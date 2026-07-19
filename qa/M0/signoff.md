@@ -101,8 +101,23 @@ was landed now, and each is restated in the M1 definition of done.
   `--workspace-concurrency=1`, eliminating the `@vitest/coverage-v8` temp-file
   race. Verified GREEN on 4 consecutive clean runs.
 
-### State after second fix pass (commit pending)
+### State after second fix pass
 - Full suite: **69 tests, 0 failures, 0 skipped; 100% statement coverage all
-  packages; thresholds enforced; 4/4 consecutive green runs.**
+  packages; thresholds enforced.**
 - `pnpm audit`: clean. Build/typecheck: clean.
-- Re-dispatching Security re-review + Global Tester for final confirmation.
+
+## FINAL CLEARANCE
+
+- **QA Reviewer: SIGN-OFF YES**
+- **Security Reviewer: SIGN-OFF YES** (round 2, after R1/R2/R3 fixes)
+- **User Tester: SIGN-OFF YES**
+- **Global Tester: GLOBAL SUITE GREEN** (round 3) — 7/7 strictly-sequential
+  runs PASS; the specific concurrent-invocation coverage race re-tested 3/3
+  rounds PASS (both simultaneous invocations green); thresholds met; 0 skipped;
+  working tree stays clean (coverage now under `os.tmpdir()/tamasha-cov-<pid>`).
+
+Total findings across the milestone: **49 original + 3 introduced-by-fix + 1
+flakiness = 53, all resolved.** Suite grew 13 → 69 tests.
+
+**M0 CLEARED — 2026-07-19.** Proceeding to M1 (platform core: rooms, join,
+lobby, VIP, reconnect, pause, settings shell).
