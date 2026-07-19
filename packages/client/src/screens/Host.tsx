@@ -74,7 +74,12 @@ export function Host({
             players={pub.players}
             deadline={pub.deadline}
           />
-          <PodiumRow players={pub.players} audienceCount={pub.audienceCount} inGame />
+          <PodiumRow
+            players={pub.players}
+            audienceCount={pub.audienceCount}
+            inGame
+            showLocks={(pub.phaseData as KsPublicPhase | null)?.kind === "question"}
+          />
         </>
       )}
     </main>
@@ -209,10 +214,12 @@ function PodiumRow({
   players,
   audienceCount,
   inGame = false,
+  showLocks = false,
 }: {
   players: PlayerPublic[];
   audienceCount: number;
   inGame?: boolean;
+  showLocks?: boolean;
 }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "center", marginTop: "1rem" }}>
@@ -229,7 +236,7 @@ function PodiumRow({
               opacity: p.connected ? 1 : 0.6,
               textAlign: "center",
               minWidth: "6.5rem",
-              border: inGame && p.answered && p.alive ? `2px solid ${COLORS.marigold}` : "2px solid transparent",
+              border: showLocks && p.answered && p.alive ? `2px solid ${COLORS.marigold}` : "2px solid transparent",
             }}
           >
             <div style={{ fontWeight: 700 }}>
@@ -237,7 +244,7 @@ function PodiumRow({
             </div>
             <div style={{ fontSize: "0.75rem" }}>{avatarLabel(p.avatar)}</div>
             {inGame && <div style={{ fontSize: "0.9rem", fontWeight: 700 }}>{`₹${p.money}`}</div>}
-            {inGame && p.answered && p.alive && <div style={{ fontSize: "0.75rem" }}>🪔 taiyaar</div>}
+            {showLocks && p.answered && p.alive && <div style={{ fontSize: "0.75rem" }}>🪔 taiyaar</div>}
             {!p.connected && <div style={{ fontSize: "0.7rem", color: COLORS.blood }}>signal gaya</div>}
           </div>
         );

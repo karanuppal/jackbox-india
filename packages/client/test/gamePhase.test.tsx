@@ -170,3 +170,22 @@ describe("Host — M2 UX (podium, death names, tally legend)", () => {
     expect(html).toContain("kitno ne yeh chuna");
   });
 });
+
+describe("Host — lock badge gating (UT-M2-R1)", () => {
+  const answeredPlayers = [player({ id: "p1", name: "Karan", money: 2000, answered: true, alive: true })];
+
+  it("shows the taiyaar lock during a question", () => {
+    const html = renderToString(<Host state={joined({ public: base("question", question, { players: answeredPlayers }) })} origin="http://localhost" />);
+    expect(html).toContain("taiyaar");
+  });
+
+  it("does NOT show the taiyaar lock on the reveal podium", () => {
+    const html = renderToString(<Host state={joined({ public: base("reveal", reveal, { players: answeredPlayers }) })} origin="http://localhost" />);
+    expect(html).not.toContain("taiyaar");
+  });
+
+  it("does NOT show the taiyaar lock on the game-over podium", () => {
+    const html = renderToString(<Host state={joined({ public: base("gameOver", gameOver, { players: answeredPlayers }) })} origin="http://localhost" />);
+    expect(html).not.toContain("taiyaar");
+  });
+});
