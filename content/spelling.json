@@ -1,10 +1,50 @@
 [
-  { "id": "sw_0001", "word": "khichdi", "adult": false },
-  { "id": "sw_0002", "word": "jugaad", "adult": false },
-  { "id": "sw_0003", "word": "chappal", "adult": false },
-  { "id": "sw_0004", "word": "jalebi", "adult": false },
-  { "id": "sw_0005", "word": "paneer", "adult": false },
-  { "id": "sw_0006", "word": "shaadi", "adult": false },
-  { "id": "sw_0007", "word": "bandar", "adult": false },
-  { "id": "sw_0008", "word": "samosa", "adult": false }
+  {
+    "id": "sw_0001",
+    "word": "khichdi",
+    "vo": "sw_0001.ogg",
+    "adult": false
+  },
+  {
+    "id": "sw_0002",
+    "word": "jugaad",
+    "vo": "sw_0002.ogg",
+    "adult": false
+  },
+  {
+    "id": "sw_0003",
+    "word": "chappal",
+    "vo": "sw_0003.ogg",
+    "adult": false
+  },
+  {
+    "id": "sw_0004",
+    "word": "jalebi",
+    "vo": "sw_0004.ogg",
+    "adult": false
+  },
+  {
+    "id": "sw_0005",
+    "word": "paneer",
+    "vo": "sw_0005.ogg",
+    "adult": false
+  },
+  {
+    "id": "sw_0006",
+    "word": "shaadi",
+    "vo": "sw_0006.ogg",
+    "adult": false
+  },
+  {
+    "id": "sw_0007",
+    "word": "bandar",
+    "vo": "sw_0007.ogg",
+    "adult": false
+  },
+  {
+    "id": "sw_0008",
+    "word": "samosa",
+    "vo": "sw_0008.ogg",
+    "adult": false
+  }
 ]

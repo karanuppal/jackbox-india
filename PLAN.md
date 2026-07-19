@@ -653,9 +653,25 @@ presentation → audio.
 ## 10. Open items (tracked, non-blocking)
 
 1. Final brand names + domain (D-check before M8; one-file rename).
-2. Hosting provider (Fly/Railway/EC2) — ops decision at M0.
+2. ~~Hosting provider — ops decision at M0.~~ **Decided at M0:** containerized
+   deploy (single Docker image, server serves the built SPA statically; image
+   built and validated in CI). Target: any container host in ap-south-1 /
+   Mumbai (Fly.io `bom` preferred). **Actually provisioning the staging URL
+   requires owner-held credentials — OPEN for the owner**; the M0 DoD
+   "staging URL" is amended to "deploy pipeline (image + CI build) ready,
+   staging URL pending owner credentials."
 3. TTS provider winner — decided by bake-off at M6 start (amendment recorded here).
 4. Music: royalty-free stems vs commissioned score — decide by M6.
+
+## 11. Amendments log
+
+| Date | Amendment |
+|---|---|
+| 2026-07-19 | **§4.2 wire shapes (QA-M0-16):** client messages are `{seq, payload:{action,…}}`; ALL server messages are a typed union each carrying `seq` (monotonic per connection). Game-specific inputs travel as an opaque `{action:"game", payload}` envelope validated by the active game module, keeping the platform protocol game-agnostic. |
+| 2026-07-19 | **§6.2 spelling items** carry a `vo` field like every other content type (schema enforced `vo === id + ".ogg"` for all banks). |
+| 2026-07-19 | **§8.1 layout:** `/packages/audio-pipeline` and `/assets` are created when their milestone lands (M6); content validation scripts live as tests in `@tamasha/shared` and run in CI both via `pnpm test` and the dedicated `pnpm validate:content` step. |
+| 2026-07-19 | **§8.6 M0 DoD:** "deploy pipeline to a staging URL" delivered as Docker image + CI build; staging URL blocked on owner credentials (see §10.2). |
+| 2026-07-19 | **§6.2 serve-order decision (UT-M0-11):** answer options are displayed in stored order (TMP-style fixed positions); the bank enforces balance with over- AND under-representation bounds plus a file-order cycle check in `checkBankInvariants`. |
 
 ---
 

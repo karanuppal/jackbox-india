@@ -7,6 +7,9 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
-    "validate:content": "pnpm --filter @tamasha/shared test -- --run content"
+    "validate:content": "pnpm --filter @tamasha/shared exec vitest run test/content.test.ts"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
   }
 }

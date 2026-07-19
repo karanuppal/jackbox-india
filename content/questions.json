@@ -3,9 +3,17 @@
     "id": "q_0001",
     "text": "Sholay mein Gabbar ka pehla famous sawaal — 'Kitne aadmi the?' — usne kis se poocha tha?",
     "textRoman": true,
-    "options": ["Kaalia aur uske do saathi", "Jai aur Veeru", "Thakur Baldev Singh", "Sambha"],
-    "correct": 0,
-    "categories": ["bollywood", "classic-films"],
+    "options": [
+      "Sambha aur uske do saathi",
+      "Kaalia aur uske do saathi",
+      "Jai aur Veeru",
+      "Ramgarh ke gaonwale"
+    ],
+    "correct": 1,
+    "categories": [
+      "bollywood",
+      "classic-films"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0001.ogg",
@@ -16,9 +24,16 @@
     "id": "q_0002",
     "text": "2011 World Cup final mein Dhoni ka winning six kis bowler ki ball par laga tha?",
     "textRoman": true,
-    "options": ["Lasith Malinga", "Nuwan Kulasekara", "Muttiah Muralitharan", "Angelo Mathews"],
-    "correct": 1,
-    "categories": ["cricket"],
+    "options": [
+      "Lasith Malinga",
+      "Muttiah Muralitharan",
+      "Angelo Mathews",
+      "Nuwan Kulasekara"
+    ],
+    "correct": 3,
+    "categories": [
+      "cricket"
+    ],
     "difficulty": 2,
     "adult": false,
     "vo": "q_0002.ogg",
@@ -29,9 +44,16 @@
     "id": "q_0003",
     "text": "Vada pav ka janm — yaani pehli baar bech kar famous karna — kis sheher ke naam likha jaata hai?",
     "textRoman": true,
-    "options": ["Pune", "Nashik", "Mumbai", "Surat"],
+    "options": [
+      "Pune",
+      "Nashik",
+      "Mumbai",
+      "Surat"
+    ],
     "correct": 2,
-    "categories": ["food"],
+    "categories": [
+      "food"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0003.ogg",
@@ -42,9 +64,16 @@
     "id": "q_0004",
     "text": "Doordarshan ke Shaktimaan ka aam-zindagi wala roop kaun tha?",
     "textRoman": true,
-    "options": ["Ranjeet Singh", "Dhruv Mehra", "Kilvish", "Pandit Gangadhar Shastri"],
-    "correct": 3,
-    "categories": ["tv-ott"],
+    "options": [
+      "Pandit Gangadhar Shastri",
+      "Ranjeet Singh",
+      "Dhruv Mehra",
+      "Kilvish"
+    ],
+    "correct": 0,
+    "categories": [
+      "tv-ott"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0004.ogg",
@@ -55,9 +84,16 @@
     "id": "q_0005",
     "text": "'Washing powder ____, doodh si safedi…' — jingle poora karo.",
     "textRoman": true,
-    "options": ["Nirma", "Surf", "Wheel", "Rin"],
-    "correct": 0,
-    "categories": ["ads-jingles"],
+    "options": [
+      "Surf",
+      "Wheel",
+      "Nirma",
+      "Rin"
+    ],
+    "correct": 2,
+    "categories": [
+      "ads-jingles"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0005.ogg",
@@ -66,11 +102,18 @@
   },
   {
     "id": "q_0006",
-    "text": "90s ka pop anthem 'Made in India' kis singer ne gaya tha?",
+    "text": "90s ka pop anthem 'Made in India' kis singer ne gaaya tha?",
     "textRoman": true,
-    "options": ["Usha Uthup", "Alisha Chinai", "Shweta Shetty", "Falguni Pathak"],
+    "options": [
+      "Usha Uthup",
+      "Alisha Chinai",
+      "Shweta Shetty",
+      "Falguni Pathak"
+    ],
     "correct": 1,
-    "categories": ["music"],
+    "categories": [
+      "music"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0006.ogg",
@@ -81,9 +124,16 @@
     "id": "q_0007",
     "text": "'Just looking like a wow!' — yeh viral line kis online seller ki thi?",
     "textRoman": true,
-    "options": ["Dolly Chaiwala", "Puneet Superstar", "Jasmeen Kaur", "Orry"],
-    "correct": 2,
-    "categories": ["internet"],
+    "options": [
+      "Jasmeen Kaur",
+      "Dolly Chaiwala",
+      "Puneet Superstar",
+      "Orry"
+    ],
+    "correct": 0,
+    "categories": [
+      "internet"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0007.ogg",
@@ -94,9 +144,17 @@
     "id": "q_0008",
     "text": "India ka sabse lamba train route — Vivek Express — kahan se kahan tak chalta hai?",
     "textRoman": true,
-    "options": ["Jammu se Kanyakumari", "Guwahati se Trivandrum", "Delhi se Chennai", "Dibrugarh se Kanyakumari"],
+    "options": [
+      "Jammu se Kanyakumari",
+      "Guwahati se Trivandrum",
+      "Delhi se Chennai",
+      "Dibrugarh se Kanyakumari"
+    ],
     "correct": 3,
-    "categories": ["daily-life", "history-geo"],
+    "categories": [
+      "daily-life",
+      "history-geo"
+    ],
     "difficulty": 2,
     "adult": false,
     "vo": "q_0008.ogg",
@@ -107,9 +165,16 @@
     "id": "q_0009",
     "text": "'Pink City' ke naam se kaunsa sheher jaana jaata hai?",
     "textRoman": true,
-    "options": ["Jaipur", "Jodhpur", "Udaipur", "Bikaner"],
-    "correct": 0,
-    "categories": ["history-geo"],
+    "options": [
+      "Jodhpur",
+      "Udaipur",
+      "Bikaner",
+      "Jaipur"
+    ],
+    "correct": 3,
+    "categories": [
+      "history-geo"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0009.ogg",
@@ -118,24 +183,39 @@
   },
   {
     "id": "q_0010",
-    "text": "ISRO ka Mangalyaan mission Hollywood ki kis space film se bhi sasta tha?",
+    "text": "Mangalyaan mission famous taur par Hollywood ki kis space film se bhi sasta bataya jaata hai?",
     "textRoman": true,
-    "options": ["Interstellar", "Gravity", "The Martian", "Avatar"],
+    "options": [
+      "Interstellar",
+      "Gravity",
+      "The Martian",
+      "Avatar"
+    ],
     "correct": 1,
-    "categories": ["science-absurd"],
+    "categories": [
+      "science-absurd"
+    ],
     "difficulty": 2,
     "adult": false,
     "vo": "q_0010.ogg",
-    "source": "Mars Orbiter Mission (~USD 74M, 2013–14) vs Gravity (~USD 100M); comparison famously cited by PM and NYT.",
+    "source": "Widely-quoted comparison (incl. NYT and PM's 2014 remarks): Mars Orbiter Mission ~USD 74M vs the film Gravity ~USD 100M — 'cheaper than the movie Gravity'.",
     "era": "2000s"
   },
   {
     "id": "q_0011",
     "text": "Mughal-e-Azam ka 'Pyar Kiya To Darna Kya' kis actress par filmaya gaya tha?",
     "textRoman": true,
-    "options": ["Meena Kumari", "Nargis", "Waheeda Rehman", "Madhubala"],
-    "correct": 3,
-    "categories": ["classic-films", "music"],
+    "options": [
+      "Madhubala",
+      "Meena Kumari",
+      "Nargis",
+      "Waheeda Rehman"
+    ],
+    "correct": 0,
+    "categories": [
+      "classic-films",
+      "music"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0011.ogg",
@@ -146,9 +226,16 @@
     "id": "q_0012",
     "text": "Sachin Tendulkar ne apni 100th international century kis team ke khilaf banayi thi?",
     "textRoman": true,
-    "options": ["Australia", "Bangladesh", "England", "Pakistan"],
-    "correct": 1,
-    "categories": ["cricket"],
+    "options": [
+      "Australia",
+      "England",
+      "Bangladesh",
+      "Pakistan"
+    ],
+    "correct": 2,
+    "categories": [
+      "cricket"
+    ],
     "difficulty": 2,
     "adult": false,
     "vo": "q_0012.ogg",
@@ -159,9 +246,17 @@
     "id": "q_0013",
     "text": "'Mogambo khush hua' — yeh iconic villain dialogue kis film ka hai?",
     "textRoman": true,
-    "options": ["Shaan", "Karma", "Mr. India", "Tridev"],
+    "options": [
+      "Shaan",
+      "Karma",
+      "Mr. India",
+      "Tridev"
+    ],
     "correct": 2,
-    "categories": ["bollywood", "classic-films"],
+    "categories": [
+      "bollywood",
+      "classic-films"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0013.ogg",
@@ -172,9 +267,16 @@
     "id": "q_0014",
     "text": "Hyderabadi 'kachchi' biryani mein 'kachchi' kis cheez ke liye hai?",
     "textRoman": true,
-    "options": ["Kachcha (marinated) gosht ke saath dum", "Kachchi sabzi", "Adha pakaya chawal", "Bina masale ki biryani"],
+    "options": [
+      "Kachcha (marinated) gosht ke saath dum",
+      "Kachchi sabzi",
+      "Adha pakaya chawal",
+      "Bina masale ki biryani"
+    ],
     "correct": 0,
-    "categories": ["food"],
+    "categories": [
+      "food"
+    ],
     "difficulty": 2,
     "adult": false,
     "vo": "q_0014.ogg",
@@ -185,9 +287,17 @@
     "id": "q_0015",
     "text": "Malgudi Days kis lekhak ki kahaniyon par based tha?",
     "textRoman": true,
-    "options": ["Premchand", "Ruskin Bond", "R.K. Laxman", "R.K. Narayan"],
+    "options": [
+      "Premchand",
+      "Ruskin Bond",
+      "R.K. Laxman",
+      "R.K. Narayan"
+    ],
     "correct": 3,
-    "categories": ["tv-ott", "classic-films"],
+    "categories": [
+      "tv-ott",
+      "classic-films"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0015.ogg",
@@ -196,11 +306,18 @@
   },
   {
     "id": "q_0016",
-    "text": "P.T. Usha 1984 Olympics ke 400m hurdles final mein kitne antar se medal se chuki thin?",
+    "text": "P.T. Usha 1984 Olympics ke 400m hurdles final mein kitne antar se medal chook gayi thin?",
     "textRoman": true,
-    "options": ["Ek second", "1/100 second", "Aadha second", "1/10 second"],
+    "options": [
+      "Ek second",
+      "1/100 second",
+      "Aadha second",
+      "1/10 second"
+    ],
     "correct": 1,
-    "categories": ["sports"],
+    "categories": [
+      "sports"
+    ],
     "difficulty": 2,
     "adult": false,
     "vo": "q_0016.ogg",
@@ -211,9 +328,17 @@
     "id": "q_0017",
     "text": "A.R. Rahman ko pehla Oscar kis film ke liye mila tha?",
     "textRoman": true,
-    "options": ["Lagaan", "Roja", "Slumdog Millionaire", "127 Hours"],
-    "correct": 2,
-    "categories": ["music", "bollywood"],
+    "options": [
+      "Slumdog Millionaire",
+      "Lagaan",
+      "Roja",
+      "127 Hours"
+    ],
+    "correct": 0,
+    "categories": [
+      "music",
+      "bollywood"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0017.ogg",
@@ -224,9 +349,16 @@
     "id": "q_0018",
     "text": "Camlin geometry box ke 'divider' ka asli, official kaam kya hai?",
     "textRoman": true,
-    "options": ["Circle banana", "Pencil ki nok theek karna", "Bagal wale ko chubhana", "Doori naapna aur transfer karna"],
-    "correct": 3,
-    "categories": ["daily-life"],
+    "options": [
+      "Circle banana",
+      "Pencil ki nok theek karna",
+      "Doori naapna aur transfer karna",
+      "Bagal wale ko chubhana"
+    ],
+    "correct": 2,
+    "categories": [
+      "daily-life"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0018.ogg",
@@ -237,9 +369,16 @@
     "id": "q_0019",
     "text": "Nagpur ke viral Dolly Chaiwala ne 2024 mein kis billionaire ko chai pilai thi?",
     "textRoman": true,
-    "options": ["Bill Gates", "Elon Musk", "Mark Zuckerberg", "Jeff Bezos"],
-    "correct": 0,
-    "categories": ["internet"],
+    "options": [
+      "Elon Musk",
+      "Bill Gates",
+      "Mark Zuckerberg",
+      "Jeff Bezos"
+    ],
+    "correct": 1,
+    "categories": [
+      "internet"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0019.ogg",
@@ -250,9 +389,17 @@
     "id": "q_0020",
     "text": "RRR ke 'Naatu Naatu' ne kaunsa Academy Award jeeta?",
     "textRoman": true,
-    "options": ["Best Picture", "Best Original Song", "Best Sound", "Best Original Score"],
-    "correct": 1,
-    "categories": ["regional-cinema", "music"],
+    "options": [
+      "Best Picture",
+      "Best Sound",
+      "Best Original Score",
+      "Best Original Song"
+    ],
+    "correct": 3,
+    "categories": [
+      "regional-cinema",
+      "music"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0020.ogg",
@@ -263,9 +410,16 @@
     "id": "q_0021",
     "text": "Amul girl apne cartoons mein hamesha kaunsi dress mein dikhti hai?",
     "textRoman": true,
-    "options": ["Peeli saree", "Neeli salwar-kameez", "Red polka-dot frock", "Green lehenga"],
+    "options": [
+      "Peeli saree",
+      "Neeli salwar-kameez",
+      "Red polka-dot frock",
+      "Green lehenga"
+    ],
     "correct": 2,
-    "categories": ["ads-jingles"],
+    "categories": [
+      "ads-jingles"
+    ],
     "difficulty": 1,
     "adult": false,
     "vo": "q_0021.ogg",
@@ -276,9 +430,16 @@
     "id": "q_0022",
     "text": "Kolkata ke Howrah Bridge ka official naam kya hai?",
     "textRoman": true,
-    "options": ["Vidyasagar Setu", "Netaji Setu", "Hooghly Setu", "Rabindra Setu"],
-    "correct": 3,
-    "categories": ["history-geo"],
+    "options": [
+      "Rabindra Setu",
+      "Vidyasagar Setu",
+      "Netaji Setu",
+      "Hooghly Setu"
+    ],
+    "correct": 0,
+    "categories": [
+      "history-geo"
+    ],
     "difficulty": 2,
     "adult": false,
     "vo": "q_0022.ogg",
@@ -289,9 +450,17 @@
     "id": "q_0023",
     "text": "Kishore Kumar ne record kitni baar Filmfare Best Male Playback Singer award jeeta?",
     "textRoman": true,
-    "options": ["8", "5", "10", "3"],
-    "correct": 0,
-    "categories": ["music", "classic-films"],
+    "options": [
+      "5",
+      "10",
+      "3",
+      "8"
+    ],
+    "correct": 3,
+    "categories": [
+      "music",
+      "classic-films"
+    ],
     "difficulty": 3,
     "adult": false,
     "vo": "q_0023.ogg",
@@ -302,9 +471,16 @@
     "id": "q_0024",
     "text": "Kamasutra originally kis bhasha mein likha gaya tha?",
     "textRoman": true,
-    "options": ["Pali", "Sanskrit", "Prakrit", "Tamil"],
+    "options": [
+      "Pali",
+      "Sanskrit",
+      "Prakrit",
+      "Tamil"
+    ],
     "correct": 1,
-    "categories": ["science-absurd"],
+    "categories": [
+      "science-absurd"
+    ],
     "difficulty": 2,
     "adult": true,
     "vo": "q_0024.ogg",
