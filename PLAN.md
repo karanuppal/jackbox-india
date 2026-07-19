@@ -676,6 +676,8 @@ presentation → audio.
 | 2026-07-19 | **§4.4 skipTutorial setting (QA-M1-8):** the *setting* (auto-skip on start) is honored by the game engine when the real trivia engine lands in **M2**; the stub engine ignores it. The VIP `skipTutorial` *action* works today. |
 | 2026-07-19 | **§5.1 avatar art (UT-M1-6):** podium avatars render as labeled cards in M1–M6; the doll-style character art + ghost variant is part of the **M7** full art pass. |
 | 2026-07-19 | **§8.6 M1 fixes:** reconnection now supports name-based rejoin (cross-device / cleared storage), VIP reassignment on VIP-leave, host-absence teardown, host-token persistence across reloads. Abuse limits (per-IP room-create / lookup / join throttles, global room cap, per-IP socket cap, join-handshake timeout, timing-safe secret compares) added per SEC-M1-1..4. |
+| 2026-07-19 | **§3.3 M2 end-state deferral (QA-M2-3/6):** in M2 the trivia loop always runs to the full question budget and then reaches `gameOver`. The §3.3 early transitions are **deferred**: budget exhausted with 2+ alive → **Maut Ka Chakra** wheel lands in **M3/M4**; one living player remaining → **Aakhri Darwaza** finale lands in **M4**. Until then a solo player (and a game attrited to one survivor) plays all 10 questions (§3.2 "fully playable solo"), and mercy guarantees ≥1 alive so `gameOver` always has a winner. |
+| 2026-07-19 | **§3.3 M2 wrong-answer death:** in M2 a wrong-answering living player becomes a ghost **directly** at the reveal; the **Khooni Kamra** killing-floor minigames (§3.4) are inserted between wrong-answer and death in **M3**. |
 
 ---
 

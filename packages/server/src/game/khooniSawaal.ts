@@ -84,11 +84,13 @@ export class KhooniSawaalEngine implements GameEngine {
         : ctx.settings.timerMode === "off"
           ? 0 // untimed: the question resolves only when everyone answers (§3.3)
           : this.t.questionMs;
-    // Empty selection guard (QA-M2-4/SEC-M2-3): if the family-friendly filter
-    // (or an empty bank) leaves no questions, fall back to the unfiltered bank;
-    // if the bank itself is empty, end gracefully instead of crashing.
+    // Empty selection guard (QA-M2-4/SEC-M2-3): if a custom picker returned
+    // nothing, fall back to the bank — but RESPECT the family-friendly filter
+    // in the fallback so we never serve adult content in FF mode (QA-M2-R1).
+    // If the (filtered) fallback is still empty, end gracefully.
     if (this.questions.length === 0) {
-      this.questions = [...this.bank].slice(0, QUESTION_BUDGET).sort((a, b) => a.difficulty - b.difficulty);
+      const pool = this.bank.filter((q) => !ctx.settings.familyFriendly || !q.adult);
+      this.questions = pool.slice(0, QUESTION_BUDGET).sort((a, b) => a.difficulty - b.difficulty);
     }
     if (this.questions.length === 0) {
       this.phase = "gameOver";

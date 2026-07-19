@@ -289,19 +289,25 @@ describe("KhooniSawaalEngine — M2 fixes", () => {
     expect(engine.onPlayerLeft("zzz")).toBeNull(); // unknown
   });
 
-  it("guards an empty question selection (family-friendly filters everything) (QA-M2-4)", () => {
-    // a bank of only adult items + family-friendly ON → filter empties it →
-    // fallback to unfiltered bank keeps the game playable
+  it("family-friendly fallback never serves adult content — ends gracefully (QA-M2-R1)", () => {
+    // an all-adult bank + family-friendly ON → filtered fallback is empty too →
+    // gameOver rather than serving adult questions
     const adultBank: Question[] = bank(3).map((q) => ({ ...q, adult: true }));
-    const engine = new KhooniSawaalEngine(adultBank, { pickQuestions: (b, n, ff) => (ff ? [] : b.slice(0, n)) });
-    const first = engine.start({
+    const ffEngine = new KhooniSawaalEngine(adultBank, { pickQuestions: (_b, _n, ff) => (ff ? [] : _b.slice(0, _n)) });
+    const first = ffEngine.start({
       players: [{ id: "a", name: "a", avatar: 0 }],
       settings: { familyFriendly: true, profanityFilter: "strict", moderation: false, subtitles: true, timerMode: "normal", reducedMotion: false, audienceEnabled: true, password: null, hideRoomCode: false, controllerOnlyStart: false, skipTutorial: true },
       now: () => 1000,
     });
-    // fell back to the unfiltered bank → a real question, no crash
-    expect(first.phase).toBe("question");
-    expect(engine.publicPhaseData().kind).toBe("question");
+    expect(first.phase).toBe("gameOver"); // no adult questions served in FF mode
+    // with the filter OFF, the same bank plays via the fallback
+    const openEngine = new KhooniSawaalEngine(adultBank, { pickQuestions: () => [] });
+    const openFirst = openEngine.start({
+      players: [{ id: "a", name: "a", avatar: 0 }],
+      settings: { familyFriendly: false, profanityFilter: "strict", moderation: false, subtitles: true, timerMode: "normal", reducedMotion: false, audienceEnabled: true, password: null, hideRoomCode: false, controllerOnlyStart: false, skipTutorial: true },
+      now: () => 1000,
+    });
+    expect(openFirst.phase).toBe("question");
   });
 
   it("ends gracefully (gameOver) when the bank is truly empty", () => {

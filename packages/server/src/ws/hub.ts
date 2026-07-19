@@ -58,6 +58,10 @@ export class Hub {
   private registry: RoomRegistry;
   private connsByRoom = new Map<string, Set<Connection>>();
   private roomTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  // Total phase-timers armed over this hub's life. A pause-past-deadline
+  // busy-loop would inflate this without bound — tests assert it stays flat
+  // while paused (QA-M2-R2).
+  private timersArmed = 0;
   private now: () => number;
   private joinLimiter: IpRateLimiter | null;
   private connLimiter: ConcurrencyLimiter | null;
@@ -76,6 +80,11 @@ export class Hub {
   close(): Promise<void> {
     for (const ws of this.wss.clients) ws.terminate();
     return new Promise((resolve) => this.wss.close(() => resolve()));
+  }
+
+  /** Test hook: total phase-timers armed over this hub's life (QA-M2-R2). */
+  timersArmedCount(): number {
+    return this.timersArmed;
   }
 
   private onConnection(ws: WebSocket, req: IncomingMessage): void {
@@ -296,6 +305,7 @@ export class Hub {
     // restores the deadline and the resulting broadcast re-arms the tick.
     if (deadline === null || room.isPaused()) return;
     const delay = Math.max(0, deadline - this.now());
+    this.timersArmed += 1;
     const timer = setTimeout(() => {
       this.roomTimers.delete(room.code);
       // Guard against a room evicted (or its code reused) since scheduling

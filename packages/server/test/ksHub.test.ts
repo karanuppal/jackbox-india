@@ -193,7 +193,12 @@ describe("Hub timer driver (QA-M2-1 pause guard, auto-advance)", () => {
     await host.until((m) => ksPhase(m)?.kind === "question");
     // pause, then wait well past the 60ms question deadline
     host.send({ type: "action", seq: 2, payload: { action: "pause" } });
-    await new Promise((r) => setTimeout(r, 250)); // > deadline; must NOT advance/busy-loop
+    await new Promise((r) => setTimeout(r, 60)); // let the pause broadcast settle
+    const armedAtPause = hub!.timersArmedCount();
+    await new Promise((r) => setTimeout(r, 300)); // >> the 60ms deadline while paused
+    // The core assertion (QA-M2-R2): while paused past the deadline, NO new
+    // timers are armed. A reverted fix busy-loops and inflates this by 1000s.
+    expect(hub!.timersArmedCount() - armedAtPause).toBeLessThanOrEqual(1);
     const st = h.registry.get(code)!.publicState();
     expect(st.paused).toBe(true);
     expect(ksPhase({ seq: 0, type: "state", public: st, private: { you: null, role: "host", phaseData: null } })?.kind).toBe("question");
