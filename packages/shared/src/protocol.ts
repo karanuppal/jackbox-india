@@ -211,6 +211,46 @@ export const ksActionSchema = z.discriminatedUnion("type", [
 export type KsAction = z.infer<typeof ksActionSchema>;
 
 // ---------------------------------------------------------------------------
+// REST: room creation / lookup (the ecast-style indirection, §4.2).
+// ---------------------------------------------------------------------------
+export interface CreateRoomResponse {
+  code: string;
+  hostToken: string; // the host screen's session token; keep secret
+  wsPath: string; // where to open the WebSocket
+}
+
+export interface RoomLookupResponse {
+  exists: boolean;
+  phase: Phase | null;
+  joinable: boolean; // can still join as an active player
+  passwordRequired: boolean;
+  audienceEnabled: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// WebSocket client -> server messages. The first message on a socket MUST be
+// `join`; everything else is rejected until the connection is bound to a role.
+// ---------------------------------------------------------------------------
+export const joinMessageSchema = z.object({
+  type: z.literal("join"),
+  code: z.string().min(1).max(8),
+  intent: z.enum(["hostScreen", "play"]),
+  // Player display name (required for intent "play" on a fresh join).
+  name: z.string().max(64).optional(),
+  // Reconnect: proves prior identity (host token or player session token).
+  sessionToken: z.string().uuid().optional(),
+  password: z.string().max(32).optional(),
+});
+export type JoinMessage = z.infer<typeof joinMessageSchema>;
+
+export const wsClientMessageSchema = z.discriminatedUnion("type", [
+  joinMessageSchema,
+  z.object({ type: z.literal("action"), seq: z.number().int().nonnegative(), payload: clientActionSchema }),
+  z.object({ type: z.literal("ping") }),
+]);
+export type WsClientMessage = z.infer<typeof wsClientMessageSchema>;
+
+// ---------------------------------------------------------------------------
 // Server -> client state views. The server is authoritative; clients are
 // renderers. Each role receives a tailored snapshot every time state changes.
 // Every server message carries `seq` (monotonic per connection) so a

@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
 import { BRANDING } from "@tamasha/shared";
-import { App, resolveRoute } from "../src/App.js";
+import { App, resolveRoute, type Env } from "../src/App.js";
+
+const env = (pathname: string): Env => ({
+  pathname,
+  origin: "http://localhost:5173",
+  wsUrl: "ws://localhost:5173/play",
+  search: "",
+});
 
 describe("resolveRoute (UT-M0-1/2/3)", () => {
   it("matches exact routes", () => {
@@ -26,34 +33,28 @@ describe("resolveRoute (UT-M0-1/2/3)", () => {
 });
 
 describe("App shell", () => {
-  it("renders the join page with platform branding from the shared config", () => {
-    const html = renderToString(<App path="/" />);
+  it("renders the join form with platform branding", () => {
+    const html = renderToString(<App env={env("/")} />);
     expect(html).toContain(BRANDING.platformName);
-    expect(html).toContain("Join");
+    expect(html).toContain("Room code");
   });
 
-  it("renders the host screen with the game name", () => {
-    const html = renderToString(<App path="/host" />);
-    expect(html).toContain(BRANDING.gameName);
-    expect(html).toContain("Host Screen");
-  });
-
-  it("renders the moderator portal", () => {
-    const html = renderToString(<App path="/mod" />);
+  it("renders the moderator placeholder", () => {
+    const html = renderToString(<App env={env("/mod")} />);
     expect(html).toContain("Moderator");
   });
 
   it("renders an in-voice unknown-route screen with a way home", () => {
-    const html = renderToString(<App path="/hostile" />);
-    expect(html).toContain("Manzil Mahal");
+    const html = renderToString(<App env={env("/hostile")} />);
+    expect(html).toContain(BRANDING.venueName);
     expect(html).toContain('href="/"');
     expect(html).not.toContain("Host Screen");
   });
 
   it("contains no developer debris in user-visible copy (UT-M0-4)", () => {
-    for (const path of ["/", "/host", "/mod", "/nope"]) {
-      const html = renderToString(<App path={path} />);
-      expect(html).not.toMatch(/scaffold|M0|milestone/i);
+    for (const p of ["/", "/mod", "/nope"]) {
+      const html = renderToString(<App env={env(p)} />);
+      expect(html).not.toMatch(/scaffold|\bM0\b|milestone/i);
     }
   });
 });

@@ -2,11 +2,17 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import type { Server } from "node:http";
 import { existsSync, statSync, createReadStream } from "node:fs";
 import { join, normalize, resolve, extname } from "node:path";
+import { handleApi } from "./api.js";
+import type { RoomRegistry } from "./rooms/registry.js";
+
+export const WS_PATH = "/play";
 
 export interface AppOptions {
   port?: number;
   /** Directory containing the built SPA (index.html + assets). Optional. */
   staticDir?: string;
+  /** Room registry backing the REST API. Optional (omitted in pure static tests). */
+  registry?: RoomRegistry;
 }
 
 // Baseline security headers on every response (SEC-M0-10). The full CSP/HSTS
@@ -109,6 +115,9 @@ export function handle(req: IncomingMessage, res: ServerResponse, opts: AppOptio
   }
 
   if (url.pathname.startsWith("/api/")) {
+    if (opts.registry !== undefined && handleApi(opts.registry, method, url.pathname, res, sendJson, WS_PATH)) {
+      return;
+    }
     sendJson(res, 404, { error: "NOT_FOUND" });
     return;
   }

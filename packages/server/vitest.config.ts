@@ -12,7 +12,10 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**"],
-      exclude: ["src/main.ts"], // process bootstrap; exercised by deploy smoke
+      exclude: [
+        "src/main.ts", // process bootstrap; exercised by deploy smoke
+        "src/game/engine.ts", // type-only contract (interfaces erase to nothing)
+      ],
       // Per-invocation temp/report dir (see shared config) — immune to a
       // second concurrent `pnpm test` in the same tree.
       reportsDirectory: join(tmpdir(), `tamasha-cov-${process.pid}`, "server"),
