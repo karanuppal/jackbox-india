@@ -62,3 +62,50 @@ export function clearSession(code: string, store: StorageLike | null = storage()
     /* ignore */
   }
 }
+
+// --- host-screen session (QA-M1-5): persist the room so a host reload
+// reconnects to the SAME room instead of minting a new one. -------------------
+const HOST_KEY = "tamasha:host";
+
+export interface HostSession {
+  code: string;
+  hostToken: string;
+}
+
+export function saveHostSession(s: HostSession, store: StorageLike | null = storage()): void {
+  if (store === null) return;
+  try {
+    store.setItem(HOST_KEY, JSON.stringify(s));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadHostSession(store: StorageLike | null = storage()): HostSession | null {
+  if (store === null) return null;
+  try {
+    const raw = store.getItem(HOST_KEY);
+    if (raw === null) return null;
+    const p: unknown = JSON.parse(raw);
+    if (
+      typeof p === "object" &&
+      p !== null &&
+      typeof (p as HostSession).code === "string" &&
+      typeof (p as HostSession).hostToken === "string"
+    ) {
+      return p as HostSession;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+export function clearHostSession(store: StorageLike | null = storage()): void {
+  if (store === null) return;
+  try {
+    store.removeItem(HOST_KEY);
+  } catch {
+    /* ignore */
+  }
+}

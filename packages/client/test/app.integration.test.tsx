@@ -63,6 +63,11 @@ const flush = () => act(async () => { await Promise.resolve(); });
 
 describe("PlayerApp flow", () => {
   it("submits the prefilled join form and connects as a player", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ exists: true, passwordRequired: false }),
+    });
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch;
     await act(async () => { root.render(<App env={env("/")} />); });
     // code is prefilled from ?code=ACDE; fill the name and submit
     const nameInput = container.querySelector('input[aria-label="Your name"]') as HTMLInputElement;
@@ -76,6 +81,8 @@ describe("PlayerApp flow", () => {
       form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     });
     await flush();
+    await flush();
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost/api/rooms/ACDE");
     expect(sockets.length).toBe(1);
     const join = JSON.parse(sockets[0]!.sent[0]!);
     expect(join).toMatchObject({ type: "join", code: "ACDE", intent: "play", name: "Karan" });

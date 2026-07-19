@@ -13,10 +13,12 @@ export class RoomRegistry {
   private readonly now: () => number;
   private readonly ttlMs: number;
   private readonly emptyGraceMs: number;
+  private readonly hostGraceMs: number;
+  private readonly maxRooms: number;
 
   constructor(
     createEngine: CreateEngine,
-    opts: { now?: () => number; ttlMs?: number; emptyGraceMs?: number } = {},
+    opts: { now?: () => number; ttlMs?: number; emptyGraceMs?: number; hostGraceMs?: number; maxRooms?: number } = {},
   ) {
     this.createEngine = createEngine;
     this.now = opts.now ?? Date.now;
@@ -24,9 +26,19 @@ export class RoomRegistry {
     // Grace window before an all-disconnected room is reclaimed. Holds seats
     // across brief network drops so players can reconnect (PLAN.md §4.2).
     this.emptyGraceMs = opts.emptyGraceMs ?? 5 * 60 * 1000;
+    // Grace window before a host-absent room is torn down (§4.2, QA-M1-4).
+    this.hostGraceMs = opts.hostGraceMs ?? 5 * 60 * 1000;
+    // Global room ceiling (SEC-M1-1): reject creation past this.
+    this.maxRooms = opts.maxRooms ?? 20_000;
   }
 
-  create(): Room {
+  atCapacity(): boolean {
+    return this.rooms.size >= this.maxRooms;
+  }
+
+  /** Create a room, or null if the global ceiling is reached (SEC-M1-1). */
+  create(): Room | null {
+    if (this.atCapacity()) return null;
     const code = generateUniqueCode((c) => this.rooms.has(c));
     const room = new Room(code, this.createEngine, this.now);
     this.rooms.set(code, room);
@@ -58,11 +70,16 @@ export class RoomRegistry {
     const t = this.now();
     const ttlCutoff = t - this.ttlMs;
     const graceCutoff = t - this.emptyGraceMs;
+    const hostCutoff = t - this.hostGraceMs;
     for (const [code, room] of this.rooms) {
       const emptySince = room.getEmptySince();
+      const hostGoneSince = room.getHostGoneSince();
       const expired = room.createdAt < ttlCutoff;
       const abandoned = emptySince !== null && emptySince < graceCutoff;
-      if (expired || abandoned) {
+      // A room whose host screen has been gone past the grace window is torn
+      // down even if a player still lingers — the game can't resume without it.
+      const hostGone = hostGoneSince !== null && hostGoneSince < hostCutoff;
+      if (expired || abandoned || hostGone) {
         this.rooms.delete(code);
         removed += 1;
       }

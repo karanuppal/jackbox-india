@@ -10,6 +10,12 @@ importers:
 
   packages/client:
     dependencies:
+      '@fontsource/baloo-2':
+        specifier: ^5.1.0
+        version: 5.3.0
+      '@fontsource/yatra-one':
+        specifier: ^5.1.0
+        version: 5.3.0
       '@tamasha/shared':
         specifier: workspace:*
         version: link:../shared
@@ -533,6 +539,12 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/baloo-2@5.3.0':
+    resolution: {integrity: sha512-CBuxZ27jvMmD5+KaaPkMWv/yjdRNppVAd5/002yAyvyQyLNL3aZCbkx6gbAT/bjxPd1A0VMdDQjfcELI8chccQ==}
+
+  '@fontsource/yatra-one@5.3.0':
+    resolution: {integrity: sha512-4lCIB+rkftIhBDklcZUgYFtzqNVIcAb+hdMGb6eDHtCH26cg2KU9lPWpZZScCaDlEfBpBxcElfVW4Plxx+R1MA==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -1880,6 +1892,10 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.1':
     optional: true
+
+  '@fontsource/baloo-2@5.3.0': {}
+
+  '@fontsource/yatra-one@5.3.0': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:

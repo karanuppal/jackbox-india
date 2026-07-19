@@ -19,7 +19,7 @@ export class LobbyStubEngine implements GameEngine {
   privatePhaseData(_playerId: string): unknown {
     return { stub: true };
   }
-  onAction(_playerId: string, _payload: unknown): EnginePhase | null {
+  onAction(_playerId: string, _payload: unknown, _meta: import("./engine.js").ActionMeta): EnginePhase | null {
     return null;
   }
   onTimeout(): EnginePhase | null {

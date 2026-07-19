@@ -63,9 +63,9 @@ describe("Host — settings chips", () => {
       players: [], audienceCount: 0, questionNumber: 0, questionTotal: 0, deadline: null, phaseData: null,
     };
     const html = renderToString(<Host state={{ ...freshState(), status: "joined", public: pub }} origin="http://localhost" />);
-    expect(html).toContain("Full masala");
-    expect(html).toContain("Audience off");
+    expect(html).toContain("Family-Friendly: OFF");
+    expect(html).toContain("Audience: OFF");
     expect(html).toContain("Password lagega");
-    expect(html).toContain("Timers: extended");
+    expect(html).toContain("Extended timers: ON");
   });
 });

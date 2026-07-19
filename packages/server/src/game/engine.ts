@@ -21,6 +21,12 @@ export interface EnginePhase {
   deadline: number | null;
 }
 
+export interface ActionMeta {
+  role: "player" | "audience";
+  /** True if this is an active (alive) player, not a ghost/audience. */
+  active: boolean;
+}
+
 export interface GameContext {
   players: GamePlayer[];
   settings: Settings;
@@ -35,8 +41,12 @@ export interface GameEngine {
   publicPhaseData(): unknown;
   /** Private payload for one player (their prompt, their lock state, …). */
   privatePhaseData(playerId: string): unknown;
-  /** Handle a validated game action from a player. Returns next phase if it changed. */
-  onAction(playerId: string, payload: unknown): EnginePhase | null;
+  /**
+   * Handle a validated game action. `meta` carries the caller's role/liveness
+   * so the engine can authorize player-vs-audience input without re-deriving it
+   * (SEC-M1-5). Returns the next phase if it changed.
+   */
+  onAction(playerId: string, payload: unknown, meta: ActionMeta): EnginePhase | null;
   /** Called when the current phase's timer elapses. Returns next phase if it changed. */
   onTimeout(): EnginePhase | null;
   /** True once the game has reached its terminal state. */

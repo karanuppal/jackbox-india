@@ -63,3 +63,45 @@ describe("REST /api/rooms", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("REST rate limits (SEC-M1-1/2)", () => {
+  it("429s room creation past the per-IP limit", async () => {
+    const { IpRateLimiter } = await import("../src/net/ipLimits.js");
+    const registry = new (await import("../src/rooms/registry.js")).RoomRegistry(
+      (await import("../src/game/lobbyStub.js")).createLobbyStubEngine,
+    );
+    const limiters = { create: new IpRateLimiter(1, 60_000), lookup: new IpRateLimiter(100, 60_000) };
+    server = await startServer({ port: 0, registry, apiLimiters: limiters });
+    const addr = server.address();
+    if (addr === null || typeof addr === "string") throw new Error("no port");
+    const base = `http://127.0.0.1:${addr.port}`;
+    expect((await fetch(`${base}/api/rooms`, { method: "POST" })).status).toBe(201);
+    expect((await fetch(`${base}/api/rooms`, { method: "POST" })).status).toBe(429);
+  });
+
+  it("429s lookups past the per-IP limit", async () => {
+    const { IpRateLimiter } = await import("../src/net/ipLimits.js");
+    const registry = new (await import("../src/rooms/registry.js")).RoomRegistry(
+      (await import("../src/game/lobbyStub.js")).createLobbyStubEngine,
+    );
+    const limiters = { create: new IpRateLimiter(100, 60_000), lookup: new IpRateLimiter(1, 60_000) };
+    server = await startServer({ port: 0, registry, apiLimiters: limiters });
+    const addr = server.address();
+    if (addr === null || typeof addr === "string") throw new Error("no port");
+    const base = `http://127.0.0.1:${addr.port}`;
+    expect((await fetch(`${base}/api/rooms/ZZZZ`)).status).toBe(404);
+    expect((await fetch(`${base}/api/rooms/ZZZZ`)).status).toBe(429);
+  });
+
+  it("503s when the registry is at capacity (SEC-M1-1)", async () => {
+    const registry = new (await import("../src/rooms/registry.js")).RoomRegistry(
+      (await import("../src/game/lobbyStub.js")).createLobbyStubEngine,
+      { maxRooms: 0 },
+    );
+    server = await startServer({ port: 0, registry });
+    const addr = server.address();
+    if (addr === null || typeof addr === "string") throw new Error("no port");
+    const base = `http://127.0.0.1:${addr.port}`;
+    expect((await fetch(`${base}/api/rooms`, { method: "POST" })).status).toBe(503);
+  });
+});

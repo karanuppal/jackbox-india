@@ -1,0 +1,20 @@
+:root {
+  color-scheme: dark;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #1a0508;
+  color: #f3ead5;
+  /* Baloo 2 = body/UI (rounded, high-legibility, Devanagari + Latin, §5.1). */
+  font-family: "Baloo 2", system-ui, sans-serif;
+}
+h1 {
+  /* Yatra One = display face (Bollywood-horror poster look, §5.1). */
+  font-family: "Yatra One", "Baloo 2", system-ui, sans-serif;
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+}

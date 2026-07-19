@@ -108,7 +108,8 @@ describe("Controller", () => {
     const state: ClientState = { ...initialState(), status: "error", lastError: { code: "ROOM_NOT_FOUND", message: "no room" } };
     const html = renderToString(<Controller state={state} onAction={() => {}} />);
     expect(html).toContain("Arre!");
-    expect(html).toContain("no room");
+    expect(html).toContain("room code nahi mila"); // in-voice, not raw English (UT-M1-1)
+    expect(html).not.toContain("no room");
   });
 });
 
@@ -146,6 +147,6 @@ describe("Host", () => {
   it("shows the paused banner mid-game", () => {
     const state = joined({ public: pub({ phase: "tutorial", paused: true, players: [player()] }) });
     const html = renderToString(<Host state={state} origin="http://localhost" />);
-    expect(html).toContain("rukka hua hai");
+    expect(html).toContain("game rok diya hai");
   });
 });

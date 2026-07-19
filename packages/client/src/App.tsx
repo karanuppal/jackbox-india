@@ -4,7 +4,13 @@ import { useRoom } from "./net/useRoom.js";
 import { JoinForm, type JoinSubmit } from "./screens/Join.js";
 import { Controller } from "./screens/Controller.js";
 import { Host } from "./screens/Host.js";
-import { loadSession, saveSession } from "./net/session.js";
+import {
+  clearHostSession,
+  loadHostSession,
+  loadSession,
+  saveHostSession,
+  saveSession,
+} from "./net/session.js";
 import { S } from "./ui/styles.css.js";
 
 export type Route = "join" | "host" | "mod" | "notFound";
@@ -76,22 +82,54 @@ function codeFromSearch(search: string): string {
   return m !== null ? decodeURIComponent(m[1]!).toUpperCase().slice(0, 4) : "";
 }
 
-/** Join form → controller. Restores a saved session if one exists. */
+/** Join form → controller. Looks up the room first (§4.2) so it can prompt for
+ *  a password when required, and restores a saved session if one exists. */
 function PlayerApp({ env }: { env: Env }) {
   const [join, setJoin] = useState<Omit<JoinMessage, "type"> | null>(null);
+  const [askPassword, setAskPassword] = useState(false);
+  const [notice, setNotice] = useState<string | undefined>(undefined);
   const initialCode = codeFromSearch(env.search);
 
-  function onSubmit(v: JoinSubmit) {
+  async function onSubmit(v: JoinSubmit) {
+    setNotice(undefined);
+    // Pre-flight lookup: detect nonexistent/passworded rooms before the socket.
+    try {
+      const look = (await (await fetch(`${env.origin}/api/rooms/${v.code}`)).json()) as {
+        exists: boolean;
+        passwordRequired: boolean;
+      };
+      if (!look.exists) {
+        setNotice("Yeh room code nahi mila. Dobara check karo.");
+        return;
+      }
+      if (look.passwordRequired && v.password === undefined) {
+        setAskPassword(true);
+        setNotice("Is room mein password lagega.");
+        return;
+      }
+    } catch {
+      // Lookup failed (offline?) — fall through and let the socket surface it.
+    }
     const saved = loadSession(v.code);
     setJoin({
       code: v.code,
       intent: "play",
       name: v.name,
+      ...(v.password !== undefined ? { password: v.password } : {}),
       ...(saved !== null ? { sessionToken: saved.sessionToken } : {}),
     });
   }
 
-  if (join === null) return <JoinForm initialCode={initialCode} onSubmit={onSubmit} />;
+  if (join === null) {
+    return (
+      <JoinForm
+        initialCode={initialCode}
+        askPassword={askPassword}
+        {...(notice !== undefined ? { notice } : {})}
+        onSubmit={(v) => void onSubmit(v)}
+      />
+    );
+  }
   return <ConnectedController env={env} join={join} />;
 }
 
@@ -105,21 +143,40 @@ function ConnectedController({ env, join }: { env: Env; join: Omit<JoinMessage, 
   return <Controller state={state} onAction={sendAction} />;
 }
 
-/** Creates a room via REST, then connects as the host screen. */
+/** Restores or creates a room, then connects as the host screen. */
 function HostApp({ env }: { env: Env }) {
   const [room, setRoom] = useState<{ code: string; hostToken: string } | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let live = true;
-    fetch(`${env.origin}/api/rooms`, { method: "POST" })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("create failed"))))
-      .then((body) => {
+    async function boot() {
+      // Reload-safe: if we still hold a host session for a room the server
+      // knows, reconnect to it instead of orphaning it (QA-M1-5).
+      const saved = loadHostSession();
+      if (saved !== null) {
+        try {
+          const look = (await (await fetch(`${env.origin}/api/rooms/${saved.code}`)).json()) as { exists: boolean };
+          if (look.exists) {
+            if (live) setRoom(saved);
+            return;
+          }
+        } catch {
+          /* fall through to create */
+        }
+        clearHostSession();
+      }
+      try {
+        const res = await fetch(`${env.origin}/api/rooms`, { method: "POST" });
+        if (!res.ok) throw new Error("create failed");
+        const body = (await res.json()) as { code: string; hostToken: string };
+        saveHostSession({ code: body.code, hostToken: body.hostToken });
         if (live) setRoom({ code: body.code, hostToken: body.hostToken });
-      })
-      .catch(() => {
+      } catch {
         if (live) setFailed(true);
-      });
+      }
+    }
+    void boot();
     return () => {
       live = false;
     };
@@ -145,10 +202,10 @@ function HostApp({ env }: { env: Env }) {
 }
 
 function ConnectedHost({ env, room }: { env: Env; room: { code: string; hostToken: string } }) {
-  const { state } = useRoom(env.wsUrl, {
+  const { state, sendAction } = useRoom(env.wsUrl, {
     code: room.code,
     intent: "hostScreen",
     sessionToken: room.hostToken,
   });
-  return <Host state={state} origin={env.origin} />;
+  return <Host state={state} origin={env.origin} onAction={sendAction} />;
 }

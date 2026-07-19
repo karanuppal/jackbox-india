@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   ACTION_ROLE,
   MAX_AUDIENCE,
+  MAX_NAME_LENGTH,
   MAX_PLAYERS,
   sanitizeName,
   toPublicSettings,
@@ -15,7 +16,8 @@ import {
   type Settings,
   type ServerErrorCode,
 } from "@tamasha/shared";
-import type { GameEngine, GamePlayer } from "../game/engine.js";
+import type { ActionMeta, GameEngine, GamePlayer } from "../game/engine.js";
+import { safeEqual } from "../net/ipLimits.js";
 
 export interface Player {
   id: string;
@@ -67,6 +69,8 @@ export class Room {
   // The registry evicts rooms empty past a grace window, so a brief all-drop
   // (network blip) does not destroy held seats (PLAN.md §4.2).
   private emptySince: number | null;
+  // Epoch-ms the host disconnected; drives host-absence teardown (§4.2, QA-M1-4).
+  private hostGoneSince: number | null = null;
 
   constructor(code: string, createEngine: CreateEngine, now: () => number = Date.now) {
     this.code = code;
@@ -106,18 +110,27 @@ export class Room {
 
   // --- host screen -----------------------------------------------------------
   connectHost(sessionToken: string): JoinResult | JoinError {
-    if (sessionToken !== this.hostToken) return { ok: false, code: "NOT_ALLOWED" };
+    if (!safeEqual(sessionToken, this.hostToken)) return { ok: false, code: "NOT_ALLOWED" };
     this.hostConnected = true;
+    this.hostGoneSince = null;
     this.recomputeEmpty();
     return { ok: true, playerId: null, sessionToken: this.hostToken, role: "host" };
   }
   disconnectHost(): void {
     this.hostConnected = false;
+    this.hostGoneSince = this.now();
     // Host drop pauses the game for everyone (grace before teardown, §4.2).
     if (this.phase !== "lobby" && this.phase !== "gameOver" && this.phase !== "postGame") {
       this.paused = true;
     }
     this.recomputeEmpty();
+  }
+  /** Epoch-ms the host screen last disconnected (null while connected). §4.2. */
+  getHostGoneSince(): number | null {
+    return this.hostGoneSince;
+  }
+  isHostConnected(): boolean {
+    return this.hostConnected;
   }
 
   private recomputeEmpty(): void {
@@ -131,21 +144,35 @@ export class Room {
   join(opts: { name?: string; sessionToken?: string; password?: string }): JoinResult | JoinError {
     // Reconnect path: known token restores the exact seat.
     if (opts.sessionToken !== undefined) {
-      const existing = [...this.players.values()].find((p) => p.sessionToken === opts.sessionToken);
+      const existing = [...this.players.values()].find((p) => safeEqual(p.sessionToken, opts.sessionToken!));
       if (existing !== undefined) {
         existing.connected = true;
+        this.reassignVipIfNeeded();
         this.recomputeEmpty();
         return { ok: true, playerId: existing.id, sessionToken: existing.sessionToken, role: existing.role };
       }
       // Unknown token → fall through and treat as a fresh join.
     }
 
-    if (this.passwordRequired() && opts.password !== this.settings.password) {
+    if (this.passwordRequired() && !safeEqual(opts.password ?? "", this.settings.password ?? "")) {
       return { ok: false, code: "BAD_PASSWORD" };
     }
 
     const cleanName = sanitizeName(opts.name ?? "");
     if (cleanName === null) return { ok: false, code: "BAD_NAME" };
+
+    // Name-based reconnect (UT-M1-4): if a DISCONNECTED player holds this exact
+    // name, reclaim that seat — covers cleared storage / a different device,
+    // matching Jackbox's "same code + same name" rejoin.
+    const stale = [...this.players.values()].find(
+      (p) => !p.connected && p.name.toLowerCase() === cleanName.toLowerCase(),
+    );
+    if (stale !== undefined) {
+      stale.connected = true;
+      this.reassignVipIfNeeded();
+      this.recomputeEmpty();
+      return { ok: true, playerId: stale.id, sessionToken: stale.sessionToken, role: stale.role };
+    }
 
     const asPlayer = this.joinable();
     if (!asPlayer) {
@@ -159,7 +186,7 @@ export class Room {
       id,
       sessionToken,
       name: this.uniqueName(cleanName),
-      avatar: this.nextAvatar(),
+      avatar: asPlayer ? this.nextAvatar() : -1, // audience needs no avatar (QA-M1-12)
       role: asPlayer ? "player" : "audience",
       vip: asPlayer && this.activePlayers().length === 0,
       alive: true,
@@ -169,6 +196,7 @@ export class Room {
       joinOrder: this.joinCounter++,
     };
     this.players.set(id, player);
+    this.reassignVipIfNeeded();
     this.recomputeEmpty();
     return { ok: true, playerId: id, sessionToken, role: player.role };
   }
@@ -176,14 +204,30 @@ export class Room {
   markDisconnected(playerId: string): void {
     const p = this.players.get(playerId);
     if (p !== undefined) p.connected = false;
+    this.reassignVipIfNeeded();
     this.recomputeEmpty();
+  }
+
+  /**
+   * If the VIP is gone (disconnected) and another connected active player
+   * exists, promote the earliest-joined connected player (QA-M1-3). Prevents a
+   * lobby soft-lock where nobody can press the VIP-only start button.
+   */
+  private reassignVipIfNeeded(): void {
+    const players = this.activePlayers();
+    const currentVip = players.find((p) => p.vip);
+    if (currentVip !== undefined && currentVip.connected) return;
+    const heir = players.find((p) => p.connected);
+    if (heir === undefined) return; // nobody connected; keep flag until someone returns
+    for (const p of players) p.vip = false;
+    heir.vip = true;
   }
 
   private uniqueName(name: string): string {
     const taken = new Set([...this.players.values()].map((p) => p.name.toLowerCase()));
     if (!taken.has(name.toLowerCase())) return name;
     for (let n = 2; n < 100; n++) {
-      const candidate = `${name} ${n}`.slice(0, 15);
+      const candidate = `${name} ${n}`.slice(0, MAX_NAME_LENGTH + 3);
       if (!taken.has(candidate.toLowerCase())) return candidate;
     }
     return `${name} ${randomUUID().slice(0, 3)}`;
@@ -240,6 +284,8 @@ export class Room {
         this.paused = false;
         return null;
       case "game":
+        // Paused freezes all game input for everyone (§4.3, QA-M1-10).
+        if (this.paused) return "NOT_ALLOWED";
         return this.applyGameAction(playerId, action.payload);
       default: {
         const _exhaustive: never = action;
@@ -276,7 +322,10 @@ export class Room {
 
   private applyGameAction(playerId: string | null, payload: unknown): ServerErrorCode | null {
     if (this.engine === null || playerId === null) return "NOT_ALLOWED";
-    const next = this.engine.onAction(playerId, payload);
+    const p = this.players.get(playerId);
+    if (p === undefined) return "NOT_ALLOWED";
+    const meta: ActionMeta = { role: p.role, active: p.role === "player" && p.alive };
+    const next = this.engine.onAction(playerId, payload, meta);
     if (next !== null) {
       this.phase = next.phase as Phase;
       this.deadline = next.deadline;

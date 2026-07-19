@@ -672,6 +672,10 @@ presentation → audio.
 | 2026-07-19 | **§8.1 layout:** `/packages/audio-pipeline` and `/assets` are created when their milestone lands (M6); content validation scripts live as tests in `@tamasha/shared` and run in CI both via `pnpm test` and the dedicated `pnpm validate:content` step. |
 | 2026-07-19 | **§8.6 M0 DoD:** "deploy pipeline to a staging URL" delivered as Docker image + CI build; staging URL blocked on owner credentials (see §10.2). |
 | 2026-07-19 | **§6.2 serve-order decision (UT-M0-11):** answer options are displayed in stored order (TMP-style fixed positions); the bank enforces balance with over- AND under-representation bounds plus a file-order cycle check in `checkBankInvariants`. |
+| 2026-07-19 | **§4.4 start-path decision (QA-M1-7):** v1 start is **always controller-only** (VIP-only). The `controllerOnlyStart` setting is therefore inert in v1 and retained only for forward-compat; there is no host-screen start button. |
+| 2026-07-19 | **§4.4 skipTutorial setting (QA-M1-8):** the *setting* (auto-skip on start) is honored by the game engine when the real trivia engine lands in **M2**; the stub engine ignores it. The VIP `skipTutorial` *action* works today. |
+| 2026-07-19 | **§5.1 avatar art (UT-M1-6):** podium avatars render as labeled cards in M1–M6; the doll-style character art + ghost variant is part of the **M7** full art pass. |
+| 2026-07-19 | **§8.6 M1 fixes:** reconnection now supports name-based rejoin (cross-device / cleared storage), VIP reassignment on VIP-leave, host-absence teardown, host-token persistence across reloads. Abuse limits (per-IP room-create / lookup / join throttles, global room cap, per-IP socket cap, join-handshake timeout, timing-safe secret compares) added per SEC-M1-1..4. |
 
 ---
 

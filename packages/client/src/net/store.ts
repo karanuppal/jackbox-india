@@ -60,8 +60,12 @@ function applyServer(state: ClientState, msg: ServerMessage): ClientState {
   const base = { ...state, lastSeq: Math.max(state.lastSeq, msg.seq) };
   switch (msg.type) {
     case "joined":
+      // A `joined` message begins a NEW server connection whose seq restarts
+      // at 0. Reset the sequence baseline so the reconnect restore snapshot
+      // (seq 1, 2, …) is not dropped as stale (QA-M1-1).
       return {
         ...base,
+        lastSeq: msg.seq,
         status: "joined",
         playerId: msg.playerId === "" ? null : msg.playerId,
         sessionToken: msg.sessionToken,

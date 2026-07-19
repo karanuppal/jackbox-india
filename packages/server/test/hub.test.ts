@@ -5,6 +5,8 @@ import { startServer, WS_PATH } from "../src/app.js";
 import { RoomRegistry } from "../src/rooms/registry.js";
 import { Hub } from "../src/ws/hub.js";
 import { createLobbyStubEngine } from "../src/game/lobbyStub.js";
+import { ConcurrencyLimiter, IpRateLimiter } from "../src/net/ipLimits.js";
+import type { HubOptions } from "../src/ws/hub.js";
 import type { ServerMessage } from "@tamasha/shared";
 
 let server: Server | null = null;
@@ -16,10 +18,10 @@ interface Harness {
   registry: RoomRegistry;
 }
 
-async function boot(): Promise<Harness> {
+async function boot(hubOpts: Partial<HubOptions> = {}): Promise<Harness> {
   const registry = new RoomRegistry(createLobbyStubEngine);
   server = await startServer({ port: 0, registry });
-  hub = new Hub(server, registry, { path: WS_PATH });
+  hub = new Hub(server, registry, { path: WS_PATH, ...hubOpts });
   const addr = server.address();
   if (addr === null || typeof addr === "string") throw new Error("no port");
   return { base: `http://127.0.0.1:${addr.port}`, wsUrl: `ws://127.0.0.1:${addr.port}${WS_PATH}`, registry };
@@ -323,5 +325,70 @@ describe("Hub — rate limiting", () => {
     const err = await c.until((m) => m.type === "error");
     if (err.type === "error") expect(err.code).toBe("BAD_MESSAGE");
     c.close();
+  });
+});
+
+describe("Hub — M1 hardening", () => {
+  it("evicts an overlapping socket for the same identity; the live seat stays connected (QA-M1-2)", async () => {
+    const h = await boot();
+    const { code } = await createRoom(h.base);
+    const p1 = new Client(h.wsUrl);
+    await p1.open();
+    p1.send({ type: "join", code, intent: "play", name: "Karan" });
+    const joined = await p1.next();
+    if (joined.type !== "joined") throw new Error("join");
+    // second socket rejoins with the same token (overlap, old socket lingers)
+    const p2 = new Client(h.wsUrl);
+    await p2.open();
+    p2.send({ type: "join", code, intent: "play", sessionToken: joined.sessionToken });
+    await p2.until((m) => m.type === "joined");
+    // p1's socket gets closed by the server (superseded); wait for it
+    await new Promise((r) => setTimeout(r, 100));
+    // p2 should see itself still connected (not flipped offline by p1's close)
+    const state = await p2.until((m) => m.type === "state" && m.public.players.length === 1);
+    if (state.type === "state") expect(state.public.players[0]!.connected).toBe(true);
+    p2.close();
+  });
+
+  it("throttles join attempts per IP (SEC-M1-2)", async () => {
+    const limiter = new IpRateLimiter(2, 60_000);
+    const h = await boot({ joinLimiter: limiter });
+    const { code } = await createRoom(h.base);
+    const results: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      const c = new Client(h.wsUrl);
+      await c.open();
+      c.send({ type: "join", code, intent: "play", name: `P${i}` });
+      const m = await c.next();
+      results.push(m.type === "error" ? m.code : m.type);
+      c.close();
+    }
+    // first 2 join, rest are rate-limited
+    expect(results.filter((r) => r === "RATE_LIMITED").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("caps concurrent connections per IP (SEC-M1-3)", async () => {
+    const h = await boot({ connLimiter: new ConcurrencyLimiter(1) });
+    const c1 = new Client(h.wsUrl);
+    await c1.open();
+    const c2 = new Client(h.wsUrl);
+    // second socket should be closed by the server almost immediately
+    const closed = await new Promise<boolean>((resolve) => {
+      c2.ws.on("close", () => resolve(true));
+      c2.ws.on("open", () => setTimeout(() => resolve(c2.ws.readyState === 3), 200));
+    });
+    expect(closed).toBe(true);
+    c1.close();
+  });
+
+  it("drops a socket that never joins within the timeout (SEC-M1-3)", async () => {
+    const h = await boot({ joinTimeoutMs: 80 });
+    const c = new Client(h.wsUrl);
+    await c.open();
+    const closed = await new Promise<boolean>((resolve) => {
+      c.ws.on("close", () => resolve(true));
+      setTimeout(() => resolve(false), 500);
+    });
+    expect(closed).toBe(true);
   });
 });

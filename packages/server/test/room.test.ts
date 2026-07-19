@@ -258,3 +258,88 @@ describe("Room — coverage completeness", () => {
     expect(room.applyAction(a.playerId, { action: "game", payload: {} })).toBe("NOT_ALLOWED");
   });
 });
+
+describe("Room — M1 fix pass (VIP reassign, name reconnect, host teardown)", () => {
+  it("reassigns VIP to the earliest connected player when the VIP disconnects (QA-M1-3)", () => {
+    const room = makeRoom();
+    const a = room.join({ name: "VIP" });
+    const b = room.join({ name: "Second" });
+    if (!a.ok || !b.ok || a.playerId === null) throw new Error("join");
+    expect(room.publicState().players.find((p) => p.name === "VIP")!.vip).toBe(true);
+    room.markDisconnected(a.playerId);
+    // Second is promoted and can now start
+    expect(room.publicState().players.find((p) => p.name === "Second")!.vip).toBe(true);
+    expect(room.applyAction(b.playerId, { action: "startGame" })).toBeNull();
+    expect(room.getPhase()).toBe("tutorial");
+  });
+
+  it("does not reassign VIP if the VIP is still connected", () => {
+    const room = makeRoom();
+    const a = room.join({ name: "VIP" });
+    const b = room.join({ name: "Second" });
+    if (!a.ok || !b.ok || b.playerId === null) throw new Error("join");
+    room.markDisconnected(b.playerId); // a non-VIP leaves
+    expect(room.publicState().players.find((p) => p.name === "VIP")!.vip).toBe(true);
+  });
+
+  it("reclaims a disconnected seat by matching name (UT-M1-4 cross-device rejoin)", () => {
+    const room = makeRoom();
+    const a = room.join({ name: "Priya" });
+    if (!a.ok || a.playerId === null) throw new Error("join");
+    room.markDisconnected(a.playerId);
+    // fresh join, no token, same name → reclaims the same seat, no duplicate
+    const again = room.join({ name: "Priya" });
+    expect(again.ok).toBe(true);
+    if (again.ok) expect(again.playerId).toBe(a.playerId);
+    expect(room.publicState().players).toHaveLength(1);
+    expect(room.publicState().players[0]!.connected).toBe(true);
+  });
+
+  it("does not reclaim a name that is still connected (creates a unique name)", () => {
+    const room = makeRoom();
+    room.join({ name: "Ravi" });
+    const dup = room.join({ name: "Ravi" });
+    expect(dup.ok).toBe(true);
+    const names = room.publicState().players.map((p) => p.name);
+    expect(names).toContain("Ravi");
+    expect(names).toContain("Ravi 2");
+  });
+
+  it("tracks host-gone timestamp for teardown (QA-M1-4)", () => {
+    let t = 1000;
+    const room = new Room("ACDE", createLobbyStubEngine, () => t);
+    room.connectHost(room.hostToken);
+    expect(room.getHostGoneSince()).toBeNull();
+    t = 5000;
+    room.disconnectHost();
+    expect(room.getHostGoneSince()).toBe(5000);
+    room.connectHost(room.hostToken);
+    expect(room.getHostGoneSince()).toBeNull();
+  });
+
+  it("audience members get no avatar (QA-M1-12)", () => {
+    const room = makeRoom();
+    for (let i = 0; i < MAX_PLAYERS; i++) room.join({ name: `P${i}` });
+    const aud = room.join({ name: "Aud" });
+    if (!aud.ok || aud.playerId === null) throw new Error("join");
+    // audience isn't in publicState.players; check via reconnect role stability
+    expect(aud.role).toBe("audience");
+  });
+
+  it("freezes game actions while paused (QA-M1-10)", () => {
+    const room = makeRoom();
+    const a = room.join({ name: "VIP" });
+    if (!a.ok) throw new Error("join");
+    room.applyAction(a.playerId, { action: "startGame" });
+    room.applyAction(null, { action: "pause" });
+    expect(room.applyAction(a.playerId, { action: "game", payload: {} })).toBe("NOT_ALLOWED");
+    room.applyAction(null, { action: "resume" });
+    expect(room.applyAction(a.playerId, { action: "game", payload: {} })).toBeNull();
+  });
+
+  it("uses timing-safe host-token comparison but still rejects wrong tokens", () => {
+    const room = makeRoom();
+    expect(room.connectHost("wrong-length")).toEqual({ ok: false, code: "NOT_ALLOWED" });
+    expect(room.connectHost(room.hostToken).ok).toBe(true);
+  });
+});

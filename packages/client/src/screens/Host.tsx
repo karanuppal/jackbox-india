@@ -10,7 +10,15 @@ import { joinUrl, qrSvg } from "../net/qr.js";
  * filling avatar podium, and a settings summary. Scenes for the game phases
  * arrive with M2 (§5.2).
  */
-export function Host({ state, origin }: { state: ClientState; origin: string }) {
+export function Host({
+  state,
+  origin,
+  onAction,
+}: {
+  state: ClientState;
+  origin: string;
+  onAction?: (p: unknown) => void;
+}) {
   const code = state.public?.code ?? "";
   const [qr, setQr] = useState<string>("");
 
@@ -54,12 +62,14 @@ export function Host({ state, origin }: { state: ClientState; origin: string }) 
           )}
           <PodiumRow players={pub.players} audienceCount={pub.audienceCount} />
           {pub.players.length === 0 && <p style={{ opacity: 0.7 }}>Pehle mehmaan ka intezaar…</p>}
-          <SettingsSummary settings={pub.settings} />
+          <SettingsPanel settings={pub.settings} onAction={onAction} />
         </>
       ) : (
         <>
-          {pub.paused && <p style={S.error}>⏸ Game rukka hua hai</p>}
-          <p style={{ fontSize: "1.5rem" }}>Tamasha shuru! (phase: {pub.phase})</p>
+          {pub.paused && <p style={S.error}>⏸ Mishra Ji ne game rok diya hai…</p>}
+          <p style={{ fontSize: "1.5rem", textAlign: "center" }}>
+            {BRANDING.venueName} ke darwaze band ho chuke hain. Khel shuru!
+          </p>
           <PodiumRow players={pub.players} audienceCount={pub.audienceCount} />
         </>
       )}
@@ -106,20 +116,46 @@ function PodiumRow({
   );
 }
 
-function SettingsSummary({ settings }: { settings: NonNullable<ClientState["public"]>["settings"] }) {
-  const chips = [
-    settings.familyFriendly ? "Family-Friendly" : "Full masala",
-    settings.audienceEnabled ? "Audience on" : "Audience off",
-    settings.passwordRequired ? "Password lagega" : null,
-    settings.timerMode !== "normal" ? `Timers: ${settings.timerMode}` : null,
-  ].filter((c): c is string => c !== null);
+type PublicSettings = NonNullable<ClientState["public"]>["settings"];
+
+/**
+ * Host-screen settings (§4.4). Toggles dispatch `updateSettings` (host-only,
+ * lobby-only). When `onAction` is absent (SSR/read-only preview) it renders as
+ * a static summary. Timer mode and content filter are the M1 essentials.
+ */
+function SettingsPanel({ settings, onAction }: { settings: PublicSettings; onAction: ((p: unknown) => void) | undefined }) {
+  const set = (patch: Record<string, unknown>) =>
+    onAction?.({ action: "updateSettings", settings: patch });
+
+  const Toggle = ({ label, on, patch }: { label: string; on: boolean; patch: Record<string, unknown> }) => (
+    <button
+      type="button"
+      onClick={() => set(patch)}
+      disabled={onAction === undefined}
+      style={{
+        fontSize: "0.85rem",
+        minHeight: "40px",
+        borderRadius: "1rem",
+        padding: "0.3rem 0.8rem",
+        border: `1px solid ${COLORS.marigold}`,
+        background: on ? COLORS.marigold : "transparent",
+        color: on ? COLORS.ink : COLORS.cream,
+        cursor: onAction !== undefined ? "pointer" : "default",
+      }}
+    >
+      {`${label}: ${on ? "ON" : "OFF"}`}
+    </button>
+  );
+
   return (
-    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "center", marginTop: "1rem", opacity: 0.8 }}>
-      {chips.map((c) => (
-        <span key={c} style={{ fontSize: "0.8rem", border: `1px solid ${COLORS.marigold}`, borderRadius: "1rem", padding: "0.2rem 0.6rem" }}>
-          {c}
-        </span>
-      ))}
+    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "center", marginTop: "1.25rem" }}>
+      <Toggle label="Family-Friendly" on={settings.familyFriendly} patch={{ familyFriendly: !settings.familyFriendly }} />
+      <Toggle label="Audience" on={settings.audienceEnabled} patch={{ audienceEnabled: !settings.audienceEnabled }} />
+      <Toggle label="Extended timers" on={settings.timerMode === "extended"} patch={{ timerMode: settings.timerMode === "extended" ? "normal" : "extended" }} />
+      <Toggle label="Streamer mode" on={settings.hideRoomCode} patch={{ hideRoomCode: !settings.hideRoomCode }} />
+      {settings.passwordRequired && (
+        <span style={{ fontSize: "0.8rem", alignSelf: "center", color: COLORS.ghost }}>🔒 Password lagega</span>
+      )}
     </div>
   );
 }
