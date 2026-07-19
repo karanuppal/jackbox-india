@@ -1,0 +1,31 @@
+# Fly.io deploy config for Tamasha (PLAN.md §8.5). Fly is the recommended host:
+# native WebSocket support, single container, Mumbai region, free/cheap tier.
+# Deploy: `fly launch --copy-config --no-deploy` once to create the app, then
+# `fly deploy`. The Dockerfile builds the SPA + server into one image.
+app = "tamasha-khooni-sawaal"
+primary_region = "bom" # Mumbai
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8787"
+  STATIC_DIR = "/app/packages/client/dist"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0 # scale to zero when idle (party game, bursty use)
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
