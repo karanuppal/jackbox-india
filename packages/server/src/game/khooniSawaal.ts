@@ -1,5 +1,6 @@
 import {
   CORRECT_REWARD,
+  ksActionSchema,
   QUESTION_BUDGET,
   TIMERS,
   type KsPrivatePhase,
@@ -9,6 +10,11 @@ import {
   type Question,
 } from "@tamasha/shared";
 import type { ActionMeta, EnginePhase, GameContext, GameEngine } from "./engine.js";
+
+// Sentinel written into a player's answer slot when they forfeit (disconnect
+// or auto-skip) — never equals a real option index (0–3), so it always scores
+// wrong and lets the all-answered check complete (§4.2, QA-M2-2/SEC-M2-1).
+const FORFEIT = -1;
 
 // Mishra Ji's lines (subtitles now; VO audio in M6). Original writing.
 const VO = {
@@ -34,6 +40,8 @@ type Phase = "tutorial" | "question" | "reveal" | "gameOver";
 export interface KsOptions {
   /** Deterministic selection for tests: pick `n` questions from the bank. */
   pickQuestions?: (bank: Question[], n: number, familyFriendly: boolean) => Question[];
+  /** Override phase durations (ms) — used by tests for fast timer-driver runs. */
+  timers?: Partial<Record<keyof typeof TIMERS, number>>;
 }
 
 /**
@@ -56,10 +64,14 @@ export class KhooniSawaalEngine implements GameEngine {
     tally: KsRevealOptionTally[];
   } | null = null;
 
+  private readonly t: Record<keyof typeof TIMERS, number>;
+
   constructor(
     private readonly bank: Question[],
     private readonly opts: KsOptions = {},
-  ) {}
+  ) {
+    this.t = { ...TIMERS, ...opts.timers };
+  }
 
   start(ctx: GameContext): EnginePhase {
     this.now = ctx.now;
@@ -68,13 +80,23 @@ export class KhooniSawaalEngine implements GameEngine {
     this.questions = pick(this.bank, QUESTION_BUDGET, ctx.settings.familyFriendly);
     this.questionMs =
       ctx.settings.timerMode === "extended"
-        ? TIMERS.questionMs * 2
+        ? this.t.questionMs * 2
         : ctx.settings.timerMode === "off"
           ? 0 // untimed: the question resolves only when everyone answers (§3.3)
-          : TIMERS.questionMs;
+          : this.t.questionMs;
+    // Empty selection guard (QA-M2-4/SEC-M2-3): if the family-friendly filter
+    // (or an empty bank) leaves no questions, fall back to the unfiltered bank;
+    // if the bank itself is empty, end gracefully instead of crashing.
+    if (this.questions.length === 0) {
+      this.questions = [...this.bank].slice(0, QUESTION_BUDGET).sort((a, b) => a.difficulty - b.difficulty);
+    }
+    if (this.questions.length === 0) {
+      this.phase = "gameOver";
+      return { phase: "gameOver", deadline: null };
+    }
     this.phase = "tutorial";
     if (ctx.settings.skipTutorial) return this.beginQuestion();
-    return { phase: "tutorial", deadline: this.now() + TIMERS.tutorialMs };
+    return { phase: "tutorial", deadline: this.now() + this.t.tutorialMs };
   }
 
   private beginQuestion(): EnginePhase {
@@ -111,7 +133,21 @@ export class KhooniSawaalEngine implements GameEngine {
     if (idx === null) return null;
     if (p.answer !== null) return null; // locked; no takebacks
     p.answer = idx;
-    // Everyone (alive + ghost) has locked in → resolve immediately.
+    return this.maybeResolve();
+  }
+
+  /** A player disconnected — forfeit their pending answer so the round can
+   *  still resolve in no-timer mode (§4.2, QA-M2-2). */
+  onPlayerLeft(playerId: string): EnginePhase | null {
+    if (this.phase !== "question") return null;
+    const p = this.players.find((x) => x.id === playerId);
+    if (p === undefined || p.answer !== null) return null;
+    p.answer = FORFEIT;
+    return this.maybeResolve();
+  }
+
+  /** Resolve once everyone (alive + ghost) has locked in. */
+  private maybeResolve(): EnginePhase | null {
     if (this.players.every((x) => x.answer !== null)) return this.resolveQuestion();
     return null;
   }
@@ -138,7 +174,9 @@ export class KhooniSawaalEngine implements GameEngine {
       }
     }
     const counts = [0, 0, 0, 0];
-    for (const p of this.players) if (p.answer !== null) counts[p.answer]! += 1;
+    for (const p of this.players) {
+      if (p.answer !== null && p.answer >= 0 && p.answer <= 3) counts[p.answer]! += 1;
+    }
     this.lastReveal = {
       deaths,
       mercy: allLivingWrong,
@@ -146,12 +184,17 @@ export class KhooniSawaalEngine implements GameEngine {
       tally: counts.map((count, index) => ({ index, count, correct: index === correct })),
     };
     this.phase = "reveal";
-    return { phase: "reveal", deadline: this.now() + TIMERS.revealMs };
+    return { phase: "reveal", deadline: this.now() + this.t.revealMs };
   }
 
   private afterReveal(): EnginePhase {
-    const alive = this.players.filter((p) => p.alive).length;
-    const done = this.index >= this.questions.length - 1 || alive <= 1;
+    // M2 ends only when the question budget is exhausted, so a solo player (and
+    // a game attrited to one survivor) plays the full 10 questions (§3.2
+    // "fully playable solo"). §3.3's early transitions are deferred:
+    //   • budget exhausted with 2+ alive → Maut Ka Chakra wheel  → M3/M4
+    //   • 1 living player remaining        → Aakhri Darwaza finale → M4
+    // Until those land, the game reaches gameOver at the budget (QA-M2-3/6).
+    const done = this.index >= this.questions.length - 1;
     if (done) {
       this.phase = "gameOver";
       return { phase: "gameOver", deadline: null };
@@ -233,15 +276,17 @@ export class KhooniSawaalEngine implements GameEngine {
   }
 }
 
-/** Extract a valid option index from a game action payload. */
+/**
+ * Extract a valid option index from a game action payload, validating shape via
+ * the single shared schema (QA-M2-7) and rejecting stale answers for a prior
+ * question. Returns null on any invalid/mismatched payload.
+ */
 function parseAnswer(payload: unknown, expectedId: string): number | null {
-  if (typeof payload !== "object" || payload === null) return null;
-  const p = payload as { type?: unknown; questionId?: unknown; optionIndex?: unknown };
-  if (p.type !== "answer") return null;
-  if (p.questionId !== expectedId) return null; // stale answer for a prior question
-  if (typeof p.optionIndex !== "number" || !Number.isInteger(p.optionIndex)) return null;
-  if (p.optionIndex < 0 || p.optionIndex > 3) return null;
-  return p.optionIndex;
+  const parsed = ksActionSchema.safeParse(payload);
+  if (!parsed.success) return null;
+  const action = parsed.data;
+  if (action.questionId !== expectedId) return null; // stale answer for a prior question
+  return action.optionIndex;
 }
 
 /**

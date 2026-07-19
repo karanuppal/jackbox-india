@@ -210,6 +210,14 @@ export class Room {
   markDisconnected(playerId: string): void {
     const p = this.players.get(playerId);
     if (p !== undefined) p.connected = false;
+    // Forfeit any pending answer so an untimed round can still resolve (§4.2).
+    if (this.engine !== null) {
+      const next = this.engine.onPlayerLeft(playerId);
+      if (next !== null) {
+        this.phase = next.phase as Phase;
+        this.deadline = next.deadline;
+      }
+    }
     this.reassignVipIfNeeded();
     this.recomputeEmpty();
   }

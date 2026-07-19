@@ -291,10 +291,16 @@ export class Hub {
       this.roomTimers.delete(room.code);
     }
     const deadline = room.getDeadline();
-    if (deadline === null) return;
+    // Do NOT arm a tick while paused (QA-M2-1): the deadline sits in the past
+    // during a long pause, so re-arming would busy-loop at 0ms delay. Resume
+    // restores the deadline and the resulting broadcast re-arms the tick.
+    if (deadline === null || room.isPaused()) return;
     const delay = Math.max(0, deadline - this.now());
     const timer = setTimeout(() => {
       this.roomTimers.delete(room.code);
+      // Guard against a room evicted (or its code reused) since scheduling
+      // (QA-M2-5 / SEC-M2-2): only act if the registry still holds THIS room.
+      if (this.registry.get(room.code) !== room) return;
       if (room.handleTimeout()) this.broadcast(room);
       else this.scheduleTick(room); // deadline moved (e.g. resumed) — reschedule
     }, delay);

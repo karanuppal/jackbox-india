@@ -50,6 +50,12 @@ export interface GameEngine {
   /** Called when the current phase's timer elapses. Returns next phase if it changed. */
   onTimeout(): EnginePhase | null;
   /**
+   * A player disconnected. The engine forfeits their pending input (§4.2:
+   * disconnected inputs default to no-answer/wrong) so an untimed phase can
+   * still resolve. Returns the next phase if it changed.
+   */
+  onPlayerLeft(playerId: string): EnginePhase | null;
+  /**
    * Per-player game state the Room folds into its public snapshot (money,
    * alive, answered). Returns null if the engine doesn't track this player
    * (e.g. audience) — the Room then uses defaults.

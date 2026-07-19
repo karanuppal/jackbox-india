@@ -127,7 +127,7 @@ export const spellingWordSchema = z
   });
 export type SpellingWord = z.infer<typeof spellingWordSchema>;
 
-export const questionBankSchema = z.array(questionSchema);
+export const questionBankSchema = z.array(questionSchema).min(1);
 export const finaleBankSchema = z.array(finaleCategorySchema);
 export const promptBankSchema = z.array(promptSchema);
 export const spellingBankSchema = z.array(spellingWordSchema);

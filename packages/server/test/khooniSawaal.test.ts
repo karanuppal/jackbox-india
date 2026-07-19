@@ -155,19 +155,31 @@ describe("KhooniSawaalEngine — scoring & death", () => {
 });
 
 describe("KhooniSawaalEngine — termination", () => {
-  it("ends when only one player remains alive", () => {
+  it("does NOT end early when attrited to one alive — plays to the budget (QA-M2-3)", () => {
     const { engine } = makeEngine(["a", "b"]);
     engine.onTimeout(); // q1
     engine.onAction("a", answer("q_0001", 0), meta); // correct
     engine.onAction("b", answer("q_0001", 3), meta); // wrong → dead, only a alive
-    const next = engine.onTimeout(); // reveal → afterReveal → gameOver (1 alive)
-    expect(next?.phase).toBe("gameOver");
-    expect(engine.isOver()).toBe(true);
-    const go = pub(engine);
-    if (go.kind === "gameOver") {
-      expect(go.winnerId).toBe("a");
-      expect(go.standings[0]!.playerId).toBe("a");
+    const next = engine.onTimeout(); // reveal → afterReveal → NEXT question, not gameOver
+    expect(next?.phase).toBe("question"); // continues despite 1 alive
+    expect(engine.isOver()).toBe(false);
+  });
+
+  it("a solo game plays all 10 questions (§3.2 fully playable solo)", () => {
+    const { engine } = makeEngine(["solo"]);
+    engine.onTimeout(); // q1
+    let lastPhase = "question";
+    for (let q = 1; q <= 10; q++) {
+      const qid = `q_${String(q).padStart(4, "0")}`;
+      const res = engine.onAction("solo", answer(qid, q % 2 === 0 ? 3 : 0), meta); // alternate right/wrong
+      // solo player: wrong = all-living-wrong = mercy, never dies
+      expect(res?.phase).toBe("reveal");
+      const after = engine.onTimeout();
+      lastPhase = after!.phase;
+      if (q < 10) expect(lastPhase).toBe("question");
     }
+    expect(lastPhase).toBe("gameOver");
+    expect(engine.playerState("solo")!.alive).toBe(true); // survived via mercy
   });
 
   it("ends after the question budget with survivors, ranked by money", () => {
@@ -254,5 +266,61 @@ describe("KhooniSawaalEngine — snapshots & edges", () => {
     expect(priv.answered).toBe(true);
     expect(priv.myAnswer).toBe(2);
     expect(engine.privatePhaseData("zzz").answered).toBe(false);
+  });
+});
+
+describe("KhooniSawaalEngine — M2 fixes", () => {
+  it("no-timer round resolves when a non-answering player forfeits on disconnect (QA-M2-2/SEC-M2-1)", () => {
+    const { engine } = makeEngine(["a", "b"], { timerMode: "off" });
+    engine.onTimeout(); // q1, untimed (deadline null)
+    engine.onAction("a", answer("q_0001", 0), meta); // a answers; b never does
+    expect(engine.publicPhaseData().kind).toBe("question"); // stuck without forfeit
+    const next = engine.onPlayerLeft("b"); // b disconnects → forfeit → resolve
+    expect(next?.phase).toBe("reveal");
+    expect(engine.playerState("b")!.alive).toBe(false); // forfeit scored wrong
+  });
+
+  it("onPlayerLeft is a no-op outside a question or for an already-answered player", () => {
+    const { engine } = makeEngine(["a", "b"]);
+    expect(engine.onPlayerLeft("a")).toBeNull(); // still in tutorial
+    engine.onTimeout(); // q1
+    engine.onAction("a", answer("q_0001", 0), meta);
+    expect(engine.onPlayerLeft("a")).toBeNull(); // already answered
+    expect(engine.onPlayerLeft("zzz")).toBeNull(); // unknown
+  });
+
+  it("guards an empty question selection (family-friendly filters everything) (QA-M2-4)", () => {
+    // a bank of only adult items + family-friendly ON → filter empties it →
+    // fallback to unfiltered bank keeps the game playable
+    const adultBank: Question[] = bank(3).map((q) => ({ ...q, adult: true }));
+    const engine = new KhooniSawaalEngine(adultBank, { pickQuestions: (b, n, ff) => (ff ? [] : b.slice(0, n)) });
+    const first = engine.start({
+      players: [{ id: "a", name: "a", avatar: 0 }],
+      settings: { familyFriendly: true, profanityFilter: "strict", moderation: false, subtitles: true, timerMode: "normal", reducedMotion: false, audienceEnabled: true, password: null, hideRoomCode: false, controllerOnlyStart: false, skipTutorial: true },
+      now: () => 1000,
+    });
+    // fell back to the unfiltered bank → a real question, no crash
+    expect(first.phase).toBe("question");
+    expect(engine.publicPhaseData().kind).toBe("question");
+  });
+
+  it("ends gracefully (gameOver) when the bank is truly empty", () => {
+    const engine = new KhooniSawaalEngine([], { pickQuestions: () => [] });
+    const first = engine.start({
+      players: [{ id: "a", name: "a", avatar: 0 }],
+      settings: { familyFriendly: false, profanityFilter: "strict", moderation: false, subtitles: true, timerMode: "normal", reducedMotion: false, audienceEnabled: true, password: null, hideRoomCode: false, controllerOnlyStart: false, skipTutorial: false },
+      now: () => 1000,
+    });
+    expect(first.phase).toBe("gameOver");
+    expect(engine.isOver()).toBe(true);
+  });
+
+  it("rejects a malformed answer payload via the shared schema (QA-M2-7)", () => {
+    const { engine } = makeEngine(["a", "b"]);
+    engine.onTimeout(); // q1
+    expect(engine.onAction("a", { type: "answer", questionId: "q_0001", optionIndex: "0" }, meta)).toBeNull();
+    expect(engine.onAction("a", { type: "answer", questionId: "bad", optionIndex: 0 }, meta)).toBeNull();
+    expect(engine.onAction("a", { nope: true }, meta)).toBeNull();
+    expect(engine.playerState("a")!.answered).toBe(false);
   });
 });

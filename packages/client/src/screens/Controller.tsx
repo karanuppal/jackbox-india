@@ -4,6 +4,7 @@ import type { ClientState } from "../net/store.js";
 import { S } from "../ui/styles.css.js";
 import { COLORS, avatarLabel } from "../ui/theme.js";
 import { errorText } from "../net/errors.js";
+import { Countdown } from "../ui/Countdown.js";
 
 /**
  * Phone controller. In M1 this shows the lobby "waiting" state and, for the
@@ -57,6 +58,9 @@ export function Controller({ state, onAction }: { state: ClientState; onAction: 
         <GamePhase
           pub={state.public.phaseData as KsPublicPhase | null}
           priv={state.private?.phaseData as KsPrivatePhase | null}
+          deadline={state.public.deadline}
+          isVip={isVip}
+          isAudience={isAudience}
           onAction={onAction}
         />
       )}
@@ -72,25 +76,51 @@ export function Controller({ state, onAction }: { state: ClientState; onAction: 
 function GamePhase({
   pub,
   priv,
+  deadline,
+  isVip,
+  isAudience,
   onAction,
 }: {
   pub: KsPublicPhase | null;
   priv: KsPrivatePhase | null;
+  deadline: number | null;
+  isVip: boolean;
+  isAudience: boolean;
   onAction: (p: unknown) => void;
 }) {
   if (pub === null) return <p style={{ textAlign: "center" }}>Screen ki taraf dekho…</p>;
   const ghost = priv !== null && !priv.alive;
 
   if (pub.kind === "tutorial") {
-    return <p style={{ textAlign: "center" }}>Mishra Ji samjha rahe hain… screen dekho.</p>;
+    return (
+      <>
+        <p style={{ textAlign: "center" }}>Mishra Ji samjha rahe hain… screen dekho.</p>
+        {isVip && (
+          <button style={S.button} onClick={() => onAction({ action: "skipTutorial" })}>
+            Tutorial chhodo
+          </button>
+        )}
+      </>
+    );
   }
   if (pub.kind === "question") {
+    // Audience answers are aggregate-only in v1 (§3.2); they watch the screen.
+    if (isAudience) {
+      return (
+        <>
+          <p style={{ opacity: 0.7 }}>{`Sawaal ${pub.number} / ${pub.total}`}</p>
+          <p style={{ textAlign: "center" }}>Aap audience mein ho — screen par sawaal dekho!</p>
+        </>
+      );
+    }
     const answered = priv?.answered ?? false;
     const mine = priv?.myAnswer ?? null;
     return (
       <>
         {ghost && <p style={{ color: COLORS.ghost }}>👻 Aatma mode — phir bhi khel sakte ho.</p>}
-        <p style={{ opacity: 0.7 }}>{`Sawaal ${pub.number} / ${pub.total}`}</p>
+        <p style={{ opacity: 0.7 }}>
+          {`Sawaal ${pub.number} / ${pub.total}`} <Countdown deadline={deadline} />
+        </p>
         {answered ? (
           <p style={{ textAlign: "center" }}>Jawaab lock ho gaya. Screen dekho…</p>
         ) : (
@@ -110,20 +140,27 @@ function GamePhase({
     );
   }
   if (pub.kind === "reveal") {
-    const iDied = priv !== null && !priv.alive && pub.deaths.includes(""); // deaths carry ids on host; controller just reflects liveness
-    void iDied;
     return (
       <p style={{ textAlign: "center" }}>
         {pub.mercy
           ? "Sab bach gaye… is baar."
           : ghost
-            ? "Aap Khooni Kamra dekh chuke ho. Ab aatma ban ke khelo."
+            ? "Aap ab aatma ho. Phir bhi khelte raho."
             : "Screen dekho — kiski kismat acchi thi?"}
       </p>
     );
   }
   // gameOver
-  return <p style={{ textAlign: "center" }}>Khel khatam. Screen par natija dekho!</p>;
+  return (
+    <>
+      <p style={{ textAlign: "center" }}>Khel khatam. Screen par natija dekho!</p>
+      {isVip && (
+        <button style={S.button} onClick={() => onAction({ action: "restart" })}>
+          Phir se khelein?
+        </button>
+      )}
+    </>
+  );
 }
 
 /** VIP-only room-code readout — lets the VIP announce/reveal the code even in

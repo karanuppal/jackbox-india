@@ -145,3 +145,59 @@ describe("Khooni Sawaal over the hub (message-driven, no-timer)", () => {
     p2.close();
   });
 });
+
+describe("Hub timer driver (QA-M2-1 pause guard, auto-advance)", () => {
+  async function bootFast() {
+    const registry = new RoomRegistry(
+      createKhooniSawaalEngine(bank(), { pickQuestions: (b, n) => b.slice(0, n), timers: { tutorialMs: 40, questionMs: 60, revealMs: 40 } }),
+    );
+    server = await startServer({ port: 0, registry });
+    hub = new Hub(server, registry, { path: WS_PATH });
+    const addr = server.address();
+    if (addr === null || typeof addr === "string") throw new Error("no port");
+    return { registry, base: `http://127.0.0.1:${addr.port}`, wsUrl: `ws://127.0.0.1:${addr.port}${WS_PATH}` };
+  }
+
+  it("auto-advances the tutorial to a question via the timer", async () => {
+    const h = await bootFast();
+    const { code, hostToken } = await createRoom(h.base);
+    const host = new Client(h.wsUrl);
+    await host.open();
+    host.send({ type: "join", code, intent: "hostScreen", sessionToken: hostToken });
+    await host.until((m) => m.type === "state");
+    const vip = new Client(h.wsUrl);
+    await vip.open();
+    vip.send({ type: "join", code, intent: "play", name: "VIP" });
+    await vip.until((m) => m.type === "state");
+    vip.send({ type: "action", seq: 1, payload: { action: "startGame" } }); // → tutorial (40ms)
+    // the timer should auto-advance to the question without any further input
+    const q = await host.until((m) => ksPhase(m)?.kind === "question");
+    expect(ksPhase(q)?.kind).toBe("question");
+    host.close();
+    vip.close();
+  });
+
+  it("does not busy-loop or advance while paused past the deadline (QA-M2-1)", async () => {
+    const h = await bootFast();
+    const { code, hostToken } = await createRoom(h.base);
+    const host = new Client(h.wsUrl);
+    await host.open();
+    host.send({ type: "join", code, intent: "hostScreen", sessionToken: hostToken });
+    await host.until((m) => m.type === "state");
+    host.send({ type: "action", seq: 1, payload: { action: "updateSettings", settings: { skipTutorial: true } } });
+    const vip = new Client(h.wsUrl);
+    await vip.open();
+    vip.send({ type: "join", code, intent: "play", name: "VIP" });
+    await vip.until((m) => m.type === "state");
+    vip.send({ type: "action", seq: 2, payload: { action: "startGame" } }); // → question (60ms)
+    await host.until((m) => ksPhase(m)?.kind === "question");
+    // pause, then wait well past the 60ms question deadline
+    host.send({ type: "action", seq: 2, payload: { action: "pause" } });
+    await new Promise((r) => setTimeout(r, 250)); // > deadline; must NOT advance/busy-loop
+    const st = h.registry.get(code)!.publicState();
+    expect(st.paused).toBe(true);
+    expect(ksPhase({ seq: 0, type: "state", public: st, private: { you: null, role: "host", phaseData: null } })?.kind).toBe("question");
+    host.close();
+    vip.close();
+  });
+});

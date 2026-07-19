@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { BRANDING, type KsPublicPhase } from "@tamasha/shared";
+import { BRANDING, type KsPublicPhase, type PlayerPublic } from "@tamasha/shared";
 import type { ClientState } from "../net/store.js";
 import { S } from "../ui/styles.css.js";
 import { COLORS, avatarLabel } from "../ui/theme.js";
 import { joinUrl, qrSvg } from "../net/qr.js";
+import { Countdown } from "../ui/Countdown.js";
 
 /**
  * Host screen (the shared "show" display). M1: lobby with room code, QR, the
@@ -67,8 +68,13 @@ export function Host({
       ) : (
         <>
           {pub.paused && <p style={S.error}>⏸ Mishra Ji ne game rok diya hai…</p>}
-          <GameScene pub={pub.phaseData as KsPublicPhase | null} subtitles={pub.settings.subtitles} />
-          <PodiumRow players={pub.players} audienceCount={pub.audienceCount} />
+          <GameScene
+            pub={pub.phaseData as KsPublicPhase | null}
+            subtitles={pub.settings.subtitles}
+            players={pub.players}
+            deadline={pub.deadline}
+          />
+          <PodiumRow players={pub.players} audienceCount={pub.audienceCount} inGame />
         </>
       )}
     </main>
@@ -77,12 +83,23 @@ export function Host({
 
 /** The shared "show" for a game phase (§5.2). One dominant element per screen,
  *  sized for an across-the-room read; a subtitle line renders the host VO. */
-function GameScene({ pub, subtitles }: { pub: KsPublicPhase | null; subtitles: boolean }) {
+function GameScene({
+  pub,
+  subtitles,
+  players,
+  deadline,
+}: {
+  pub: KsPublicPhase | null;
+  subtitles: boolean;
+  players: PlayerPublic[];
+  deadline: number | null;
+}) {
   if (pub === null) {
     return <p style={{ fontSize: "1.5rem", textAlign: "center" }}>{BRANDING.venueName}…</p>;
   }
   const Subtitle = ({ vo }: { vo: string }) =>
     subtitles ? <p style={{ maxWidth: "40rem", textAlign: "center", opacity: 0.85, fontStyle: "italic" }}>“{vo}”</p> : null;
+  const nameOf = (id: string) => players.find((p) => p.id === id)?.name ?? "koi";
 
   if (pub.kind === "tutorial") {
     return (
@@ -95,7 +112,9 @@ function GameScene({ pub, subtitles }: { pub: KsPublicPhase | null; subtitles: b
   if (pub.kind === "question") {
     return (
       <div style={{ textAlign: "center", width: "100%" }}>
-        <p style={{ opacity: 0.7 }}>{`Sawaal ${pub.number} / ${pub.total}`}</p>
+        <p style={{ opacity: 0.7 }}>
+          {`Sawaal ${pub.number} / ${pub.total}`} <Countdown deadline={deadline} />
+        </p>
         <h2 style={{ fontSize: "2rem", maxWidth: "45rem", margin: "0.5rem auto" }}>{pub.text}</h2>
         <OptionGrid options={pub.options} />
         <Subtitle vo={pub.vo} />
@@ -103,16 +122,20 @@ function GameScene({ pub, subtitles }: { pub: KsPublicPhase | null; subtitles: b
     );
   }
   if (pub.kind === "reveal") {
+    const diedNames = pub.deaths.map(nameOf);
     return (
       <div style={{ textAlign: "center", width: "100%" }}>
         <h2 style={{ fontSize: "1.75rem", maxWidth: "45rem", margin: "0.5rem auto" }}>{pub.text}</h2>
         <OptionGrid options={pub.options} correct={pub.correct} tally={pub.tally} />
+        <p style={{ opacity: 0.6, fontSize: "0.85rem" }}>(number = kitno ne yeh chuna)</p>
         {pub.mercy ? (
           <p style={{ color: COLORS.marigold }}>Sab galat — par aaj sabko maafi!</p>
         ) : pub.allCorrect ? (
           <p style={{ color: COLORS.marigold }}>Sab ne sahi jawab diya!</p>
         ) : (
-          <p style={{ color: COLORS.blood }}>{`${pub.deaths.length} mehmaan Khooni Kamra ki taraf…`}</p>
+          <p style={{ color: COLORS.blood, fontSize: "1.25rem" }}>
+            {`💀 ${diedNames.join(", ")} — Khooni Kamra ki taraf…`}
+          </p>
         )}
         <Subtitle vo={pub.vo} />
       </div>
@@ -185,33 +208,40 @@ function OptionGrid({
 function PodiumRow({
   players,
   audienceCount,
+  inGame = false,
 }: {
-  players: ClientState["public"] extends null ? never : NonNullable<ClientState["public"]>["players"];
+  players: PlayerPublic[];
   audienceCount: number;
+  inGame?: boolean;
 }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "center", marginTop: "1rem" }}>
-      {players.map((p) => (
-        <div
-          key={p.id}
-          style={{
-            padding: "0.5rem 0.75rem",
-            borderRadius: "0.5rem",
-            background: p.connected ? COLORS.plaster : "#5a4a3a",
-            color: COLORS.ink,
-            opacity: p.connected ? 1 : 0.6,
-            textAlign: "center",
-            minWidth: "6rem",
-          }}
-        >
-          <div style={{ fontWeight: 700 }}>
-            {p.vip ? "★ " : ""}
-            {p.name}
+      {players.map((p) => {
+        const ghost = inGame && !p.alive;
+        return (
+          <div
+            key={p.id}
+            style={{
+              padding: "0.5rem 0.75rem",
+              borderRadius: "0.5rem",
+              background: ghost ? "#243a3a" : p.connected ? COLORS.plaster : "#5a4a3a",
+              color: ghost ? COLORS.ghost : COLORS.ink,
+              opacity: p.connected ? 1 : 0.6,
+              textAlign: "center",
+              minWidth: "6.5rem",
+              border: inGame && p.answered && p.alive ? `2px solid ${COLORS.marigold}` : "2px solid transparent",
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>
+              {`${p.vip ? "★ " : ""}${ghost ? "👻 " : ""}${p.name}`}
+            </div>
+            <div style={{ fontSize: "0.75rem" }}>{avatarLabel(p.avatar)}</div>
+            {inGame && <div style={{ fontSize: "0.9rem", fontWeight: 700 }}>{`₹${p.money}`}</div>}
+            {inGame && p.answered && p.alive && <div style={{ fontSize: "0.75rem" }}>🪔 taiyaar</div>}
+            {!p.connected && <div style={{ fontSize: "0.7rem", color: COLORS.blood }}>signal gaya</div>}
           </div>
-          <div style={{ fontSize: "0.75rem" }}>{avatarLabel(p.avatar)}</div>
-          {!p.connected && <div style={{ fontSize: "0.7rem", color: COLORS.blood }}>signal gaya</div>}
-        </div>
-      ))}
+        );
+      })}
       {audienceCount > 0 && (
         <div style={{ padding: "0.5rem 0.75rem", alignSelf: "center", color: COLORS.ghost }}>
           {`+ ${audienceCount} audience`}
