@@ -43,4 +43,9 @@ reviewer hardenings applied in round 2 (Security INFO-1, QA non-blocking note).
 - Full suite: **197 tests** (42 shared + 95 server + 60 client), 0 failures,
   0 skipped; all packages above coverage thresholds; typecheck + build clean
   (fonts bundled); `pnpm audit` clean.
-- Global Tester full-suite determinism run: **pending** (dispatched).
+- **Global Tester: GLOBAL SUITE GREEN.** 5/5 strictly-sequential runs, 198
+  tests, fully deterministic (identical counts + coverage every run), all
+  thresholds met, zero skips, exclusions match documentation, and every M1
+  behavior confirmed to have a real behavioral test.
+
+**M1 CLEARED — 2026-07-19.** Proceeding to M2 (Khooni Sawaal trivia loop).
