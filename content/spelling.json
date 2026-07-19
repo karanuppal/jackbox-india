@@ -1,0 +1,10 @@
+[
+  { "id": "sw_0001", "word": "khichdi", "adult": false },
+  { "id": "sw_0002", "word": "jugaad", "adult": false },
+  { "id": "sw_0003", "word": "chappal", "adult": false },
+  { "id": "sw_0004", "word": "jalebi", "adult": false },
+  { "id": "sw_0005", "word": "paneer", "adult": false },
+  { "id": "sw_0006", "word": "shaadi", "adult": false },
+  { "id": "sw_0007", "word": "bandar", "adult": false },
+  { "id": "sw_0008", "word": "samosa", "adult": false }
+]

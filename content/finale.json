@@ -1,0 +1,48 @@
+[
+  {
+    "id": "f_0001",
+    "title": "In films mein Shah Rukh Khan ne double role kiya hai",
+    "vo": "f_0001.ogg",
+    "adult": false,
+    "options": [
+      { "text": "Duplicate", "fits": true },
+      { "text": "Don", "fits": true },
+      { "text": "Fan", "fits": true },
+      { "text": "Ra.One", "fits": true },
+      { "text": "Dilwale Dulhania Le Jayenge", "fits": false },
+      { "text": "Chennai Express", "fits": false },
+      { "text": "Swades", "fits": false }
+    ],
+    "source": "Duplicate (1998), Don (2006, Don/Vijay), Fan (2016, Aryan/Gaurav), Ra.One (2011, Shekhar/G.One)."
+  },
+  {
+    "id": "f_0002",
+    "title": "In shehron mein metro rail chalti hai (2024 tak)",
+    "vo": "f_0002.ogg",
+    "adult": false,
+    "options": [
+      { "text": "Kochi", "fits": true },
+      { "text": "Nagpur", "fits": true },
+      { "text": "Jaipur", "fits": true },
+      { "text": "Lucknow", "fits": true },
+      { "text": "Shimla", "fits": false },
+      { "text": "Panaji", "fits": false }
+    ],
+    "source": "Kochi (2017), Nagpur (2019), Jaipur (2015), Lucknow (2017) metros operational; Shimla and Panaji have none."
+  },
+  {
+    "id": "f_0003",
+    "title": "Yeh Vishal Bhardwaj ki Shakespeare adaptations hain",
+    "vo": "f_0003.ogg",
+    "adult": false,
+    "options": [
+      { "text": "Maqbool", "fits": true },
+      { "text": "Omkara", "fits": true },
+      { "text": "Haider", "fits": true },
+      { "text": "Kaminey", "fits": false },
+      { "text": "Rangoon", "fits": false },
+      { "text": "7 Khoon Maaf", "fits": false }
+    ],
+    "source": "Maqbool=Macbeth (2003), Omkara=Othello (2006), Haider=Hamlet (2014)."
+  }
+]
