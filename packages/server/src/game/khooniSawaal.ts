@@ -287,6 +287,7 @@ function parseAnswer(payload: unknown, expectedId: string): number | null {
   const parsed = ksActionSchema.safeParse(payload);
   if (!parsed.success) return null;
   const action = parsed.data;
+  if (action.type !== "answer") return null; // not a trivia answer
   if (action.questionId !== expectedId) return null; // stale answer for a prior question
   return action.optionIndex;
 }

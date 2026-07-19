@@ -1,0 +1,123 @@
+// Khooni Kamra (killing-floor) shared types (PLAN.md §3.4). When living players
+// answer a trivia question wrong (and it isn't a mercy), they are sent to the
+// Khooni Kamra where one of 8 minigames runs; at least one loser dies. The
+// minigame kinds and their public/private payloads are defined here so the
+// server sub-engines and the client renderers agree.
+
+export const MINIGAME_KINDS = [
+  "hisaabKitaab", // K1 rapid mental math (skill)
+  "yaaddasht", // K2 memory grid (memory)
+  "taashKePatte", // K3 card recall (memory)
+  "spellingShelling", // K4 spelling (skill)
+  "sabseGhatiyaJawaab", // K5 worst-answer voting (social)
+  "gandaChitra", // K6 worst-drawing voting (social/draw)
+  "zeharWaliChai", // K7 poisoned cup (luck)
+  "dhokha", // K8 betrayal split (social)
+] as const;
+export type MinigameKind = (typeof MINIGAME_KINDS)[number];
+
+// Minigames that require >=2 floor players and >=1 living voter (§3.4).
+export const VOTING_MINIGAMES: readonly MinigameKind[] = ["sabseGhatiyaJawaab", "gandaChitra"];
+
+/** Timers (ms) for the killing-floor sub-phases. */
+export const KAMRA_TIMERS = {
+  introMs: 3500,
+  playMs: 25000,
+  voteMs: 15000,
+  resultMs: 5000,
+  wheelSpinMs: 4000,
+} as const;
+
+// --- per-floor-player state visible on the host screen --------------------
+export interface KamraFloorPlayer {
+  playerId: string;
+  name: string;
+  /** Progress/score within the minigame (interpretation is per-kind). */
+  score: number;
+  done: boolean; // submitted / locked in
+}
+
+// --- public phase payloads (host screen) ----------------------------------
+export interface KamraIntroPublic {
+  kind: "kamraIntro";
+  minigame: MinigameKind;
+  title: string;
+  rules: string;
+  floor: KamraFloorPlayer[];
+  vo: string;
+}
+
+export interface KamraPlayPublic {
+  kind: "kamraPlay";
+  minigame: MinigameKind;
+  floor: KamraFloorPlayer[];
+  /** Optional prompt shown on the shared screen (e.g. the word to spell). */
+  prompt: string | null;
+  vo: string;
+}
+
+export interface KamraVotePublic {
+  kind: "kamraVote";
+  minigame: MinigameKind;
+  /** The submissions being voted on (answers or drawings). */
+  entries: KamraVoteEntry[];
+  vo: string;
+}
+
+export interface KamraVoteEntry {
+  playerId: string;
+  name: string;
+  /** Text answer (K5) or serialized drawing strokes (K6). */
+  text: string | null;
+  strokes: Stroke[] | null;
+  votesAgainst: number;
+}
+
+export interface KamraResultPublic {
+  kind: "kamraResult";
+  minigame: MinigameKind;
+  /** Who died on the floor this visit (>=1). */
+  deaths: string[];
+  survivors: string[];
+  vo: string;
+}
+
+export interface WheelPublic {
+  kind: "wheel";
+  /** The player currently spinning. */
+  spinnerId: string;
+  spinnerName: string;
+  /** Result of the spin once landed: "life" | "death" | null while spinning. */
+  outcome: "life" | "death" | null;
+  vo: string;
+}
+
+export type KamraPublicPhase =
+  | KamraIntroPublic
+  | KamraPlayPublic
+  | KamraVotePublic
+  | KamraResultPublic
+  | WheelPublic;
+
+// --- private payloads (per floor player's phone) --------------------------
+export interface KamraPrivate {
+  /** True if this player is on the killing floor this round. */
+  onFloor: boolean;
+  /** Per-kind private state (the math question, the grid to memorize, …). */
+  data: unknown;
+  done: boolean;
+}
+
+// --- drawing (K6 / future Drawful) ----------------------------------------
+export interface Stroke {
+  color: number; // palette index
+  width: number;
+  /** Normalized points in a 0..1 virtual canvas (renders at any resolution). */
+  points: [number, number][];
+}
+
+// Drawings are streamed one stroke per message so each frame stays under the
+// 4KB pre-parse cap (SEC-M0-11); the server accumulates up to MAX_STROKES.
+export const MAX_STROKES = 60;
+export const MAX_POINTS_PER_STROKE = 120;
+export const DRAW_PALETTE = ["#1a0508", "#c0182b", "#f5a623", "#7fd8d8"] as const;

@@ -201,14 +201,41 @@ export const MAX_CLIENT_FRAME_BYTES = 4 * 1024;
 // ---------------------------------------------------------------------------
 // Khooni Sawaal game actions (game module schema, not platform protocol).
 // ---------------------------------------------------------------------------
+const strokeSchema = z.object({
+  color: z.number().int().min(0).max(3),
+  width: z.number().min(0.5).max(20),
+  points: z.array(z.tuple([z.number().min(0).max(1), z.number().min(0).max(1)])).min(1).max(120),
+});
+
 export const ksActionSchema = z.discriminatedUnion("type", [
+  // Trivia answer
   z.object({
     type: z.literal("answer"),
     questionId: z.string().regex(/^q_\d{4}$/),
     optionIndex: z.number().int().min(0).max(3),
   }),
+  // Khooni Kamra minigame inputs (§3.4). One discriminant per input shape;
+  // the active minigame ignores inputs it doesn't understand.
+  z.object({ type: z.literal("kmMath"), value: z.number().int().min(-999).max(999) }),
+  z.object({ type: z.literal("kmRecall"), selection: z.array(z.number().int().min(0).max(63)).max(64) }),
+  z.object({ type: z.literal("kmSpell"), word: z.string().max(24) }),
+  z.object({ type: z.literal("kmAnswer"), text: z.string().max(140) }),
+  z.object({ type: z.literal("kmPick"), index: z.number().int().min(0).max(9) }),
+  z.object({ type: z.literal("kmChoice"), choice: z.enum(["spare", "betray"]) }),
+  z.object({ type: z.literal("kmVote"), targetId: z.string().uuid() }),
+  // Drawing (streamed one stroke per frame, §3.4 K6)
+  z.object({ type: z.literal("drawStroke"), stroke: strokeSchema }),
+  z.object({ type: z.literal("drawUndo") }),
+  z.object({ type: z.literal("drawClear") }),
+  z.object({ type: z.literal("drawSubmit") }),
 ]);
 export type KsAction = z.infer<typeof ksActionSchema>;
+
+// VIP censor action (host/VIP moderation of player-submitted content, §4.3).
+export const censorActionSchema = z.object({
+  type: z.literal("censor"),
+  targetId: z.string().uuid(),
+});
 
 // ---------------------------------------------------------------------------
 // REST: room creation / lookup (the ecast-style indirection, §4.2).
