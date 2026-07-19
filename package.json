@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --workspace-concurrency=1 test",
     "build": "pnpm -r build",
     "validate:content": "pnpm --filter @tamasha/shared exec vitest run test/content.test.ts"
   },

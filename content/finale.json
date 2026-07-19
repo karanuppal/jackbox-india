@@ -32,17 +32,17 @@
   },
   {
     "id": "f_0003",
-    "title": "Yeh Vishal Bhardwaj ki Shakespeare adaptations hain",
+    "title": "Yeh films Gulzar ne direct ki hain",
     "vo": "f_0003.ogg",
     "adult": false,
     "options": [
-      { "text": "Maqbool", "fits": true },
-      { "text": "Omkara", "fits": true },
-      { "text": "Haider", "fits": true },
-      { "text": "Kaminey", "fits": false },
-      { "text": "Rangoon", "fits": false },
-      { "text": "7 Khoon Maaf", "fits": false }
+      { "text": "Aandhi", "fits": true },
+      { "text": "Maachis", "fits": true },
+      { "text": "Angoor", "fits": true },
+      { "text": "Sholay", "fits": false },
+      { "text": "Masoom", "fits": false },
+      { "text": "Ijaazat", "fits": true }
     ],
-    "source": "Maqbool=Macbeth (2003), Omkara=Othello (2006), Haider=Hamlet (2014)."
+    "source": "Gulzar directed Aandhi (1975), Maachis (1996), Angoor (1982), Ijaazat (1987); Sholay=Ramesh Sippy, Masoom=Shekhar Kapur."
   }
 ]

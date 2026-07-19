@@ -154,3 +154,39 @@ describe("sanitizeName (SEC-M0-3)", () => {
     expect(playerNameSchema.safeParse("x".repeat(65)).success).toBe(false);
   });
 });
+
+describe("sanitizeName invisible-character bypass (SEC-M0-R1)", () => {
+  it("rejects names made only of blank/filler/invisible code points", () => {
+    for (const invisible of [
+      "⠀⠀⠀", // braille blank
+      "ㅤㅤ", // hangul filler
+      "ᅟ", // hangul choseong filler
+      "᠎", // mongolian vowel separator
+      "️", // lone variation selector
+      "\u{E0041}\u{E0042}", // tag characters
+      "　　", // ideographic space
+      "­", // soft hyphen
+      "؜", // arabic letter mark
+    ]) {
+      expect(sanitizeName(invisible), JSON.stringify(invisible)).toBeNull();
+    }
+  });
+
+  it("strips invisible padding but keeps the real name", () => {
+    expect(sanitizeName("⠀Karan⠀")).toBe("Karan");
+    expect(sanitizeName("Ka᠎ran")).toBe("Karan");
+  });
+
+  it("rejects a name that is only a combining mark", () => {
+    expect(sanitizeName("⃝")).toBeNull();
+    expect(sanitizeName("́́")).toBeNull();
+  });
+
+  it("strips leading combining marks that would attach to UI chrome", () => {
+    expect(sanitizeName("́Karan")).toBe("Karan");
+  });
+
+  it("still accepts emoji-only names (they are visible glyphs)", () => {
+    expect(sanitizeName("🔥🎉")).toBe("🔥🎉");
+  });
+});

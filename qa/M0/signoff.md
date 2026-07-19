@@ -79,7 +79,30 @@ was landed now, and each is restated in the M1 definition of done.
   immutable asset caching). Docker daemon unavailable in the dev sandbox;
   image build runs as a CI job.
 
-- QA Reviewer re-review: **pending**
-- Security Reviewer re-review: **pending**
-- User Tester re-review: **pending**
-- Global Tester full-suite run: **pending**
+## Re-review round (fix commit `33d6934` reviewed; second fix pass follows)
+
+- **QA Reviewer re-review: SIGN-OFF YES.** All 20 resolved; verified coverage
+  gate actually fails when forced; no new blockers. Advisories (non-blocking):
+  ACTION_ROLE vocab to reconcile in M1; `finale.json` f_0003 Haider proximity
+  to §6.4 — **actioned:** f_0003 swapped to a Gulzar-directs category.
+- **User Tester re-review: SIGN-OFF YES.** All 15 re-verified by live testing;
+  zero new findings.
+- **Security Reviewer re-review: SIGN-OFF NO (3 new).** All 14 originals
+  confirmed resolved (SEC-M0-1 crash re-exploited live — process survives), but
+  the fixes introduced 3 new issues, now fixed:
+  - SEC-M0-R1 (Medium) invisible/blank name bypass → `sanitizeName` extended to
+    strip braille blank, Hangul/other fillers, mongolian vowel separator,
+    standalone variation selectors, tag block; requires ≥1 visible glyph and
+    strips leading combining marks. Tests: "invisible-character bypass" (5).
+  - SEC-M0-R2 (Low) Docker runs as root → `USER node` added.
+  - SEC-M0-R3 (Low) no `.dockerignore` → added; runtime stage copies only the
+    built workspace from the build stage.
+- **Global Tester: GLOBAL SUITE RED** (flaky) → fixed: `pnpm test` now runs
+  `--workspace-concurrency=1`, eliminating the `@vitest/coverage-v8` temp-file
+  race. Verified GREEN on 4 consecutive clean runs.
+
+### State after second fix pass (commit pending)
+- Full suite: **69 tests, 0 failures, 0 skipped; 100% statement coverage all
+  packages; thresholds enforced; 4/4 consecutive green runs.**
+- `pnpm audit`: clean. Build/typecheck: clean.
+- Re-dispatching Security re-review + Global Tester for final confirmation.

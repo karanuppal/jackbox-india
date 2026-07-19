@@ -58,19 +58,31 @@ export const WS_MESSAGES_PER_SEC = 10;
 // shared screen and spliced into runtime TTS). SEC-M0-3.
 // ---------------------------------------------------------------------------
 
-// Control chars, bidi overrides, zero-width and joiner characters.
+// Control chars, bidi overrides, zero-width/joiner, and characters that render
+// as blank or nothing (soft hyphen, arabic letter mark, Hangul/other fillers,
+// mongolian vowel separator, braille blank, ideographic space, standalone
+// variation selectors, tag block). SEC-M0-3 / SEC-M0-R1.
 const FORBIDDEN_CODEPOINTS =
-  /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u2028-\u202E\u2060-\u2064\u206A-\u206F\uFEFF]/gu;
+  /[\u0000-\u001F\u007F-\u009F\u00AD\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\u2800\u3000\u3164\uFE00-\uFE0F\uFEFF\uFFA0]/gu;
+const FORBIDDEN_CODEPOINTS_ASTRAL = /[\u{E0000}-\u{E01EF}]/gu; // tag characters
 const MAX_COMBINING_RUN = 2; // caps zalgo stacking
 const COMBINING =
   /[\u0300-\u036F\u1AB0-\u1AFF\u1DC0-\u1DFF\u20D0-\u20FF\uFE20-\uFE2F]/u;
+// After sanitizing, a name must contain at least one visibly-printable
+// character (letter/number/punctuation/symbol that is not itself a combining
+// mark) — otherwise it renders blank and enables impersonation (SEC-M0-R1).
+const HAS_VISIBLE = /[\p{L}\p{N}\p{P}\p{S}]/u;
 
 /** Normalize an untrusted display name. Returns null if nothing survives. */
 export function sanitizeName(raw: string): string | null {
   // Whitespace (incl. \t\n) collapses to single spaces BEFORE the forbidden-
   // codepoint strip — otherwise control-class whitespace would glue words.
   let s = raw.normalize("NFC").replace(/\s+/g, " ");
-  s = s.replace(FORBIDDEN_CODEPOINTS, "").replace(/\s+/g, " ").trim();
+  s = s
+    .replace(FORBIDDEN_CODEPOINTS, "")
+    .replace(FORBIDDEN_CODEPOINTS_ASTRAL, "")
+    .replace(/\s+/g, " ")
+    .trim();
   // Cap combining-mark runs (zalgo defense).
   let out = "";
   let run = 0;
@@ -84,7 +96,10 @@ export function sanitizeName(raw: string): string | null {
     out += ch;
   }
   out = [...out].slice(0, MAX_NAME_LENGTH).join("").trim();
-  return out.length > 0 ? out : null;
+  // Strip leading combining marks (they attach to UI chrome, not the name) and
+  // require at least one visible glyph (SEC-M0-R1).
+  while (out.length > 0 && COMBINING.test([...out][0]!)) out = [...out].slice(1).join("");
+  return out.length > 0 && HAS_VISIBLE.test(out) ? out : null;
 }
 
 export const playerNameSchema = z
