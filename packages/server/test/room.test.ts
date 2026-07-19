@@ -343,3 +343,22 @@ describe("Room — M1 fix pass (VIP reassign, name reconnect, host teardown)", (
     expect(room.connectHost(room.hostToken).ok).toBe(true);
   });
 });
+
+describe("Room — name-reclaim token rotation (Security INFO-1)", () => {
+  it("mints a fresh session token on name-reclaim, invalidating the old one", () => {
+    const room = makeRoom();
+    const a = room.join({ name: "Priya" });
+    if (!a.ok || a.playerId === null) throw new Error("join");
+    room.markDisconnected(a.playerId);
+    const reclaim = room.join({ name: "Priya" });
+    if (!reclaim.ok) throw new Error("reclaim");
+    expect(reclaim.playerId).toBe(a.playerId);
+    expect(reclaim.sessionToken).not.toBe(a.sessionToken); // token rotated
+    // the OLD token no longer restores the seat
+    room.markDisconnected(reclaim.playerId!);
+    const oldToken = room.join({ sessionToken: a.sessionToken, name: "Ghost" });
+    // old token is unknown now → falls through; but name "Ghost" != "Priya",
+    // and Priya is disconnected, so this becomes a NEW seat, not Priya's
+    if (oldToken.ok) expect(oldToken.playerId).not.toBe(a.playerId);
+  });
+})

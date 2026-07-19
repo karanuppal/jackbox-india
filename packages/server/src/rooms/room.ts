@@ -168,6 +168,10 @@ export class Room {
       (p) => !p.connected && p.name.toLowerCase() === cleanName.toLowerCase(),
     );
     if (stale !== undefined) {
+      // Mint a FRESH session token on name-reclaim and invalidate the old one
+      // (Security INFO-1): if the prior holder returns, their stale token no
+      // longer matches, so only the newest name-reclaimer holds the seat.
+      stale.sessionToken = randomUUID();
       stale.connected = true;
       this.reassignVipIfNeeded();
       this.recomputeEmpty();

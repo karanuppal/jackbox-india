@@ -55,8 +55,12 @@ export function reduce(state: ClientState, event: StoreEvent): ClientState {
 }
 
 function applyServer(state: ClientState, msg: ServerMessage): ClientState {
-  // Drop stale/out-of-order frames (monotonic seq per connection).
-  if (msg.seq <= state.lastSeq && msg.type !== "joined") return state;
+  // Drop stale/out-of-order frames (monotonic seq per connection). `joined`
+  // and `error` are exempt: a fresh connection restarts seq at 0, and a
+  // re-join that is REJECTED after reconnect (e.g. the room was swept) sends
+  // its error at seq 0 — which must still surface, not be silently dropped
+  // while the client retries against a frozen board.
+  if (msg.seq <= state.lastSeq && msg.type !== "joined" && msg.type !== "error") return state;
   const base = { ...state, lastSeq: Math.max(state.lastSeq, msg.seq) };
   switch (msg.type) {
     case "joined":

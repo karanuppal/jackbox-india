@@ -85,3 +85,16 @@ describe("client store reducer", () => {
     expect(pong.status).toBe("connecting");
   });
 });
+
+describe("client store — error surfacing after reconnect (QA note)", () => {
+  it("surfaces an error that arrives at a low seq after the baseline climbed", () => {
+    let s = initialState();
+    // baseline climbs on the first connection
+    for (let i = 0; i < 4; i++) {
+      s = reduce(s, { kind: "server", message: { seq: i, type: "state", public: pub(), private: { you: null, role: "player", phaseData: null } } });
+    }
+    // reconnect re-join rejected → error at seq 0 must NOT be dropped
+    s = reduce(s, { kind: "server", message: { seq: 0, type: "error", code: "ROOM_NOT_FOUND", message: "gone" } });
+    expect(s.lastError?.code).toBe("ROOM_NOT_FOUND");
+  });
+});
