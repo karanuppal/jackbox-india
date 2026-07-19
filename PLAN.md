@@ -568,7 +568,40 @@ deadline, cleared on early all-answered). Game module interface:
 onTimeout(phase) / getPublicState() / getPrivateState(playerId)` — the
 platform layer knows nothing about trivia.
 
-### 8.3 Testing & quality bar
+### 8.3 Review board & milestone gates (owner mandate, 2026-07-19 — non-negotiable)
+
+Every milestone ends with a **three-reviewer gate** run by dedicated agents
+whose job is to find problems, not to approve:
+
+1. **QA Reviewer** — correctness audit: reads the diff and the spec (§3–§7),
+   hunts for logic bugs, spec deviations, missing edge cases, and untested
+   paths; runs the full test suite and tries to break the build.
+2. **Security Reviewer** — audits for input validation, injection (all player
+   text is untrusted and rendered on shared screens), WebSocket auth/role
+   escalation (player→VIP/host/moderator), room-code guessing, DoS surfaces
+   (message flooding, oversized payloads, stroke bombs), secret handling, and
+   dependency risk.
+3. **User Tester** — plays the product like a real party: drives the actual
+   running server/clients end to end (join flows, phones, reconnects, weird
+   names, impatient tapping), and reports anything confusing, broken, or
+   off-vibe.
+
+**Gate rules:**
+- A milestone is **not cleared** until all three reviewers sign off.
+- **Every finding gets fixed — no severity threshold, no deferrals** — and
+  every fix lands with a test that would have caught it. Re-review after
+  fixes until each reviewer's findings list is empty.
+- Reports and sign-offs are committed under `/qa/M<n>/` (`qa-report.md`,
+  `security-report.md`, `user-test-report.md`, `signoff.md`) so the audit
+  trail lives in the repo.
+- **Global Tester:** before *anything* is declared done (a milestone, or any
+  "it works" claim to the owner), a dedicated Global Tester agent runs the
+  entire test suite — unit + integration, covering every code path (statement
+  coverage enforced in CI; every FSM transition, every scoring rule, every
+  minigame, every reconnect point must have a test) — from a clean checkout.
+  A red or skipped test blocks the claim.
+
+### 8.4 Testing & quality bar
 
 - Unit: FSM transitions, scoring math, finale movement/steal/darkness logic,
   content validators (the finale rules are the most bug-prone — exhaustive
@@ -580,7 +613,7 @@ platform layer knows nothing about trivia.
   game, including a mid-game reconnect and a VIP censor action.
 - Manual playtest gates at M3, M5, M7 (below) with real phones.
 
-### 8.4 Deployment
+### 8.5 Deployment
 
 Single Docker image (server serves the built SPA statically); deploy to
 **ap-south-1 (Mumbai)**; TLS via platform; WebSocket-aware host (Fly.io or
@@ -588,7 +621,7 @@ Railway or EC2+Caddy — OPEN, ops choice, does not affect code). Static assets
 (VO/music/art) served via CDN path from the same origin. Env-flagged TTS keys.
 No database v1; metrics = structured logs + a `/healthz`.
 
-### 8.5 Milestones
+### 8.6 Milestones
 
 | M | Deliverable | Definition of done |
 |---|---|---|
