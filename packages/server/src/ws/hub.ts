@@ -30,6 +30,8 @@ interface Connection {
   joinTimer: ReturnType<typeof setTimeout> | null;
 }
 
+export type TimerHandle = unknown;
+
 export interface HubOptions {
   now?: () => number;
   path?: string;
@@ -39,6 +41,21 @@ export interface HubOptions {
   connLimiter?: ConcurrencyLimiter;
   /** Drop a socket that never completes `join` within this many ms (SEC-M1-3). */
   joinTimeoutMs?: number;
+  /**
+   * Phase-timer scheduler. Injectable so tests drive phase advances
+   * deterministically (no wall-clock races). Defaults to setTimeout/clearTimeout.
+   */
+  setTimer?: (fn: () => void, ms: number) => TimerHandle;
+  clearTimer?: (h: TimerHandle) => void;
+}
+
+function defaultSetTimer(fn: () => void, ms: number): TimerHandle {
+  const t = setTimeout(fn, ms);
+  if (typeof t.unref === "function") t.unref();
+  return t;
+}
+function defaultClearTimer(h: TimerHandle): void {
+  clearTimeout(h as ReturnType<typeof setTimeout>);
 }
 
 function clientIp(req: IncomingMessage): string {
@@ -57,7 +74,7 @@ export class Hub {
   private wss: WebSocketServer;
   private registry: RoomRegistry;
   private connsByRoom = new Map<string, Set<Connection>>();
-  private roomTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private roomTimers = new Map<string, TimerHandle>();
   // Total phase-timers armed over this hub's life. A pause-past-deadline
   // busy-loop would inflate this without bound — tests assert it stays flat
   // while paused (QA-M2-R2).
@@ -66,6 +83,8 @@ export class Hub {
   private joinLimiter: IpRateLimiter | null;
   private connLimiter: ConcurrencyLimiter | null;
   private joinTimeoutMs: number;
+  private setTimer: (fn: () => void, ms: number) => TimerHandle;
+  private clearTimer: (h: TimerHandle) => void;
 
   constructor(server: Server, registry: RoomRegistry, opts: HubOptions = {}) {
     this.registry = registry;
@@ -73,6 +92,8 @@ export class Hub {
     this.joinLimiter = opts.joinLimiter ?? null;
     this.connLimiter = opts.connLimiter ?? null;
     this.joinTimeoutMs = opts.joinTimeoutMs ?? 10_000;
+    this.setTimer = opts.setTimer ?? defaultSetTimer;
+    this.clearTimer = opts.clearTimer ?? defaultClearTimer;
     this.wss = new WebSocketServer({ server, path: opts.path ?? "/play", maxPayload: MAX_CLIENT_FRAME_BYTES });
     this.wss.on("connection", (ws, req) => this.onConnection(ws, req));
   }
@@ -296,7 +317,7 @@ export class Hub {
   private scheduleTick(room: Room): void {
     const existing = this.roomTimers.get(room.code);
     if (existing !== undefined) {
-      clearTimeout(existing);
+      this.clearTimer(existing);
       this.roomTimers.delete(room.code);
     }
     const deadline = room.getDeadline();
@@ -306,7 +327,7 @@ export class Hub {
     if (deadline === null || room.isPaused()) return;
     const delay = Math.max(0, deadline - this.now());
     this.timersArmed += 1;
-    const timer = setTimeout(() => {
+    const timer = this.setTimer(() => {
       this.roomTimers.delete(room.code);
       // Guard against a room evicted (or its code reused) since scheduling
       // (QA-M2-5 / SEC-M2-2): only act if the registry still holds THIS room.
@@ -314,7 +335,6 @@ export class Hub {
       if (room.handleTimeout()) this.broadcast(room);
       else this.scheduleTick(room); // deadline moved (e.g. resumed) — reschedule
     }, delay);
-    if (typeof timer.unref === "function") timer.unref();
     this.roomTimers.set(room.code, timer);
   }
 

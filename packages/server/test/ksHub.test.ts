@@ -146,20 +146,55 @@ describe("Khooni Sawaal over the hub (message-driven, no-timer)", () => {
   });
 });
 
-describe("Hub timer driver (QA-M2-1 pause guard, auto-advance)", () => {
-  async function bootFast() {
+describe("Hub timer driver (deterministic, injected timers)", () => {
+  // A controllable fake timer: timers fire only when we call runDue(), and a
+  // runaway self-rescheduling loop is caught by the iteration cap rather than
+  // hanging. Combined with an injected clock, this removes all wall-clock races.
+  class FakeTimers {
+    private q = new Map<number, { fn: () => void; at: number }>();
+    private id = 0;
+    clock = 1000;
+    set = (fn: () => void, ms: number): number => {
+      const h = ++this.id;
+      this.q.set(h, { fn, at: this.clock + ms });
+      return h;
+    };
+    clear = (h: unknown): void => {
+      this.q.delete(h as number);
+    };
+    /** Fire all timers due at/before the clock. Returns how many fired; if it
+     *  hits `cap`, a busy-loop (0ms self-reschedule) is present. */
+    runDue(cap = 200): number {
+      let fired = 0;
+      for (;;) {
+        const due = [...this.q.entries()].find(([, t]) => t.at <= this.clock);
+        if (due === undefined) break;
+        this.q.delete(due[0]);
+        due[1].fn();
+        if (++fired >= cap) break;
+      }
+      return fired;
+    }
+    pending(): number {
+      return this.q.size;
+    }
+  }
+
+  async function bootFake(fake: FakeTimers) {
     const registry = new RoomRegistry(
       createKhooniSawaalEngine(bank(), { pickQuestions: (b, n) => b.slice(0, n), timers: { tutorialMs: 40, questionMs: 60, revealMs: 40 } }),
+      { now: () => fake.clock },
     );
     server = await startServer({ port: 0, registry });
-    hub = new Hub(server, registry, { path: WS_PATH });
+    hub = new Hub(server, registry, { path: WS_PATH, now: () => fake.clock, setTimer: fake.set, clearTimer: fake.clear });
     const addr = server.address();
     if (addr === null || typeof addr === "string") throw new Error("no port");
     return { registry, base: `http://127.0.0.1:${addr.port}`, wsUrl: `ws://127.0.0.1:${addr.port}${WS_PATH}` };
   }
 
-  it("auto-advances the tutorial to a question via the timer", async () => {
-    const h = await bootFast();
+  it("auto-advances the tutorial to a question when its timer fires", async () => {
+    const fake = new FakeTimers();
+    const h = await bootFake(fake);
     const { code, hostToken } = await createRoom(h.base);
     const host = new Client(h.wsUrl);
     await host.open();
@@ -169,16 +204,20 @@ describe("Hub timer driver (QA-M2-1 pause guard, auto-advance)", () => {
     await vip.open();
     vip.send({ type: "join", code, intent: "play", name: "VIP" });
     await vip.until((m) => m.type === "state");
-    vip.send({ type: "action", seq: 1, payload: { action: "startGame" } }); // → tutorial (40ms)
-    // the timer should auto-advance to the question without any further input
+    vip.send({ type: "action", seq: 1, payload: { action: "startGame" } }); // → tutorial (deadline clock+40)
+    await host.until((m) => ksPhase(m)?.kind === "tutorial");
+    // advance the clock past the tutorial deadline and fire the timer
+    fake.clock += 50;
+    fake.runDue();
     const q = await host.until((m) => ksPhase(m)?.kind === "question");
     expect(ksPhase(q)?.kind).toBe("question");
     host.close();
     vip.close();
   });
 
-  it("does not busy-loop or advance while paused past the deadline (QA-M2-1)", async () => {
-    const h = await bootFast();
+  it("does NOT busy-loop while paused past the deadline (QA-M2-1)", async () => {
+    const fake = new FakeTimers();
+    const h = await bootFake(fake);
     const { code, hostToken } = await createRoom(h.base);
     const host = new Client(h.wsUrl);
     await host.open();
@@ -189,19 +228,52 @@ describe("Hub timer driver (QA-M2-1 pause guard, auto-advance)", () => {
     await vip.open();
     vip.send({ type: "join", code, intent: "play", name: "VIP" });
     await vip.until((m) => m.type === "state");
-    vip.send({ type: "action", seq: 2, payload: { action: "startGame" } }); // → question (60ms)
+    vip.send({ type: "action", seq: 2, payload: { action: "startGame" } }); // → question (deadline clock+60)
     await host.until((m) => ksPhase(m)?.kind === "question");
-    // pause, then wait well past the 60ms question deadline
+    // pause BEFORE the deadline, then push the clock far past it
     host.send({ type: "action", seq: 2, payload: { action: "pause" } });
-    await new Promise((r) => setTimeout(r, 60)); // let the pause broadcast settle
-    const armedAtPause = hub!.timersArmedCount();
-    await new Promise((r) => setTimeout(r, 300)); // >> the 60ms deadline while paused
-    // The core assertion (QA-M2-R2): while paused past the deadline, NO new
-    // timers are armed. A reverted fix busy-loops and inflates this by 1000s.
-    expect(hub!.timersArmedCount() - armedAtPause).toBeLessThanOrEqual(1);
+    await host.until((m) => m.type === "state" && m.public.paused);
+    const armedBefore = hub!.timersArmedCount();
+    fake.clock += 10_000_000; // long past the frozen deadline
+    const fired = fake.runDue(200); // fire everything due; a busy-loop would hit the cap
+    // With the guard: the pause broadcast already cleared the pending timer, so
+    // nothing is due and nothing re-arms. A reverted guard would 0ms-loop → cap.
+    expect(fired).toBeLessThan(200);
+    expect(fake.pending()).toBe(0);
+    expect(hub!.timersArmedCount() - armedBefore).toBeLessThanOrEqual(1);
+    // still paused, still on the question
     const st = h.registry.get(code)!.publicState();
     expect(st.paused).toBe(true);
     expect(ksPhase({ seq: 0, type: "state", public: st, private: { you: null, role: "host", phaseData: null } })?.kind).toBe("question");
+    host.close();
+    vip.close();
+  });
+
+  it("resumes cleanly and advances after a pause (no lost timer)", async () => {
+    const fake = new FakeTimers();
+    const h = await bootFake(fake);
+    const { code, hostToken } = await createRoom(h.base);
+    const host = new Client(h.wsUrl);
+    await host.open();
+    host.send({ type: "join", code, intent: "hostScreen", sessionToken: hostToken });
+    await host.until((m) => m.type === "state");
+    host.send({ type: "action", seq: 1, payload: { action: "updateSettings", settings: { skipTutorial: true } } });
+    const vip = new Client(h.wsUrl);
+    await vip.open();
+    vip.send({ type: "join", code, intent: "play", name: "VIP" });
+    await vip.until((m) => m.type === "state");
+    vip.send({ type: "action", seq: 2, payload: { action: "startGame" } });
+    await host.until((m) => ksPhase(m)?.kind === "question");
+    host.send({ type: "action", seq: 2, payload: { action: "pause" } });
+    await host.until((m) => m.type === "state" && m.public.paused);
+    fake.clock += 1000;
+    host.send({ type: "action", seq: 3, payload: { action: "resume" } });
+    await host.until((m) => m.type === "state" && !m.public.paused);
+    // after resume the deadline is restored into the future; fire it to advance
+    fake.clock += 200;
+    fake.runDue();
+    const rev = await host.until((m) => ksPhase(m)?.kind === "reveal");
+    expect(ksPhase(rev)?.kind).toBe("reveal");
     host.close();
     vip.close();
   });
