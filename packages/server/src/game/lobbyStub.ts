@@ -25,6 +25,12 @@ export class LobbyStubEngine implements GameEngine {
   onTimeout(): EnginePhase | null {
     return null;
   }
+  playerState(): { alive: boolean; money: number; answered: boolean } | null {
+    return null;
+  }
+  progress(): { number: number; total: number } {
+    return { number: 0, total: 0 };
+  }
   isOver(): boolean {
     return false;
   }

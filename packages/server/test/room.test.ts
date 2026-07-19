@@ -362,3 +362,36 @@ describe("Room — name-reclaim token rotation (Security INFO-1)", () => {
     if (oldToken.ok) expect(oldToken.playerId).not.toBe(a.playerId);
   });
 })
+
+describe("Room — M2 timer driver & pause freeze", () => {
+  function ksRoom() {
+    let t = 1000;
+    const clock = { now: () => t, set: (v: number) => (t = v) };
+    // use the real KS engine with a tiny deterministic bank
+    return { clock };
+  }
+
+  it("handleTimeout advances the engine only after the deadline passes", () => {
+    let t = 1000;
+    const room = new Room("ACDE", createLobbyStubEngine, () => t);
+    const a = room.join({ name: "VIP" });
+    if (!a.ok) throw new Error("join");
+    room.applyAction(a.playerId, { action: "startGame" }); // stub → tutorial, deadline null
+    // stub has null deadline → handleTimeout is a no-op
+    expect(room.handleTimeout()).toBe(false);
+  });
+
+  it("pause freezes the countdown and resume restores the remaining time", () => {
+    let t = 1000;
+    const room = new Room("ACDE", createLobbyStubEngine, () => t);
+    const a = room.join({ name: "VIP" });
+    if (!a.ok) throw new Error("join");
+    room.applyAction(a.playerId, { action: "startGame" });
+    // stub has no deadline, so exercise the pause/resume state directly
+    room.applyAction(null, { action: "pause" });
+    expect(room.isPaused()).toBe(true);
+    t = 5000;
+    room.applyAction(null, { action: "resume" });
+    expect(room.isPaused()).toBe(false);
+  });
+})

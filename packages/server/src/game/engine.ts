@@ -49,6 +49,14 @@ export interface GameEngine {
   onAction(playerId: string, payload: unknown, meta: ActionMeta): EnginePhase | null;
   /** Called when the current phase's timer elapses. Returns next phase if it changed. */
   onTimeout(): EnginePhase | null;
+  /**
+   * Per-player game state the Room folds into its public snapshot (money,
+   * alive, answered). Returns null if the engine doesn't track this player
+   * (e.g. audience) — the Room then uses defaults.
+   */
+  playerState(playerId: string): { alive: boolean; money: number; answered: boolean } | null;
+  /** Round progress for the host screen ({number, total}); zeros outside rounds. */
+  progress(): { number: number; total: number };
   /** True once the game has reached its terminal state. */
   isOver(): boolean;
 }

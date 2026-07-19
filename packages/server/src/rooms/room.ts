@@ -71,6 +71,8 @@ export class Room {
   private emptySince: number | null;
   // Epoch-ms the host disconnected; drives host-absence teardown (§4.2, QA-M1-4).
   private hostGoneSince: number | null = null;
+  // Milliseconds left on the countdown when the game was paused (§4.3).
+  private pausedRemaining: number | null = null;
 
   constructor(code: string, createEngine: CreateEngine, now: () => number = Date.now) {
     this.code = code;
@@ -282,10 +284,18 @@ export class Room {
         return null;
       }
       case "pause":
-        this.paused = true;
+        if (!this.paused) {
+          this.paused = true;
+          // Freeze the countdown: remember what was left (§4.3 pause).
+          this.pausedRemaining = this.deadline !== null ? Math.max(0, this.deadline - this.now()) : null;
+        }
         return null;
       case "resume":
-        this.paused = false;
+        if (this.paused) {
+          this.paused = false;
+          if (this.pausedRemaining !== null) this.deadline = this.now() + this.pausedRemaining;
+          this.pausedRemaining = null;
+        }
         return null;
       case "game":
         // Paused freezes all game input for everyone (§4.3, QA-M1-10).
@@ -349,21 +359,43 @@ export class Room {
     }
   }
 
+  /**
+   * The current phase's deadline has been reached — advance the engine
+   * (§3.3 auto-advance of timed phases). No-op when untimed, paused, or the
+   * deadline is still in the future. Returns true if state changed.
+   */
+  handleTimeout(): boolean {
+    if (this.engine === null || this.paused) return false;
+    if (this.deadline === null || this.now() < this.deadline) return false;
+    const next = this.engine.onTimeout();
+    if (next === null) return false;
+    this.phase = next.phase as Phase;
+    this.deadline = next.deadline;
+    return true;
+  }
+
+  getDeadline(): number | null {
+    return this.deadline;
+  }
+
   // --- snapshots -------------------------------------------------------------
   private playerPublic(p: Player): PlayerPublic {
+    // During an active game the engine owns money/alive/answered (§3.5).
+    const gs = this.engine !== null ? this.engine.playerState(p.id) : null;
     return {
       id: p.id,
       name: p.name,
       avatar: p.avatar,
       vip: p.vip,
-      alive: p.alive,
-      money: p.money,
+      alive: gs !== null ? gs.alive : p.alive,
+      money: gs !== null ? gs.money : p.money,
       connected: p.connected,
-      answered: p.answered,
+      answered: gs !== null ? gs.answered : p.answered,
     };
   }
 
   publicState(): RoomPublicState {
+    const progress = this.engine !== null ? this.engine.progress() : { number: 0, total: 0 };
     return {
       code: this.code,
       phase: this.phase,
@@ -371,8 +403,8 @@ export class Room {
       settings: toPublicSettings(this.settings),
       players: this.activePlayers().map((p) => this.playerPublic(p)),
       audienceCount: this.audience().length,
-      questionNumber: 0,
-      questionTotal: 0,
+      questionNumber: progress.number,
+      questionTotal: progress.total,
       deadline: this.deadline,
       phaseData: this.engine !== null ? this.engine.publicPhaseData() : null,
     };

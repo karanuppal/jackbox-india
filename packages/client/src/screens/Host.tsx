@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BRANDING } from "@tamasha/shared";
+import { BRANDING, type KsPublicPhase } from "@tamasha/shared";
 import type { ClientState } from "../net/store.js";
 import { S } from "../ui/styles.css.js";
 import { COLORS, avatarLabel } from "../ui/theme.js";
@@ -67,13 +67,118 @@ export function Host({
       ) : (
         <>
           {pub.paused && <p style={S.error}>⏸ Mishra Ji ne game rok diya hai…</p>}
-          <p style={{ fontSize: "1.5rem", textAlign: "center" }}>
-            {BRANDING.venueName} ke darwaze band ho chuke hain. Khel shuru!
-          </p>
+          <GameScene pub={pub.phaseData as KsPublicPhase | null} subtitles={pub.settings.subtitles} />
           <PodiumRow players={pub.players} audienceCount={pub.audienceCount} />
         </>
       )}
     </main>
+  );
+}
+
+/** The shared "show" for a game phase (§5.2). One dominant element per screen,
+ *  sized for an across-the-room read; a subtitle line renders the host VO. */
+function GameScene({ pub, subtitles }: { pub: KsPublicPhase | null; subtitles: boolean }) {
+  if (pub === null) {
+    return <p style={{ fontSize: "1.5rem", textAlign: "center" }}>{BRANDING.venueName}…</p>;
+  }
+  const Subtitle = ({ vo }: { vo: string }) =>
+    subtitles ? <p style={{ maxWidth: "40rem", textAlign: "center", opacity: 0.85, fontStyle: "italic" }}>“{vo}”</p> : null;
+
+  if (pub.kind === "tutorial") {
+    return (
+      <div style={{ textAlign: "center" }}>
+        <p style={{ fontSize: "1.75rem", color: COLORS.marigold }}>Kaise khelein</p>
+        <Subtitle vo={pub.vo} />
+      </div>
+    );
+  }
+  if (pub.kind === "question") {
+    return (
+      <div style={{ textAlign: "center", width: "100%" }}>
+        <p style={{ opacity: 0.7 }}>{`Sawaal ${pub.number} / ${pub.total}`}</p>
+        <h2 style={{ fontSize: "2rem", maxWidth: "45rem", margin: "0.5rem auto" }}>{pub.text}</h2>
+        <OptionGrid options={pub.options} />
+        <Subtitle vo={pub.vo} />
+      </div>
+    );
+  }
+  if (pub.kind === "reveal") {
+    return (
+      <div style={{ textAlign: "center", width: "100%" }}>
+        <h2 style={{ fontSize: "1.75rem", maxWidth: "45rem", margin: "0.5rem auto" }}>{pub.text}</h2>
+        <OptionGrid options={pub.options} correct={pub.correct} tally={pub.tally} />
+        {pub.mercy ? (
+          <p style={{ color: COLORS.marigold }}>Sab galat — par aaj sabko maafi!</p>
+        ) : pub.allCorrect ? (
+          <p style={{ color: COLORS.marigold }}>Sab ne sahi jawab diya!</p>
+        ) : (
+          <p style={{ color: COLORS.blood }}>{`${pub.deaths.length} mehmaan Khooni Kamra ki taraf…`}</p>
+        )}
+        <Subtitle vo={pub.vo} />
+      </div>
+    );
+  }
+  // gameOver
+  return (
+    <div style={{ textAlign: "center", width: "100%" }}>
+      <h2 style={{ fontSize: "2rem", color: COLORS.marigold }}>Natija</h2>
+      <ol style={{ listStyle: "none", padding: 0, maxWidth: "24rem", margin: "0 auto" }}>
+        {pub.standings.map((s, i) => (
+          <li
+            key={s.playerId}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "0.4rem 0.75rem",
+              margin: "0.25rem 0",
+              borderRadius: "0.5rem",
+              background: i === 0 ? COLORS.marigold : "rgba(255,255,255,0.06)",
+              color: i === 0 ? COLORS.ink : COLORS.cream,
+              opacity: s.alive ? 1 : 0.6,
+            }}
+          >
+            <span>{`${i === 0 ? "👑 " : ""}${s.alive ? "" : "👻 "}${s.name}`}</span>
+            <span>{`₹${s.money}`}</span>
+          </li>
+        ))}
+      </ol>
+      <Subtitle vo={pub.vo} />
+    </div>
+  );
+}
+
+function OptionGrid({
+  options,
+  correct,
+  tally,
+}: {
+  options: readonly string[];
+  correct?: number;
+  tally?: { index: number; count: number; correct: boolean }[];
+}) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem", maxWidth: "40rem", margin: "0.75rem auto" }}>
+      {options.map((opt, i) => {
+        const isCorrect = correct === i;
+        const count = tally?.find((t) => t.index === i)?.count ?? null;
+        return (
+          <div
+            key={i}
+            style={{
+              padding: "0.75rem",
+              borderRadius: "0.5rem",
+              fontSize: "1.25rem",
+              background: correct === undefined ? "rgba(255,255,255,0.06)" : isCorrect ? "#1f7a3d" : "rgba(192,24,43,0.25)",
+              color: COLORS.cream,
+              border: `2px solid ${isCorrect ? COLORS.marigold : "transparent"}`,
+            }}
+          >
+            {opt}
+            {count !== null && <span style={{ opacity: 0.7, fontSize: "0.9rem" }}>{` — ${count}`}</span>}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

@@ -57,6 +57,7 @@ export class Hub {
   private wss: WebSocketServer;
   private registry: RoomRegistry;
   private connsByRoom = new Map<string, Set<Connection>>();
+  private roomTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private now: () => number;
   private joinLimiter: IpRateLimiter | null;
   private connLimiter: ConcurrencyLimiter | null;
@@ -263,17 +264,42 @@ export class Hub {
 
   broadcast(room: Room): void {
     const set = this.connsByRoom.get(room.code);
-    if (set === undefined) return;
-    const pub = room.publicState();
-    for (const conn of set) {
-      if (conn.role === null) continue;
-      this.send(conn, {
-        seq: conn.outSeq++,
-        type: "state",
-        public: pub,
-        private: room.privateView(conn.playerId, conn.role),
-      });
+    if (set !== undefined) {
+      const pub = room.publicState();
+      for (const conn of set) {
+        if (conn.role === null) continue;
+        this.send(conn, {
+          seq: conn.outSeq++,
+          type: "state",
+          public: pub,
+          private: room.privateView(conn.playerId, conn.role),
+        });
+      }
     }
+    this.scheduleTick(room);
+  }
+
+  /**
+   * Schedule the engine's next timed auto-advance. When the room's deadline
+   * passes, fire handleTimeout and re-broadcast (which reschedules the next
+   * phase). One timer per room; rescheduled on every broadcast.
+   */
+  private scheduleTick(room: Room): void {
+    const existing = this.roomTimers.get(room.code);
+    if (existing !== undefined) {
+      clearTimeout(existing);
+      this.roomTimers.delete(room.code);
+    }
+    const deadline = room.getDeadline();
+    if (deadline === null) return;
+    const delay = Math.max(0, deadline - this.now());
+    const timer = setTimeout(() => {
+      this.roomTimers.delete(room.code);
+      if (room.handleTimeout()) this.broadcast(room);
+      else this.scheduleTick(room); // deadline moved (e.g. resumed) — reschedule
+    }, delay);
+    if (typeof timer.unref === "function") timer.unref();
+    this.roomTimers.set(room.code, timer);
   }
 
   private send(conn: Connection, msg: ServerMessage): void {

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { BRANDING } from "@tamasha/shared";
+import { BRANDING, type KsPrivatePhase, type KsPublicPhase } from "@tamasha/shared";
 import type { ClientState } from "../net/store.js";
 import { S } from "../ui/styles.css.js";
-import { avatarLabel } from "../ui/theme.js";
+import { COLORS, avatarLabel } from "../ui/theme.js";
 import { errorText } from "../net/errors.js";
 
 /**
@@ -54,12 +54,76 @@ export function Controller({ state, onAction }: { state: ClientState; onAction: 
           )}
         </>
       ) : (
-        <p style={{ textAlign: "center" }}>Screen ki taraf dekho — tamasha shuru!</p>
+        <GamePhase
+          pub={state.public.phaseData as KsPublicPhase | null}
+          priv={state.private?.phaseData as KsPrivatePhase | null}
+          onAction={onAction}
+        />
       )}
       {softError !== null && phase === "lobby" && <p style={S.error}>{softError}</p>}
       {state.status === "reconnecting" && <p style={{ opacity: 0.7 }}>Dobara jud rahe hain…</p>}
     </main>
   );
+}
+
+/** Per-phase controller widgets for the trivia loop (§5.3). During a question
+ *  the phone shows the four options as big buttons; after locking in, a wait
+ *  card. Ghosts get the same controls, framed as playing from beyond. */
+function GamePhase({
+  pub,
+  priv,
+  onAction,
+}: {
+  pub: KsPublicPhase | null;
+  priv: KsPrivatePhase | null;
+  onAction: (p: unknown) => void;
+}) {
+  if (pub === null) return <p style={{ textAlign: "center" }}>Screen ki taraf dekho…</p>;
+  const ghost = priv !== null && !priv.alive;
+
+  if (pub.kind === "tutorial") {
+    return <p style={{ textAlign: "center" }}>Mishra Ji samjha rahe hain… screen dekho.</p>;
+  }
+  if (pub.kind === "question") {
+    const answered = priv?.answered ?? false;
+    const mine = priv?.myAnswer ?? null;
+    return (
+      <>
+        {ghost && <p style={{ color: COLORS.ghost }}>👻 Aatma mode — phir bhi khel sakte ho.</p>}
+        <p style={{ opacity: 0.7 }}>{`Sawaal ${pub.number} / ${pub.total}`}</p>
+        {answered ? (
+          <p style={{ textAlign: "center" }}>Jawaab lock ho gaya. Screen dekho…</p>
+        ) : (
+          <div style={{ display: "grid", gap: "0.6rem", width: "100%", maxWidth: "22rem" }}>
+            {pub.options.map((opt, i) => (
+              <button
+                key={i}
+                style={{ ...S.button, marginTop: 0, background: mine === i ? COLORS.marigold : COLORS.blood, color: mine === i ? COLORS.ink : COLORS.cream }}
+                onClick={() => onAction({ action: "game", payload: { type: "answer", questionId: pub.questionId, optionIndex: i } })}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+  if (pub.kind === "reveal") {
+    const iDied = priv !== null && !priv.alive && pub.deaths.includes(""); // deaths carry ids on host; controller just reflects liveness
+    void iDied;
+    return (
+      <p style={{ textAlign: "center" }}>
+        {pub.mercy
+          ? "Sab bach gaye… is baar."
+          : ghost
+            ? "Aap Khooni Kamra dekh chuke ho. Ab aatma ban ke khelo."
+            : "Screen dekho — kiski kismat acchi thi?"}
+      </p>
+    );
+  }
+  // gameOver
+  return <p style={{ textAlign: "center" }}>Khel khatam. Screen par natija dekho!</p>;
 }
 
 /** VIP-only room-code readout — lets the VIP announce/reveal the code even in
