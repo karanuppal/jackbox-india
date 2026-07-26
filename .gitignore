@@ -4,3 +4,4 @@ coverage/
 *.local
 .env
 .DS_Store
+fleet-results/

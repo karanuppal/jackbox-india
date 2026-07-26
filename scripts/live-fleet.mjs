@@ -41,6 +41,12 @@ async function clickText(page, text, timeout = 4000) {
   await btn.click({ timeout });
 }
 
+// Stale-element safety: the game advances phases server-side, so any element
+// found a moment ago may detach before the click lands. Every click gets a
+// SHORT timeout — Playwright's 30s default froze the whole loop for ~2min in
+// run #1 while the live game played on without us.
+const CLICK = { timeout: 1500 };
+
 /** Generic phone bot: whatever scene shows, play it plausibly. */
 async function playScene(page, who, opts) {
   const body = await page.textContent("body").catch(() => "");
@@ -51,11 +57,25 @@ async function playScene(page, who, opts) {
   // question phase: 4 option buttons after the Sawaal header
   if (body.includes("Sawaal ") && body.includes("/ 10")) {
     if (n >= 4) {
-      const idx = opts.wrong ? 3 : 0; // our test bank isn't known; 0 vs 3 randomizes outcomes
-      await buttons.nth(Math.min(idx, n - 1)).click().catch(() => {});
+      // rotate picks per question so answers spread across options — some
+      // right, some wrong, like a real living room (run #1's fixed idx 0
+      // was wrong twice straight and ended the game in 2 rounds)
+      opts.q = (opts.q ?? 0) + 1;
+      const idx = opts.wrong ? 3 : (opts.q + opts.seed) % 4;
+      await buttons.nth(Math.min(idx, n - 1)).click(CLICK).catch(() => {});
       return opts.wrong ? "answered-wrong-ish" : "answered";
     }
     return "question-wait";
+  }
+  // finale judging first among widgets: its marker phrase is exact, while
+  // category/option TEXT can accidentally contain kamra marker words
+  // (run #1 mislabeled a finale turn as "spelling")
+  if (body.includes("Jo FIT ho use chuno")) {
+    const opts2 = page.locator("button");
+    const c = await opts2.count();
+    for (let i = 0; i < Math.min(2, c - 1); i++) await opts2.nth(i).click(CLICK).catch(() => {});
+    await clickText(page, "Lock karo").catch(() => {});
+    return "finale-judged";
   }
   if (body.includes("= ?")) {
     // Hisaab-Kitaab: read "a op b = ?" and type the right answer
@@ -72,31 +92,31 @@ async function playScene(page, who, opts) {
   if (body.includes("wahi tiles dabao") || body.includes("YAAD KARO")) {
     const tiles = page.locator('[aria-label^="tile"]');
     const c = await tiles.count();
-    for (let i = 0; i < Math.min(3, c); i++) await tiles.nth(i).click().catch(() => {});
+    for (let i = 0; i < Math.min(3, c); i++) await tiles.nth(i).click(CLICK).catch(() => {});
     await clickText(page, "Lock karo").catch(() => {});
     return "memory";
   }
   if (body.includes("Kahan tha") || body.includes("Patte yaad")) {
     const cards = page.locator('[aria-label^="card"]');
     const c = await cards.count();
-    if (c > 0) await cards.first().click().catch(() => {});
+    if (c > 0) await cards.first().click(CLICK).catch(() => {});
     await clickText(page, "Lock karo").catch(() => {});
     return "taash";
   }
-  if (body.includes("spell karo")) {
+  if (body.includes("use spell karo")) {
     // tap every letter key once, then lock
     const keys = page.locator("button:not(:disabled)");
     const c = await keys.count();
     for (let i = 0; i < c; i++) {
       const t = await keys.nth(i).textContent().catch(() => "");
-      if (t && t.trim().length === 1 && /[a-z]/i.test(t.trim())) await keys.nth(i).click().catch(() => {});
+      if (t && t.trim().length === 1 && /[a-z]/i.test(t.trim())) await keys.nth(i).click(CLICK).catch(() => {});
     }
     await clickText(page, "Lock karo").catch(() => {});
     return "spelling";
   }
   if (body.includes("Ek glass chuno")) {
     const cups = page.locator('[aria-label^="chai"]');
-    if ((await cups.count()) > 0) await cups.nth(0).click().catch(() => {});
+    if ((await cups.count()) > 0) await cups.nth(0).click(CLICK).catch(() => {});
     return "chai";
   }
   if (body.includes("SAVE MYSELF")) {
@@ -127,14 +147,6 @@ async function playScene(page, who, opts) {
     const b = page.locator("button:not(:disabled)", { hasText: /:|🎨|🚫/ }).first();
     await b.click({ timeout: 2000 }).catch(() => {});
     return "voted";
-  }
-  if (body.includes("Jo FIT ho use chuno")) {
-    const opts2 = page.locator("button");
-    const c = await opts2.count();
-    // toggle the first two options, then lock
-    for (let i = 0; i < Math.min(2, c - 1); i++) await opts2.nth(i).click().catch(() => {});
-    await clickText(page, "Lock karo").catch(() => {});
-    return "finale-judged";
   }
   if (body.includes("Sab Aa Gaye")) {
     if (opts.vip) {
@@ -183,13 +195,14 @@ async function main() {
     });
     await sleep(800);
     await shot(page, `join-${name}`);
-    phones.push({ name, page, wrong: name === "Bunty", betray: name === "Chintu", vip: name === "Asha" });
+    phones.push({ name, page, seed: names.indexOf(name), wrong: name === "Bunty", betray: name === "Chintu", vip: name === "Asha" });
     log(`${name} joined via live URL (mobile viewport)`);
   }
   await shot(host, "host-lobby-full");
 
   // 3) play the full game (bounded loop)
   let lastHostScene = "";
+  let lastSceneShotAt = Date.now();
   let gameOverSeen = false;
   const deadline = Date.now() + 14 * 60 * 1000;
   while (Date.now() < deadline && !gameOverSeen) {
@@ -218,8 +231,15 @@ async function main() {
                   : "other";
     if (scene !== lastHostScene) {
       lastHostScene = scene;
+      lastSceneShotAt = Date.now();
       log(`HOST scene: ${scene}`);
       await shot(host, `host-${scene}`);
+    } else if (Date.now() - lastSceneShotAt > 25000) {
+      // heartbeat capture during long same-scene stretches — aesthetics
+      // evidence AND a stall canary in the timeline
+      lastSceneShotAt = Date.now();
+      await shot(host, `host-${scene}-hb`);
+      log(`heartbeat: host still on ${scene}`);
     }
     if (scene === "natija") {
       gameOverSeen = true;
