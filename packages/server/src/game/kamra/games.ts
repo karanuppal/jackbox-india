@@ -112,8 +112,9 @@ export class HisaabKitaab extends Base {
       : "Jaldi-jaldi jod-ghata karo. Sabse kam sahi jawab wala… gaya.";
   }
   private gen(): { a: number; b: number; op: "+" | "-" } {
-    const a = Math.floor(this.deps.rand() * 20);
-    const b = Math.floor(this.deps.rand() * 20);
+    // Operands floor at 2 — no free "0 + 0" money (UT-M4-5).
+    const a = 2 + Math.floor(this.deps.rand() * 18);
+    const b = 2 + Math.floor(this.deps.rand() * 18);
     return { a, b, op: this.deps.rand() < 0.5 ? "+" : "-" };
   }
   override privateFor(playerId: string): unknown {

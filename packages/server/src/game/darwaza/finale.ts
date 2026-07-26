@@ -278,8 +278,15 @@ export class AakhriDarwazaFinale {
     }
 
     // Movement: 1 space per correct judgment; the barrier blocks an imperfect
-    // crossing (§3.6).
+    // crossing (§3.6). NO LOCK = NO MOVEMENT (UT-M4-2, TMP behavior, PLAN
+    // amendment 2026-07-26): an untouched phone never creeps forward, never
+    // "accidentally" steals a body, and can never be barrier-perfect idle.
     for (const r of this.active()) {
+      const locked = this.selections.has(r.id);
+      if (!locked) {
+        r.lastMove = 0;
+        continue;
+      }
       const assigned = this.assignments.get(r.id) ?? [];
       const sel = new Set(this.selections.get(r.id) ?? []);
       let score = 0;

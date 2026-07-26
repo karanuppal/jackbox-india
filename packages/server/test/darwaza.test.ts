@@ -208,6 +208,21 @@ describe("AakhriDarwazaFinale — darkness & barrier", () => {
   });
 });
 
+describe("AakhriDarwazaFinale — no lock, no movement (UT-M4-2)", () => {
+  it("an idle runner never moves — even when dealt all non-fitting options", () => {
+    const f = makeFinale({ ghosts: [entrant("g1", 100)] });
+    f.onTimeout(); // judge t1
+    judgePerfect(f, "g1"); // the ghost judges; the living player is IDLE
+    f.onTimeout(); // judge timeout → resolve
+    const p = pub(f) as Extract<FinalePublic, { kind: "finaleTurn" }>;
+    const L = p.runners.find((r) => r.id === "L")!;
+    expect(L.lastMove).toBe(0); // untouched phone = zero creep
+    expect(L.distance).toBe(FINALE_START_LIVING);
+    const g = p.runners.find((r) => r.id === "g1")!;
+    expect(g.lastMove).toBeGreaterThan(0); // the engaged runner moved
+  });
+});
+
 describe("AakhriDarwazaFinale — audience runner (§3.6)", () => {
   it("audience majority moves the runner; audience escape crowns the body holder", () => {
     const f = makeFinale({ ghosts: [], audience: true });

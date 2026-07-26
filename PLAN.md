@@ -694,6 +694,8 @@ presentation → audio.
 | 2026-07-26 | **§3.3 wheel spin order (UT-M3-3):** poorest surviving player spins first (the leaders earned their safety); odds (5 maut : 1 zindagi) are shown on the shared screen. |
 | 2026-07-26 | **§5.1 K3 symbols (UT-M3-13):** taash symbols are kirpan/hockey/chappal/hathoda — chappal replaces belan (no rolling-pin emoji renders; 🥖 read as bread). |
 | 2026-07-26 | **M5 delivered:** content bank at 500 questions + 63 worst prompts + 47 drawing prompts + 46 spelling words + 34 finale categories, all §6.4-policy-filtered, schema-validated, correct-index balanced (10–40%%), with per-item source notes. VO ids regenerate at M6. |
+| 2026-07-26 | **§3.6 idle runners (UT-M4-2, pinned):** NO LOCK = NO MOVEMENT — an unlocked judgment scores zero (TMP behavior), deviating from a literal reading of "leaving a non-fit unselected" for un-submitted turns; idle phones can't creep, steal bodies, or break the barrier. |
+| 2026-07-26 | **K1 operands (UT-M4-5):** Hisaab-Kitaab operands floor at 2 — no zero-sum free money. |
 
 ---
 

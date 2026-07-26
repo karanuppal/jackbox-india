@@ -471,14 +471,15 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     expect(pub(engine).kind).toBe("kamraIntro");
     engine.onTimeout(); // intro → play
     expect(pub(engine).kind).toBe("kamraPlay");
-    // b's private math question is deterministic under rand()=0: 0 + 0
+    // b's private math question is deterministic under rand()=0: 2 + 2
+    // (operands floor at 2, UT-M4-5)
     const priv = engine.privatePhaseData("b");
     expect(priv.kamra?.onFloor).toBe(true);
-    expect(priv.kamra?.data).toEqual({ a: 0, b: 0, op: "+", score: 0, soloBar: 3 });
+    expect(priv.kamra?.data).toEqual({ a: 2, b: 2, op: "+", score: 0, soloBar: 3 });
     // three correct answers clears the solo survival bar (§3.4)
-    engine.onAction("b", { type: "kmMath", value: 0 }, meta);
-    engine.onAction("b", { type: "kmMath", value: 0 }, meta);
-    engine.onAction("b", { type: "kmMath", value: 0 }, meta);
+    engine.onAction("b", { type: "kmMath", value: 4 }, meta);
+    engine.onAction("b", { type: "kmMath", value: 4 }, meta);
+    engine.onAction("b", { type: "kmMath", value: 4 }, meta);
     const after = driveKamra(engine); // play timeout → result (no deaths) → next q
     expect(after?.phase).toBe("question");
     expect(engine.playerState("b")!.alive).toBe(true); // survived the kamra

@@ -240,7 +240,9 @@ function GameScene({
           ? "Audience bhaag gayi! Taaj zinda shareer ko mila."
           : pub.finale?.escaped === true
             ? "Aakhri Darwaze se zinda nikla — wahi jeeta. Paisa sirf yaadgaar hai."
-            : "Niyam: jo zinda bacha, wahi jeeta — paisa nahi, saansein ginti hain."}
+            : pub.finale !== undefined
+              ? "Koi zinda nahi nikla. Taaj sabse amir laash ko — mubarak ho… jaisi bhi ho." // UT-M4-3
+              : "Niyam: jo zinda bacha, wahi jeeta — paisa nahi, saansein ginti hain."}
       </p>
       <ol style={{ listStyle: "none", padding: 0, maxWidth: "24rem", margin: "0 auto" }}>
         {pub.standings.map((s, i) => (

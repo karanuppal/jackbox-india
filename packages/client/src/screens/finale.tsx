@@ -38,10 +38,15 @@ export function HostFinaleScene({
     );
   }
   const nameOf = (id: string) => pub.runners.find((r) => r.id === id)?.name ?? "koi";
+  const darknessLive = pub.darkness < FINALE_DARKNESS_START;
   return (
     <div style={{ textAlign: "center", width: "100%" }}>
       <p style={{ opacity: 0.7 }}>
         {`Aakhri Darwaza — chakkar ${pub.turn}`} {pub.sub === "judge" && <Countdown deadline={deadline} />}
+        {/* darkness telegraph so turn 4 isn't a surprise (UT-M4-4) */}
+        <span style={{ marginLeft: "0.75rem", color: darknessLive ? COLORS.blood : COLORS.ghost, fontSize: "0.85rem" }}>
+          {darknessLive ? "🌑 andhera badh raha hai!" : "🌑 andhera chakkar 4 se badhega"}
+        </span>
       </p>
       <h2 style={{ fontSize: "1.6rem", color: COLORS.marigold, maxWidth: "42rem", margin: "0.4rem auto" }}>
         {pub.categoryTitle}
@@ -89,7 +94,13 @@ function Track({ runners, darkness }: { runners: FinaleRunnerPublic[]; darkness:
       <div
         style={{ position: "absolute", top: 0, bottom: 0, left: `${pct(darkness)}%`, right: 0, background: "rgba(0,0,0,0.75)", borderLeft: `3px solid ${COLORS.blood}`, transition: "left 0.8s" }}
       />
-      <div style={{ position: "absolute", left: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "2rem" }}>🚪</div>
+      {/* distance ticks every 5 spaces so movement is legible (UT-M4-4) */}
+      {[5, 10, 15, 20, 25].map((d) => (
+        <div key={d} style={{ position: "absolute", left: `${pct(d)}%`, top: 0, bottom: 0, borderLeft: "1px dashed rgba(255,255,255,0.15)" }}>
+          <span style={{ position: "absolute", bottom: "0.1rem", left: "0.15rem", fontSize: "0.6rem", opacity: 0.5 }}>{d}</span>
+        </div>
+      ))}
+      <div style={{ position: "absolute", left: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "3rem" }}>🚪</div>
       {runners.map((r, i) => (
         <div
           key={r.id}
