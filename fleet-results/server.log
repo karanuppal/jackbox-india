@@ -1,0 +1,5 @@
+
+> @tamasha/server@0.1.0 start /home/runner/work/jackbox-india/jackbox-india/packages/server
+> tsx src/main.ts
+
+tamasha server listening on { address: '::', family: 'IPv6', port: 8787 }
