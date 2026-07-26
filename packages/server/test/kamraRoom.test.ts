@@ -119,6 +119,37 @@ describe("Room × Khooni Kamra integration", () => {
     expect(phaseKind(room)).toBe("kamraPlay");
   });
 
+  it("a host reload auto-resumes the host-drop pause — the room is never bricked (UT-M3-1)", () => {
+    const { room, clock, a, b, c } = setup();
+    room.applyAction(a, { action: "startGame" });
+    clock.advance(TIMERS.tutorialMs);
+    room.handleTimeout(); // → question
+    const deadlineBefore = room.publicState().deadline!;
+    room.connectHost(room.hostToken); // host screen attaches
+    room.disconnectHost(); // …and reloads (drops)
+    expect(room.isPaused()).toBe(true); // auto-pause with frozen remaining
+    clock.advance(30_000); // reload takes a while
+    expect(room.handleTimeout()).toBe(false); // frozen
+    room.connectHost(room.hostToken); // host tab comes back
+    expect(room.isPaused()).toBe(false); // pause lifted AUTOMATICALLY
+    const restored = room.publicState().deadline!;
+    expect(restored - clock.now()).toBe(deadlineBefore - (clock.now() - 30_000)); // remaining preserved
+  });
+
+  it("a DELIBERATE host pause survives a host reconnect (only resume lifts it)", () => {
+    const { room, clock, a } = setup();
+    room.applyAction(a, { action: "startGame" });
+    clock.advance(TIMERS.tutorialMs);
+    room.handleTimeout();
+    room.connectHost(room.hostToken);
+    room.applyAction(null, { action: "pause" }); // deliberate
+    room.disconnectHost();
+    room.connectHost(room.hostToken); // reconnect must NOT auto-resume
+    expect(room.isPaused()).toBe(true);
+    room.applyAction(null, { action: "resume" });
+    expect(room.isPaused()).toBe(false);
+  });
+
   it("kamra input is frozen while paused (§4.3)", () => {
     const { room, clock, a, b, c } = setup();
     room.applyAction(a, { action: "startGame" });

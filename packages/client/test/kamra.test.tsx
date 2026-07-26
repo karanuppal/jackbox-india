@@ -82,8 +82,8 @@ describe("Host — kamra scenes", () => {
     const pub: KamraPublicPhase = {
       kind: "kamraVote", minigame: "gandaChitra",
       entries: [
-        { playerId: "p1", name: "Karan", text: null, strokes: [{ color: 1, width: 3, points: [[0.1, 0.1], [0.5, 0.5]] }], votesAgainst: 2 },
-        { playerId: "p2", name: "Bunty", text: "chai", strokes: null, votesAgainst: 0 },
+        { playerId: "p1", name: "Karan", text: null, strokes: [{ color: 1, width: 3, points: [[0.1, 0.1], [0.5, 0.5]] }], censored: false, votesAgainst: 2 },
+        { playerId: "p2", name: "Bunty", text: "chai", strokes: null, censored: false, votesAgainst: 0 },
       ],
       vo: "Vote karo.",
     };
@@ -91,11 +91,41 @@ describe("Host — kamra scenes", () => {
     expect(html).toContain("Sabse ghatiya");
     expect(html).toContain("polyline"); // drawing rendered as SVG
     expect(html).toContain("chai");
+    // live tallies are hidden during the vote (UT-M3-14) — reveal at result
+    expect(html).not.toContain("👎");
+  });
+
+  it("the result shows the fatal ballot entry with its final tally (UT-M3-14)", () => {
+    const pub: KamraPublicPhase = {
+      kind: "kamraResult", minigame: "sabseGhatiyaJawaab", deaths: ["p2"], survivors: ["p1"],
+      entries: [
+        { playerId: "p1", name: "Karan", text: "theek", strokes: null, censored: false, votesAgainst: 0 },
+        { playerId: "p2", name: "Bunty", text: "bakwaas jawab", strokes: null, censored: false, votesAgainst: 2 },
+      ],
+      vo: "Faisla.",
+    };
+    const players = [player(), player({ id: "p2", name: "Bunty" })];
+    const html = renderToString(<Host state={joined({ public: base("khooniKamra", pub, { players }) })} origin="http://x" />);
+    expect(html).toContain("bakwaas jawab"); // the fatal answer gets its payoff
     expect(html).toContain("2 👎");
   });
 
+  it("a censored entry renders as a blank 🚫 card on the ballot (UT-M3-2)", () => {
+    const pub: KamraPublicPhase = {
+      kind: "kamraVote", minigame: "sabseGhatiyaJawaab",
+      entries: [
+        { playerId: "p1", name: "Karan", text: null, strokes: null, censored: true, votesAgainst: 0 },
+        { playerId: "p2", name: "Bunty", text: "chai", strokes: null, censored: false, votesAgainst: 0 },
+      ],
+      vo: "Vote karo.",
+    };
+    const html = renderToString(<Host state={joined({ public: base("khooniKamra", pub) })} origin="http://x" />);
+    expect(html).toContain("🚫");
+    expect(html).toContain("Karan"); // still ON the ballot, content hidden
+  });
+
   it("renders the result with deaths and survivors named", () => {
-    const pub: KamraPublicPhase = { kind: "kamraResult", minigame: "zeharWaliChai", deaths: ["p2"], survivors: ["p1"], vo: "Faisla." };
+    const pub: KamraPublicPhase = { kind: "kamraResult", minigame: "zeharWaliChai", deaths: ["p2"], survivors: ["p1"], entries: [], vo: "Faisla." };
     const players = [player(), player({ id: "p2", name: "Bunty" })];
     const html = renderToString(<Host state={joined({ public: base("khooniKamra", pub, { players }) })} origin="http://x" />);
     expect(html).toContain("💀");
@@ -104,17 +134,18 @@ describe("Host — kamra scenes", () => {
   });
 
   it("renders a no-deaths result as everyone surviving", () => {
-    const pub: KamraPublicPhase = { kind: "kamraResult", minigame: "dhokha", deaths: [], survivors: ["p1", "p2"], vo: "Wafaadaari." };
+    const pub: KamraPublicPhase = { kind: "kamraResult", minigame: "dhokha", deaths: [], survivors: ["p1", "p2"], entries: [], vo: "Wafaadaari." };
     const html = renderToString(<HostKamraScene pub={pub} players={[player()]} deadline={null} subtitles />);
     expect(html === "" ? renderToString(<HostKamraScene pub={pub} players={[player()]} deadline={null} subtitles />) : html).toContain("Sab bach gaye");
   });
 
-  it("renders the wheel with spinner name, spinning state, then the outcome", () => {
+  it("renders the wheel with spinner name, the odds framing, then the outcome", () => {
     const spinning: WheelPublic = { kind: "wheel", spinnerId: "p1", spinnerName: "Karan", outcome: null, vo: "Ghoomta hai…" };
     let html = renderToString(<Host state={joined({ public: base("wheel", spinning) })} origin="http://x" />);
     expect(html).toContain("MAUT KA CHAKRA");
     expect(html).toContain("Karan");
-    expect(html).toContain("🎡");
+    expect(html).toContain("5 maut : 1 zindagi"); // the rule is on screen (UT-M3-3)
+    expect(html).toContain("conic-gradient"); // a real 6-segment wheel (UT-M3-12)
     const landed: WheelPublic = { ...spinning, outcome: "death" };
     html = renderToString(<Host state={joined({ public: base("wheel", landed) })} origin="http://x" />);
     expect(html).toContain("💀");
@@ -227,7 +258,7 @@ describe("Controller — kamra minigames", () => {
     const intro: KamraPublicPhase = { kind: "kamraIntro", minigame: "dhokha", title: "Rishtedaari Test", rules: "…", floor, vo: "…" };
     await renderController(intro, privOnFloor(null), []);
     expect(container.textContent).toContain("Khooni Kamre mein ho");
-    const result: KamraPublicPhase = { kind: "kamraResult", minigame: "dhokha", deaths: ["p1"], survivors: [], vo: "…" };
+    const result: KamraPublicPhase = { kind: "kamraResult", minigame: "dhokha", deaths: ["p1"], survivors: [], entries: [], vo: "…" };
     await renderController(result, { myAnswer: null, answered: false, alive: false, kamra: null }, []);
     expect(container.textContent).toContain("aatma ban ke");
   });
@@ -237,8 +268,8 @@ describe("Controller — voting & censor", () => {
   const votePub: KamraPublicPhase = {
     kind: "kamraVote", minigame: "sabseGhatiyaJawaab",
     entries: [
-      { playerId: "p2", name: "Bunty", text: "bakwaas", strokes: null, votesAgainst: 0 },
-      { playerId: "p3", name: "Pinky", text: "theek hai", strokes: null, votesAgainst: 1 },
+      { playerId: "p2", name: "Bunty", text: "bakwaas", strokes: null, censored: false, votesAgainst: 0 },
+      { playerId: "p3", name: "Pinky", text: "theek hai", strokes: null, censored: false, votesAgainst: 1 },
     ],
     vo: "Vote karo.",
   };

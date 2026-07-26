@@ -2,13 +2,14 @@ import { startServer, WS_PATH } from "./app.js";
 import { RoomRegistry } from "./rooms/registry.js";
 import { Hub } from "./ws/hub.js";
 import { createKhooniSawaalEngine } from "./game/khooniSawaal.js";
-import { loadKamraContent, loadQuestionBank } from "./content/load.js";
+import { loadFinaleBank, loadKamraContent, loadQuestionBank } from "./content/load.js";
 import { ConcurrencyLimiter, IpRateLimiter } from "./net/ipLimits.js";
 import { LOOKUP_RATE_LIMIT_PER_MIN } from "@tamasha/shared";
 
 const port = Number(process.env.PORT ?? 8787);
 const questionBank = loadQuestionBank();
 const kamraContent = loadKamraContent();
+const finaleBank = loadFinaleBank();
 const registry = new RoomRegistry(
   createKhooniSawaalEngine(questionBank, {
     kamraContent: {
@@ -16,6 +17,7 @@ const registry = new RoomRegistry(
       worstPrompts: kamraContent.worstPrompts.map((p) => ({ text: p.text, adult: p.adult })),
       drawPrompts: kamraContent.drawPrompts.map((p) => ({ text: p.text, adult: p.adult })),
     },
+    finaleCategories: finaleBank,
   }),
 );
 

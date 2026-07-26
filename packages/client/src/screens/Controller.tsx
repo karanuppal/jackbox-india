@@ -6,6 +6,7 @@ import { COLORS, avatarLabel } from "../ui/theme.js";
 import { errorText } from "../net/errors.js";
 import { Countdown } from "../ui/Countdown.js";
 import { ControllerKamra } from "./kamra.js";
+import { ControllerFinale } from "./finale.js";
 
 /**
  * Phone controller. In M1 this shows the lobby "waiting" state and, for the
@@ -118,6 +119,18 @@ function GamePhase({
       />
     );
   }
+  if (pub.kind === "finaleIntro" || pub.kind === "finaleTurn") {
+    return (
+      <ControllerFinale
+        pub={pub}
+        priv={priv?.finale ?? null}
+        youId={youId}
+        isAudience={isAudience}
+        deadline={deadline}
+        onAction={onAction}
+      />
+    );
+  }
 
   if (pub.kind === "tutorial") {
     return (
@@ -168,14 +181,29 @@ function GamePhase({
     );
   }
   if (pub.kind === "reveal") {
+    // Tell the player THEIR fate, not a generic watch-card (UT-M3-5).
+    const mine = priv?.myAnswer ?? null;
+    const gotIt = mine !== null && mine === pub.correct;
+    const sentenced = youId !== null && pub.floor.includes(youId);
     return (
-      <p style={{ textAlign: "center" }}>
-        {pub.mercy
-          ? "Sab bach gaye… is baar."
-          : ghost
-            ? "Aap ab aatma ho. Phir bhi khelte raho."
-            : "Screen dekho — kiski kismat acchi thi?"}
-      </p>
+      <div style={{ textAlign: "center" }}>
+        {gotIt && <p style={{ color: COLORS.marigold, fontSize: "1.2rem" }}>✅ Sahi jawab! +₹1000</p>}
+        {!gotIt && mine !== null && !pub.mercy && (
+          <p style={{ color: COLORS.blood, fontSize: "1.1rem" }}>❌ Galat…</p>
+        )}
+        {sentenced && (
+          <p style={{ color: COLORS.blood, fontSize: "1.25rem" }}>🚪 Khooni Kamra aapko bula raha hai.</p>
+        )}
+        <p style={{ opacity: 0.85 }}>
+          {pub.mercy
+            ? "Sab galat — sab bach gaye… is baar."
+            : ghost
+              ? "Aap aatma ho. Phir bhi khelte raho."
+              : sentenced
+                ? "Taiyaar ho jao…"
+                : "Screen dekho."}
+        </p>
+      </div>
     );
   }
   // gameOver

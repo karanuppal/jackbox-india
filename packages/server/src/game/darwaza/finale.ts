@@ -40,7 +40,7 @@ export interface FinaleEntrant {
 
 export interface FinaleOptions {
   rand?: () => number;
-  timers?: Partial<typeof FINALE_TIMERS>;
+  timers?: Partial<Record<keyof typeof FINALE_TIMERS, number>>;
   /** Include the collective audience runner (§3.6). */
   audience?: boolean;
 }
@@ -67,7 +67,7 @@ export class AakhriDarwazaFinale {
   private readonly runners: Runner[] = [];
   private readonly categories: FinaleCategory[];
   private readonly rand: () => number;
-  private readonly t: typeof FINALE_TIMERS;
+  private readonly t: Record<keyof typeof FINALE_TIMERS, number>;
   private readonly solo: boolean;
 
   private sub: FinaleSubPhase = "intro";

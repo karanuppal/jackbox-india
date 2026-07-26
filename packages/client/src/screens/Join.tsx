@@ -16,17 +16,20 @@ const NAME_HAS_GLYPH = /[\p{L}\p{N}\p{P}\p{S}]/u;
 /** Presentational join form. Parent owns navigation/connection. */
 export function JoinForm({
   initialCode = "",
+  initialName = "",
   askPassword = false,
   notice,
   onSubmit,
 }: {
   initialCode?: string;
+  /** Prefilled from the device's last session for one-tap rejoin (UT-M3-8). */
+  initialName?: string;
   askPassword?: boolean;
   notice?: string;
   onSubmit: (v: JoinSubmit) => void;
 }) {
   const [code, setCode] = useState(initialCode);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
   const [password, setPassword] = useState("");
 
   const codeValid = /^[A-Za-z]{4}$/.test(code.trim());

@@ -2,6 +2,7 @@
 // renderer. The platform protocol stays game-agnostic (phaseData is `unknown`);
 // these types are how the KS game module and its screens agree on that payload.
 
+import type { FinalePrivate, FinalePublic } from "./darwaza.js";
 import type { KamraPrivate, KamraPublicPhase } from "./kamra.js";
 
 export const QUESTION_BUDGET = 10;
@@ -67,6 +68,8 @@ export interface KsGameOverPublic {
   kind: "gameOver";
   standings: KsStanding[]; // sorted best-first
   winnerId: string | null;
+  /** How the Aakhri Darwaza ended, when the game reached it (§3.6, M4). */
+  finale?: { escaped: boolean; audienceEscaped: boolean };
   vo: string;
 }
 
@@ -75,7 +78,8 @@ export type KsPublicPhase =
   | KsQuestionPublic
   | KsRevealPublic
   | KsGameOverPublic
-  | KamraPublicPhase;
+  | KamraPublicPhase
+  | FinalePublic;
 
 export interface KsPrivatePhase {
   /** For the question phase: this player's locked choice, or null. */
@@ -85,4 +89,6 @@ export interface KsPrivatePhase {
   alive: boolean;
   /** Khooni Kamra per-player state; null outside the kamra phase (§3.4). */
   kamra: KamraPrivate | null;
+  /** Aakhri Darwaza per-runner state; null outside the finale (§3.6, M4). */
+  finale: FinalePrivate | null;
 }

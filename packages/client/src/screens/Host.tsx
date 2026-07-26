@@ -6,6 +6,7 @@ import { COLORS, avatarLabel } from "../ui/theme.js";
 import { joinUrl, qrSvg } from "../net/qr.js";
 import { Countdown } from "../ui/Countdown.js";
 import { HostKamraScene } from "./kamra.js";
+import { HostFinaleScene } from "./finale.js";
 
 /**
  * Host screen (the shared "show" display). M1: lobby with room code, QR, the
@@ -69,6 +70,29 @@ export function Host({
       ) : (
         <>
           {pub.paused && <p style={S.error}>⏸ Mishra Ji ne game rok diya hai…</p>}
+          {/* Host pause/resume control — resume was previously unreachable
+              from any UI (UT-M3-1). Only the host connection can send these. */}
+          {onAction !== undefined && pub.phase !== "gameOver" && (
+            <button
+              type="button"
+              onClick={() => onAction({ action: pub.paused ? "resume" : "pause" })}
+              style={{
+                position: "absolute",
+                top: "0.75rem",
+                right: "0.75rem",
+                fontSize: "0.85rem",
+                minHeight: "40px",
+                borderRadius: "1rem",
+                padding: "0.3rem 0.9rem",
+                border: `1px solid ${COLORS.marigold}`,
+                background: "transparent",
+                color: COLORS.cream,
+                cursor: "pointer",
+              }}
+            >
+              {pub.paused ? "▶ Resume" : "⏸ Pause"}
+            </button>
+          )}
           <GameScene
             pub={pub.phaseData as KsPublicPhase | null}
             subtitles={pub.settings.subtitles}
@@ -156,10 +180,22 @@ function GameScene({
   ) {
     return <HostKamraScene pub={pub} players={players} deadline={deadline} subtitles={subtitles} />;
   }
+  if (pub.kind === "finaleIntro" || pub.kind === "finaleTurn") {
+    return <HostFinaleScene pub={pub} deadline={deadline} subtitles={subtitles} />;
+  }
   // gameOver
   return (
     <div style={{ textAlign: "center", width: "100%" }}>
       <h2 style={{ fontSize: "2rem", color: COLORS.marigold }}>Natija</h2>
+      {/* the rule, spelled out — a poorer survivor beating richer ghosts must
+          not read as a scoring bug (UT-M3-4) */}
+      <p style={{ opacity: 0.8, margin: "0.2rem 0 0.5rem" }}>
+        {pub.finale?.audienceEscaped === true
+          ? "Audience bhaag gayi! Taaj zinda shareer ko mila."
+          : pub.finale?.escaped === true
+            ? "Aakhri Darwaze se zinda nikla — wahi jeeta. Paisa sirf yaadgaar hai."
+            : "Niyam: jo zinda bacha, wahi jeeta — paisa nahi, saansein ginti hain."}
+      </p>
       <ol style={{ listStyle: "none", padding: 0, maxWidth: "24rem", margin: "0 auto" }}>
         {pub.standings.map((s, i) => (
           <li

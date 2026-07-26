@@ -73,6 +73,9 @@ export class Room {
   private hostGoneSince: number | null = null;
   // Milliseconds left on the countdown when the game was paused (§4.3).
   private pausedRemaining: number | null = null;
+  // The pause was caused by the host screen dropping (not a deliberate host
+  // action) — cleared automatically when the host reconnects (UT-M3-1).
+  private pausedByHostGone = false;
 
   constructor(code: string, createEngine: CreateEngine, now: () => number = Date.now) {
     this.code = code;
@@ -115,17 +118,33 @@ export class Room {
     if (!safeEqual(sessionToken, this.hostToken)) return { ok: false, code: "NOT_ALLOWED" };
     this.hostConnected = true;
     this.hostGoneSince = null;
+    // A host-drop pause lifts AUTOMATICALLY when the host screen returns —
+    // a reloaded host tab must never brick the room (UT-M3-1). A deliberate
+    // host-initiated pause stays until resumed.
+    if (this.paused && this.pausedByHostGone) this.resumeInternal();
     this.recomputeEmpty();
     return { ok: true, playerId: null, sessionToken: this.hostToken, role: "host" };
   }
   disconnectHost(): void {
     this.hostConnected = false;
     this.hostGoneSince = this.now();
-    // Host drop pauses the game for everyone (grace before teardown, §4.2).
+    // Host drop pauses the game for everyone (grace before teardown, §4.2),
+    // FREEZING the countdown like a deliberate pause does (UT-M3-1).
     if (this.phase !== "lobby" && this.phase !== "gameOver" && this.phase !== "postGame") {
-      this.paused = true;
+      if (!this.paused) {
+        this.paused = true;
+        this.pausedByHostGone = true;
+        this.pausedRemaining = this.deadline !== null ? Math.max(0, this.deadline - this.now()) : null;
+      }
     }
     this.recomputeEmpty();
+  }
+
+  private resumeInternal(): void {
+    this.paused = false;
+    this.pausedByHostGone = false;
+    if (this.pausedRemaining !== null) this.deadline = this.now() + this.pausedRemaining;
+    this.pausedRemaining = null;
   }
   /** Epoch-ms the host screen last disconnected (null while connected). §4.2. */
   getHostGoneSince(): number | null {
@@ -294,16 +313,13 @@ export class Room {
       case "pause":
         if (!this.paused) {
           this.paused = true;
+          this.pausedByHostGone = false; // deliberate — survives host reconnects
           // Freeze the countdown: remember what was left (§4.3 pause).
           this.pausedRemaining = this.deadline !== null ? Math.max(0, this.deadline - this.now()) : null;
         }
         return null;
       case "resume":
-        if (this.paused) {
-          this.paused = false;
-          if (this.pausedRemaining !== null) this.deadline = this.now() + this.pausedRemaining;
-          this.pausedRemaining = null;
-        }
+        if (this.paused) this.resumeInternal();
         return null;
       case "game":
         // Paused freezes all game input for everyone (§4.3, QA-M1-10).
@@ -326,7 +342,12 @@ export class Room {
       name: p.name,
       avatar: p.avatar,
     }));
-    const next = this.engine.start({ players: gamePlayers, settings: this.settings, now: this.now });
+    const next = this.engine.start({
+      players: gamePlayers,
+      settings: this.settings,
+      now: this.now,
+      audienceCount: () => this.audience().length,
+    });
     this.phase = next.phase as Phase;
     this.deadline = next.deadline;
     return null;

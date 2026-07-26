@@ -66,7 +66,7 @@ describe("Controller — trivia phases", () => {
     const mercyReveal: KsRevealPublic = { ...reveal, mercy: true, deaths: [], floor: [] };
     const state = joined({ public: base("reveal", mercyReveal), private: { you: player(), role: "player", phaseData: { myAnswer: 1, answered: true, alive: true } } });
     const html = renderToString(<Controller state={state} onAction={() => {}} />);
-    expect(html).toContain("Sab bach gaye");
+    expect(html).toContain("sab bach gaye");
   });
 });
 

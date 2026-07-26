@@ -34,6 +34,9 @@ export interface GameContext {
   settings: Settings;
   /** Server clock injected for determinism/testability. */
   now: () => number;
+  /** Live audience headcount (the finale's audience runner joins only when
+   *  somebody is actually watching, §3.6). Optional for older callers/tests. */
+  audienceCount?: () => number;
 }
 
 export interface GameEngine {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Question, KsPublicPhase } from "@tamasha/shared";
+import type { FinaleCategory, Question, KsPublicPhase } from "@tamasha/shared";
 import { KhooniSawaalEngine } from "../src/game/khooniSawaal.js";
 import type { GameContext } from "../src/game/engine.js";
 
@@ -22,12 +22,35 @@ function bank(n = 12): Question[] {
 
 const meta = { role: "player" as const, active: true };
 
+/** A finale category where options 0..3 fit and 4..7 don't. */
+function finaleCat(id: number): FinaleCategory {
+  return {
+    id: `f_${String(id).padStart(4, "0")}`,
+    title: "SRK double roles",
+    vo: `f_${String(id).padStart(4, "0")}.ogg`,
+    adult: false,
+    options: [
+      { text: "Duplicate", fits: true },
+      { text: "Don", fits: true },
+      { text: "Fan", fits: true },
+      { text: "Ra.One", fits: true },
+      { text: "DDLJ", fits: false },
+      { text: "Swades", fits: false },
+      { text: "Chak De", fits: false },
+      { text: "Devdas", fits: false },
+    ],
+    source: "test fixture",
+  };
+}
+
 function makeEngine(
   playerIds: string[],
   opts?: {
     skipTutorial?: boolean;
     timerMode?: "normal" | "extended" | "off";
     rand?: () => number;
+    finale?: boolean;
+    audienceCount?: number;
   },
 ) {
   let t = 1000;
@@ -38,6 +61,8 @@ function makeEngine(
     // deterministic kamra/wheel randomness (defaults to always-0: first
     // minigame in the pool, wheel always lands on death)
     rand: opts?.rand ?? (() => 0),
+    // M4: finale opt-in per test (older tests exercise the no-finale fallback)
+    ...(opts?.finale === true ? { finaleCategories: [finaleCat(1)] } : {}),
   });
   const ctx: GameContext = {
     players: playerIds.map((id) => ({ id, name: id, avatar: 0 })),
@@ -47,6 +72,7 @@ function makeEngine(
       password: null, hideRoomCode: false, controllerOnlyStart: false, skipTutorial: opts?.skipTutorial ?? false,
     },
     now: clock.now,
+    audienceCount: () => opts?.audienceCount ?? 0,
   };
   const first = engine.start(ctx);
   return { engine, clock, first };
@@ -448,7 +474,7 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     // b's private math question is deterministic under rand()=0: 0 + 0
     const priv = engine.privatePhaseData("b");
     expect(priv.kamra?.onFloor).toBe(true);
-    expect(priv.kamra?.data).toEqual({ a: 0, b: 0, op: "+" });
+    expect(priv.kamra?.data).toEqual({ a: 0, b: 0, op: "+", score: 0, soloBar: 3 });
     // three correct answers clears the solo survival bar (§3.4)
     engine.onAction("b", { type: "kmMath", value: 0 }, meta);
     engine.onAction("b", { type: "kmMath", value: 0 }, meta);
@@ -478,16 +504,21 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     const adv = engine.onAction(B, { type: "kmAnswer", text: "ghatiya jawab" }, meta);
     expect(adv?.phase).toBe("khooniKamra"); // sub-phase changed → new deadline
     expect(pub(engine).kind).toBe("kamraVote");
-    // the VIP censors A's submission — it can no longer win "worst" (§4.3)
+    // the VIP censors A's submission — content hidden, entry stays on the
+    // ballot as a blank card (UT-M3-2)
     expect(engine.onAction(C, { type: "censor", targetId: A }, { ...meta, vip: true })).toBeNull();
     const vote = pub(engine);
     if (vote.kind === "kamraVote") {
-      expect(vote.entries.map((e) => e.playerId)).toEqual([B]); // A censored out
+      const entryA = vote.entries.find((e) => e.playerId === A)!;
+      expect(entryA.censored).toBe(true);
+      expect(entryA.text).toBeNull();
     }
     // a non-VIP cannot censor
     engine.onAction(C, { type: "censor", targetId: B }, { ...meta, vip: false });
     const vote2 = pub(engine);
-    if (vote2.kind === "kamraVote") expect(vote2.entries).toHaveLength(1);
+    if (vote2.kind === "kamraVote") {
+      expect(vote2.entries.find((e) => e.playerId === B)?.censored).toBe(false);
+    }
     // the last outstanding voter votes against B → the polls close EARLY
     const closed = engine.onAction(C, { type: "kmVote", targetId: B }, meta);
     expect(closed?.phase).toBe("khooniKamra"); // sub-phase advanced → new deadline
@@ -613,6 +644,116 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     if (p2.kind === "kamraIntro") seen.push(p2.minigame);
     expect(seen).toHaveLength(2);
     expect(seen[0]).not.toBe(seen[1]); // LRU: no repeat while fresh games remain
+  });
+});
+
+describe("KhooniSawaalEngine — M4 Aakhri Darwaza integration", () => {
+  /** Perfect-judge helper: select exactly the assigned fitting options. */
+  function judgePerfect(engine: KhooniSawaalEngine, id: string) {
+    const priv = engine.privatePhaseData(id);
+    const fits = ["Duplicate", "Don", "Fan", "Ra.One"];
+    const sel = (priv.finale?.options ?? []).filter((o) => fits.includes(o.text)).map((o) => o.index);
+    const p = pub(engine);
+    const turn = p.kind === "finaleTurn" ? p.turn : 0;
+    return engine.onAction(id, { type: "fjJudge", turn, selection: sel }, meta);
+  }
+
+  it("attrition to one living player starts the finale immediately (§3.3)", () => {
+    const { engine } = makeEngine(["a", "b"], { finale: true });
+    engine.onTimeout(); // q1
+    engine.onAction("a", answer("q_0001", 0), meta);
+    engine.onAction("b", answer("q_0001", 3), meta); // wrong → kamra
+    engine.onTimeout(); // reveal → kamra
+    const next = driveKamra(engine); // b dies → 1 alive → FINALE, not question 2
+    expect(next?.phase).toBe("finaleIntro");
+    const p = pub(engine);
+    expect(p.kind).toBe("finaleIntro");
+    if (p.kind === "finaleIntro") {
+      expect(p.runners.find((r) => r.id === "a")?.kind).toBe("living");
+      expect(p.runners.find((r) => r.id === "b")?.kind).toBe("ghost");
+    }
+  });
+
+  it("the wheel hands over to the finale once one player remains", () => {
+    const { engine } = makeEngine(["a", "b", "c"], { finale: true });
+    engine.onTimeout(); // q1
+    for (let q = 1; q <= 10; q++) {
+      const qid = `q_${String(q).padStart(4, "0")}`;
+      engine.onAction("a", answer(qid, 0), meta);
+      engine.onAction("b", answer(qid, 0), meta);
+      engine.onAction("c", answer(qid, 0), meta);
+      engine.onTimeout(); // reveal → next / wheel
+    }
+    expect(pub(engine).kind).toBe("wheel");
+    // rand()=0 → every spin is death: a dies, b dies → finale for c
+    engine.onTimeout(); engine.onTimeout(); // a: land + apply
+    engine.onTimeout(); // b: land
+    const fin = engine.onTimeout(); // b: apply → 1 alive → finale
+    expect(fin?.phase).toBe("finaleIntro");
+    expect(engine.isOver()).toBe(false);
+  });
+
+  it("a perfect living player escapes and wins the whole game (§3.6)", () => {
+    const { engine } = makeEngine(["a", "b"], { finale: true });
+    engine.onTimeout(); // q1
+    engine.onAction("a", answer("q_0001", 0), meta);
+    engine.onAction("b", answer("q_0001", 3), meta);
+    engine.onTimeout(); // → kamra
+    driveKamra(engine); // b dies → finaleIntro
+    engine.onTimeout(); // intro → judge turn 1
+    expect(pub(engine).kind).toBe("finaleTurn");
+    // drive perfect turns until escape (14 spaces / 2 per turn = 7 turns; b
+    // the ghost never judges and gets eaten by the darkness eventually)
+    let guard = 0;
+    while (!engine.isOver() && guard < 40) {
+      guard += 1;
+      const p = pub(engine);
+      if (p.kind === "finaleTurn" && p.sub === "judge") {
+        judgePerfect(engine, "a");
+        // the ghost never judges, so the turn resolves on its 12s timer
+        const after = pub(engine);
+        if (after.kind === "finaleTurn" && after.sub === "judge") engine.onTimeout();
+      } else {
+        engine.onTimeout();
+      }
+    }
+    expect(engine.isOver()).toBe(true);
+    const go = pub(engine);
+    if (go.kind === "gameOver") {
+      expect(go.winnerId).toBe("a");
+      expect(go.finale?.escaped).toBe(true);
+      expect(go.standings.find((s) => s.playerId === "a")?.alive).toBe(true);
+    }
+  });
+
+  it("without finale categories the M3 endings stand (back-compat)", () => {
+    const { engine } = makeEngine(["a", "b"]);
+    engine.onTimeout(); // q1
+    engine.onAction("a", answer("q_0001", 0), meta);
+    engine.onAction("b", answer("q_0001", 3), meta);
+    engine.onTimeout();
+    const next = driveKamra(engine); // b dies → 1 alive but NO finale configured
+    expect(next?.phase).toBe("question"); // plays on to the budget (M3 rules)
+  });
+
+  it("finale private data flows to racers; audience runner appears when enabled + present", () => {
+    const { engine } = makeEngine(["a", "b"], { finale: true, audienceCount: 5 });
+    engine.onTimeout();
+    engine.onAction("a", answer("q_0001", 0), meta);
+    engine.onAction("b", answer("q_0001", 3), meta);
+    engine.onTimeout();
+    driveKamra(engine); // → finaleIntro
+    const p = pub(engine);
+    if (p.kind === "finaleIntro") {
+      expect(p.runners.some((r) => r.kind === "audience")).toBe(true);
+    }
+    engine.onTimeout(); // → judge
+    const privA = engine.privatePhaseData("a");
+    expect(privA.finale?.racing).toBe(true);
+    expect(privA.finale?.options?.length).toBeGreaterThan(0);
+    // an audience member (unknown player id) gets the audience runner's options
+    const audPriv = engine.privatePhaseData("watcher-1");
+    expect(audPriv.finale?.racing).toBe(true);
   });
 });
 

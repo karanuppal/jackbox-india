@@ -173,15 +173,18 @@ describe("K5 Sabse Ghatiya Jawaab (voting)", () => {
     g.onVote("v3", "a");
     expect(g.resolveDeaths()).toEqual(["b"]);
   });
-  it("censor hides content and blocks NEW votes, but is not death-immunity (SEC-M3-4)", () => {
+  it("censor hides CONTENT only — the entry stays on the ballot, votable and death-eligible (SEC-M3-4/UT-M3-2)", () => {
     const g = new SabseGhatiyaJawaab(floor("a", "b"), deps(), "prompt");
     g.onInput("a", answer({ type: "kmAnswer", text: "x" }));
     g.onInput("b", answer({ type: "kmAnswer", text: "gaali" }));
-    g.onVote("v1", "b"); // cast BEFORE the censor — it counts
+    g.onVote("v1", "b");
     g.censor("b");
-    g.onVote("v2", "b"); // after the censor → ignored
-    expect(g.voteEntries().some((e) => e.playerId === "b")).toBe(false); // hidden
-    expect(g.resolveDeaths()).toEqual(["b"]); // pre-censor vote still kills b
+    g.onVote("v2", "b"); // censored entries can STILL be voted (blank card)
+    const entryB = g.voteEntries().find((e) => e.playerId === "b")!;
+    expect(entryB.censored).toBe(true);
+    expect(entryB.text).toBeNull(); // content hidden…
+    expect(entryB.votesAgainst).toBe(2); // …but the ballot works
+    expect(g.resolveDeaths()).toEqual(["b"]); // censorship is not immunity
   });
 
   it("all-censored / nobody-voted falls back to a RANDOM floor player, not seat 0 (QA-M3-11)", () => {

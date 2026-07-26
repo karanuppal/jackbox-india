@@ -251,6 +251,8 @@ export class KamraCoordinator {
           minigame: g.kind,
           deaths: this.deaths,
           survivors: g.floorPublic().map((f) => f.playerId).filter((id) => !this.deaths.includes(id)),
+          // the payoff: show the fatal ballot with final tallies (UT-M3-14)
+          entries: g.needsVote ? g.voteEntries() : [],
           vo: "Faisla ho gaya.",
         };
     }

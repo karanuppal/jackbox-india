@@ -15,8 +15,23 @@ import { S } from "../ui/styles.css.js";
 import { COLORS } from "../ui/theme.js";
 import { Countdown } from "../ui/Countdown.js";
 
-// Taash Ke Patte symbols (§3.4 K3): kirpan, hockey stick, belan, hathoda.
-const TAASH_SYMBOLS = ["🗡️", "🏑", "🥖", "🔨"] as const;
+// Taash Ke Patte symbols (§3.4 K3): kirpan, hockey stick, chappal, hathoda.
+// (chappal replaces belan — no rolling-pin emoji exists and 🥖 read as bread,
+// UT-M3-13; PLAN amendment 2026-07-26.)
+const TAASH_SYMBOLS = ["🗡️", "🏑", "🩴", "🔨"] as const;
+
+/** Client-side minigame titles so the shared screen can keep the game name up
+ *  during play, not just the 3.5s intro (UT-M3-6). */
+export const MINIGAME_TITLES: Record<string, string> = {
+  hisaabKitaab: "Hisaab-Kitaab",
+  yaaddasht: "Yaaddasht",
+  taashKePatte: "Taash Ke Patte",
+  spellingShelling: "Spelling Shelling",
+  sabseGhatiyaJawaab: "Sabse Ghatiya Jawaab",
+  gandaChitra: "Ganda Chitra",
+  zeharWaliChai: "Zeher Wali Chai",
+  dhokha: "Rishtedaari Test",
+};
 
 /** The memorize window (K2/K3) — server-enforced (SEC-M3-3); the client
  *  mirrors it for display only. */
@@ -59,7 +74,8 @@ export function HostKamraScene({
     return (
       <div style={{ textAlign: "center", width: "100%" }}>
         <p style={{ opacity: 0.7 }}>
-          Khooni Kamra <Countdown deadline={deadline} />
+          {`Khooni Kamra — ${MINIGAME_TITLES[pub.minigame] ?? pub.minigame} `}
+          <Countdown deadline={deadline} />
         </p>
         {pub.prompt !== null && (
           <h2 style={{ fontSize: "2rem", color: COLORS.marigold, margin: "0.5rem auto", maxWidth: "42rem" }}>
@@ -78,7 +94,10 @@ export function HostKamraScene({
               }}
             >
               <div style={{ fontWeight: 700 }}>{f.name}</div>
-              <div style={{ fontSize: "0.8rem", opacity: 0.75 }}>{f.done ? "🪔 lock ho gaya" : "khel raha hai…"}</div>
+              <div style={{ fontSize: "0.8rem", opacity: 0.75 }}>
+                {/* live score keeps the room engaged during play (UT-M3-6) */}
+                {f.done ? "🪔 lock ho gaya" : f.score > 0 ? `score: ${f.score}` : "khel raha hai…"}
+              </div>
             </div>
           ))}
         </div>
@@ -87,6 +106,8 @@ export function HostKamraScene({
     );
   }
   if (pub.kind === "kamraVote") {
+    // Live tallies are HIDDEN during voting (UT-M3-14) — the count reveal
+    // happens at the result, Jackbox-style.
     return (
       <div style={{ textAlign: "center", width: "100%" }}>
         <h2 style={{ fontSize: "1.6rem", color: COLORS.marigold }}>
@@ -96,12 +117,7 @@ export function HostKamraScene({
           {pub.entries.map((e) => (
             <div key={e.playerId} style={{ maxWidth: "16rem" }}>
               <VoteEntryView entry={e} />
-              <p style={{ margin: "0.25rem 0 0" }}>
-                {e.name}
-                {e.votesAgainst > 0 && (
-                  <span style={{ color: COLORS.blood }}>{` — ${e.votesAgainst} 👎`}</span>
-                )}
-              </p>
+              <p style={{ margin: "0.25rem 0 0" }}>{e.name}</p>
             </div>
           ))}
         </div>
@@ -110,6 +126,7 @@ export function HostKamraScene({
     );
   }
   if (pub.kind === "kamraResult") {
+    const fatal = pub.entries.filter((e) => pub.deaths.includes(e.playerId));
     return (
       <div style={{ textAlign: "center", width: "100%" }}>
         {pub.deaths.length > 0 ? (
@@ -118,6 +135,17 @@ export function HostKamraScene({
           </h2>
         ) : (
           <h2 style={{ fontSize: "2rem", color: COLORS.marigold }}>Sab bach gaye!</h2>
+        )}
+        {/* the payoff: the fatal answer/chitra with its final tally (UT-M3-14) */}
+        {fatal.length > 0 && (
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", margin: "0.5rem 0" }}>
+            {fatal.map((e) => (
+              <div key={e.playerId} style={{ maxWidth: "16rem" }}>
+                <VoteEntryView entry={e} />
+                <p style={{ margin: "0.25rem 0 0", color: COLORS.blood }}>{`${e.name} — ${e.votesAgainst} 👎`}</p>
+              </div>
+            ))}
+          </div>
         )}
         {pub.survivors.length > 0 && pub.deaths.length > 0 && (
           <p style={{ color: COLORS.ghost }}>{`bach gaye: ${pub.survivors.map(nameOf).join(", ")}`}</p>
@@ -131,20 +159,33 @@ export function HostKamraScene({
 }
 
 function HostWheelScene({ pub }: { pub: WheelPublic }) {
+  // A real 6-segment wheel — 5 death, 1 life — so the room SEES the odds
+  // (UT-M3-3/12). Poorest spins first; the rule line frames why this exists.
+  const segments = ["💀", "💀", "💀", "🪔", "💀", "💀"];
   return (
     <div style={{ textAlign: "center", width: "100%" }}>
       <p style={{ color: COLORS.blood, fontSize: "1.1rem", letterSpacing: "0.2em" }}>MAUT KA CHAKRA</p>
-      <h2 style={{ fontSize: "2rem", color: COLORS.marigold }}>{pub.spinnerName}</h2>
+      <p style={{ opacity: 0.8, maxWidth: "36rem", margin: "0.25rem auto" }}>
+        Sawaal khatam, 2+ zinda — ab kismat faisla karegi. 5 maut : 1 zindagi. Sabse gareeb pehle.
+      </p>
+      <h2 style={{ fontSize: "2rem", color: COLORS.marigold, margin: "0.4rem" }}>{pub.spinnerName}</h2>
       <div
         aria-label="wheel"
         style={{
-          fontSize: "4rem",
-          margin: "0.5rem",
-          display: "inline-block",
+          width: "9rem",
+          height: "9rem",
+          margin: "0.5rem auto",
+          borderRadius: "50%",
+          border: `4px solid ${COLORS.marigold}`,
+          background: `conic-gradient(${COLORS.blood} 0 60deg, ${COLORS.blood} 60deg 120deg, ${COLORS.blood} 120deg 180deg, ${COLORS.marigold} 180deg 240deg, ${COLORS.blood} 240deg 300deg, ${COLORS.blood} 300deg 360deg)`,
+          display: "grid",
+          placeItems: "center",
           animation: pub.outcome === null ? "spin 0.6s linear infinite" : undefined,
         }}
       >
-        {pub.outcome === null ? "🎡" : pub.outcome === "death" ? "💀" : "🪔"}
+        <span style={{ fontSize: "2.5rem" }}>
+          {pub.outcome === null ? segments[Math.floor(Date.now() / 300) % 6] : pub.outcome === "death" ? "💀" : "🪔"}
+        </span>
       </div>
       {pub.outcome !== null && (
         <h3 style={{ color: pub.outcome === "death" ? COLORS.blood : COLORS.marigold, fontSize: "1.5rem" }}>
@@ -156,8 +197,26 @@ function HostWheelScene({ pub }: { pub: WheelPublic }) {
   );
 }
 
-/** A vote entry: either a text answer or a drawing (rendered as SVG). */
+/** A vote entry: text answer, drawing, or a censored blank card (UT-M3-2). */
 export function VoteEntryView({ entry }: { entry: KamraVoteEntry }) {
+  if (entry.censored) {
+    return (
+      <div
+        style={{
+          padding: "0.75rem",
+          borderRadius: "0.5rem",
+          background: "rgba(255,255,255,0.08)",
+          color: COLORS.blood,
+          fontSize: "1.5rem",
+          minHeight: "3rem",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        🚫
+      </div>
+    );
+  }
   if (entry.strokes !== null) {
     return <StrokesView strokes={entry.strokes} size="10rem" />;
   }
@@ -343,9 +402,13 @@ function VotePanel({
                 opacity: !canVote || mine ? 0.5 : 1,
               }}
             >
-              {e.strokes !== null ? `🎨 ${e.name}` : `${e.name}: ${e.text ?? "…"}`}
+              {e.censored
+                ? `🚫 ${e.name}` // censored: blank card, STILL votable (UT-M3-2)
+                : e.strokes !== null
+                  ? `🎨 ${e.name}`
+                  : `${e.name}: ${e.text ?? "…"}`}
             </button>
-            {isVip && !mine && (
+            {isVip && !mine && !e.censored && (
               // No self-censor — the server rejects it too (QA-M3-3).
               <button
                 type="button"
@@ -400,7 +463,13 @@ function MinigameInput({
 }
 
 /** K1 — rapid mental math with a phone keypad. */
-function MathPad({ data, game }: { data: { a: number; b: number; op: "+" | "-" } | null; game: (p: unknown) => void }) {
+function MathPad({
+  data,
+  game,
+}: {
+  data: { a: number; b: number; op: "+" | "-"; score?: number; soloBar?: number | null } | null;
+  game: (p: unknown) => void;
+}) {
   const [entry, setEntry] = useState("");
   if (data === null) return <p>…</p>;
   // Real answers are −19..38; the schema caps at ±999 — limit typing to 3
@@ -420,6 +489,12 @@ function MathPad({ data, game }: { data: { a: number; b: number; op: "+" | "-" }
   };
   return (
     <div style={{ width: "100%", maxWidth: "18rem", textAlign: "center" }}>
+      {/* live progress + the solo survival bar (UT-M3-9) */}
+      <p style={{ margin: "0.15rem", color: COLORS.marigold }}>
+        {data.soloBar != null
+          ? `Sahi: ${data.score ?? 0} / ${data.soloBar} (zinda rehne ke liye)`
+          : `Sahi: ${data.score ?? 0}`}
+      </p>
       <p style={{ fontSize: "2rem", margin: "0.25rem" }}>{`${data.a} ${data.op} ${data.b} = ?`}</p>
       <div
         aria-label="answer"
@@ -649,7 +724,16 @@ function WorstAnswer({ prompt, game }: { prompt: string; game: (p: unknown) => v
         maxLength={140}
         onChange={(e) => setText(e.target.value)}
         rows={3}
-        style={{ width: "100%", fontSize: "1.1rem", borderRadius: "0.5rem", padding: "0.5rem", border: "none" }}
+        style={{
+          width: "100%",
+          fontSize: "1.1rem",
+          borderRadius: "0.5rem",
+          padding: "0.5rem",
+          border: `2px solid ${COLORS.marigold}`,
+          background: COLORS.plaster,
+          color: COLORS.ink,
+          fontFamily: "inherit",
+        }}
       />
       <button
         type="button"

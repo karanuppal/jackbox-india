@@ -24,13 +24,39 @@ function storage(): StorageLike | null {
   return null;
 }
 
+const LAST_KEY = "tamasha:last";
+
 export function saveSession(s: StoredSession, store: StorageLike | null = storage()): void {
   if (store === null) return;
   try {
     store.setItem(keyFor(s.code), JSON.stringify(s));
+    // Remember the latest room+name so a reload can offer one-tap rejoin
+    // without the player re-remembering the code mid-minigame (UT-M3-8).
+    store.setItem(LAST_KEY, JSON.stringify({ code: s.code, name: s.name }));
   } catch {
     /* quota / denied — reconnection simply won't persist */
   }
+}
+
+/** The most recent room+name this device joined (for rejoin prefill). */
+export function loadLast(store: StorageLike | null = storage()): { code: string; name: string } | null {
+  if (store === null) return null;
+  try {
+    const raw = store.getItem(LAST_KEY);
+    if (raw === null) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      typeof (parsed as { code: unknown }).code === "string" &&
+      typeof (parsed as { name: unknown }).name === "string"
+    ) {
+      return parsed as { code: string; name: string };
+    }
+  } catch {
+    /* malformed — ignore */
+  }
+  return null;
 }
 
 export function loadSession(code: string, store: StorageLike | null = storage()): StoredSession | null {

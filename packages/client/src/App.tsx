@@ -7,6 +7,7 @@ import { Host } from "./screens/Host.js";
 import {
   clearHostSession,
   loadHostSession,
+  loadLast,
   loadSession,
   saveHostSession,
   saveSession,
@@ -88,13 +89,24 @@ function PlayerApp({ env }: { env: Env }) {
   const [join, setJoin] = useState<Omit<JoinMessage, "type"> | null>(null);
   const [askPassword, setAskPassword] = useState(false);
   const [notice, setNotice] = useState<string | undefined>(undefined);
-  const initialCode = codeFromSearch(env.search);
+  // One-tap rejoin (UT-M3-8): prefill the last room+name this device played
+  // in; a URL ?code= always wins.
+  const last = loadLast();
+  const initialCode = codeFromSearch(env.search) || (last?.code ?? "");
+  const initialName = last?.name ?? "";
 
   async function onSubmit(v: JoinSubmit) {
     setNotice(undefined);
     // Pre-flight lookup: detect nonexistent/passworded rooms before the socket.
     try {
-      const look = (await (await fetch(`${env.origin}/api/rooms/${v.code}`)).json()) as {
+      const res = await fetch(`${env.origin}/api/rooms/${v.code}`);
+      // Rate-limited is NOT "room not found" — many phones share a venue IP
+      // (UT-M3-11); tell the player to retry, not to re-scan the QR.
+      if (res.status === 429) {
+        setNotice("Thoda ruko — bahut log ek saath jud rahe hain. 10 second mein phir try karo.");
+        return;
+      }
+      const look = (await res.json()) as {
         exists: boolean;
         passwordRequired: boolean;
       };
@@ -124,6 +136,7 @@ function PlayerApp({ env }: { env: Env }) {
     return (
       <JoinForm
         initialCode={initialCode}
+        initialName={initialName}
         askPassword={askPassword}
         {...(notice !== undefined ? { notice } : {})}
         onSubmit={(v) => void onSubmit(v)}

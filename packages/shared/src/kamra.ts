@@ -99,9 +99,12 @@ export interface KamraVotePublic {
 export interface KamraVoteEntry {
   playerId: string;
   name: string;
-  /** Text answer (K5) or serialized drawing strokes (K6). */
+  /** Text answer (K5) or serialized drawing strokes (K6). Nulled when the
+   *  entry is censored — it stays ON the ballot as a blank card (UT-M3-2). */
   text: string | null;
   strokes: Stroke[] | null;
+  /** VIP-censored: content hidden, still votable and still death-eligible. */
+  censored: boolean;
   votesAgainst: number;
 }
 
@@ -111,6 +114,9 @@ export interface KamraResultPublic {
   /** Who died on the floor this visit (>=1). */
   deaths: string[];
   survivors: string[];
+  /** For voting games: the final ballot with tallies, so the room gets its
+   *  payoff — the fatal chitra/jawaab on screen (UT-M3-14). Empty otherwise. */
+  entries: KamraVoteEntry[];
   vo: string;
 }
 

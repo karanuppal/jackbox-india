@@ -2,6 +2,7 @@ import {
   applyProfanityFilter,
   censorActionSchema,
   CORRECT_REWARD,
+  FINALE_TIMERS,
   KAMRA_TIMERS,
   ksActionSchema,
   QUESTION_BUDGET,
@@ -9,6 +10,7 @@ import {
   TIMERS,
   WHEEL_DEATH_SEGMENTS,
   WHEEL_TOTAL_SEGMENTS,
+  type FinaleCategory,
   type KsAction,
   type KsPrivatePhase,
   type KsPublicPhase,
@@ -18,6 +20,7 @@ import {
   type ProfanityMode,
   type Question,
 } from "@tamasha/shared";
+import { AakhriDarwazaFinale } from "./darwaza/finale.js";
 import type { ActionMeta, EnginePhase, GameContext, GameEngine } from "./engine.js";
 import { KamraCoordinator, type KamraOptions } from "./kamra/coordinator.js";
 
@@ -48,7 +51,15 @@ interface KsPlayer {
   answer: number | null; // index for the current question
 }
 
-type Phase = "tutorial" | "question" | "reveal" | "khooniKamra" | "wheel" | "gameOver";
+type Phase =
+  | "tutorial"
+  | "question"
+  | "reveal"
+  | "khooniKamra"
+  | "wheel"
+  | "finaleIntro"
+  | "finaleTurn"
+  | "gameOver";
 
 export interface KsOptions {
   /** Deterministic selection for tests: pick `n` questions from the bank. */
@@ -66,6 +77,11 @@ export interface KsOptions {
     worstPrompts?: { text: string; adult: boolean }[];
     drawPrompts?: { text: string; adult: boolean }[];
   };
+  /** Aakhri Darwaza categories (§3.6). Without any, the game falls back to
+   *  ending at gameOver (M2/M3 behavior — used by older tests). */
+  finaleCategories?: FinaleCategory[];
+  /** Override finale durations (ms) for tests. */
+  finaleTimers?: Partial<Record<keyof typeof FINALE_TIMERS, number>>;
 }
 
 /**
@@ -100,6 +116,17 @@ export class KhooniSawaalEngine implements GameEngine {
   // --- Maut Ka Chakra state (§3.3) ----------------------------------------
   private wheelSpinnerId: string | null = null;
   private wheelOutcome: "life" | "death" | null = null;
+  /** Spin order: POOREST first (UT-M3-3 — the leaders earned their safety;
+   *  the underdogs face the wheel first). Fixed at wheel start. */
+  private wheelOrder: string[] = [];
+
+  // --- Aakhri Darwaza state (§3.6, M4) ------------------------------------
+  private finale: AakhriDarwazaFinale | null = null;
+  private finaleCats: FinaleCategory[] = [];
+  private finaleWinner: string | null = null;
+  private finaleResult: { escaped: boolean; audienceEscaped: boolean } | null = null;
+  private audienceEnabled = false;
+  private audienceCount: () => number = () => 0;
 
   private readonly t: Record<keyof typeof TIMERS, number>;
   private readonly kt: Record<keyof typeof KAMRA_TIMERS, number>;
@@ -143,6 +170,11 @@ export class KhooniSawaalEngine implements GameEngine {
     if (words.length > 0) this.kamraOpts.spellingWords = words;
     if (worst.length > 0) this.kamraOpts.worstPrompts = worst;
     if (draw.length > 0) this.kamraOpts.drawPrompts = draw;
+    // Finale prerequisites (§3.6): family-friendly filter on categories; the
+    // audience runner only exists when the audience is enabled AND present.
+    this.finaleCats = (this.opts.finaleCategories ?? []).filter((c) => !ff || !c.adult);
+    this.audienceEnabled = ctx.settings.audienceEnabled;
+    this.audienceCount = ctx.audienceCount ?? (() => 0);
     // Empty selection guard (QA-M2-4/SEC-M2-3): if a custom picker returned
     // nothing, fall back to the bank — but RESPECT the family-friendly filter
     // in the fallback so we never serve adult content in FF mode (QA-M2-R1).
@@ -185,6 +217,9 @@ export class KhooniSawaalEngine implements GameEngine {
         return this.kamraTimeout();
       case "wheel":
         return this.wheelTimeout();
+      case "finaleIntro":
+      case "finaleTurn":
+        return this.finaleTimeout();
       case "gameOver":
         return null;
     }
@@ -192,6 +227,9 @@ export class KhooniSawaalEngine implements GameEngine {
 
   onAction(playerId: string, payload: unknown, meta: ActionMeta): EnginePhase | null {
     if (this.phase === "khooniKamra") return this.kamraAction(playerId, payload, meta);
+    if (this.phase === "finaleIntro" || this.phase === "finaleTurn") {
+      return this.finaleAction(playerId, payload, meta);
+    }
     if (this.phase !== "question") return null;
     const p = this.players.find((x) => x.id === playerId);
     if (p === undefined) return null; // audience / unknown — ignored
@@ -265,13 +303,19 @@ export class KhooniSawaalEngine implements GameEngine {
     return this.advanceOrEnd();
   }
 
-  /** Next question, or the endgame: budget exhausted with 2+ alive spins the
-   *  Maut Ka Chakra (§3.3); otherwise gameOver (M4 replaces with the finale). */
+  /** Next question, or the endgame (§3.3): one living player in a multiplayer
+   *  game → the Aakhri Darwaza immediately; budget exhausted with 2+ alive →
+   *  Maut Ka Chakra, then the finale; a solo game plays its full budget and
+   *  then races the darkness alone. Without finale categories (older tests)
+   *  the game falls back to the M3 endings. */
   private advanceOrEnd(): EnginePhase {
+    const alive = this.players.filter((p) => p.alive);
+    const canFinale = this.finaleCats.length > 0;
+    if (canFinale && this.players.length > 1 && alive.length === 1) return this.startFinale();
     const done = this.index >= this.questions.length - 1;
     if (!done) return this.beginQuestion();
-    const alive = this.players.filter((p) => p.alive);
     if (alive.length >= 2) return this.startWheel();
+    if (canFinale) return this.startFinale();
     this.phase = "gameOver";
     return { phase: "gameOver", deadline: null };
   }
@@ -370,7 +414,11 @@ export class KhooniSawaalEngine implements GameEngine {
   // --- Maut Ka Chakra (§3.3) ------------------------------------------------
   private startWheel(): EnginePhase {
     this.phase = "wheel";
-    this.wheelSpinnerId = this.players.find((p) => p.alive)!.id;
+    this.wheelOrder = this.players
+      .filter((p) => p.alive)
+      .sort((a, b) => a.money - b.money)
+      .map((p) => p.id);
+    this.wheelSpinnerId = this.wheelOrder[0]!;
     this.wheelOutcome = null;
     return { phase: "wheel", deadline: this.now() + this.kt.wheelSpinMs };
   }
@@ -388,8 +436,10 @@ export class KhooniSawaalEngine implements GameEngine {
     if (spinner !== undefined && this.wheelOutcome === "death") spinner.alive = false;
     const alive = this.players.filter((p) => p.alive);
     if (alive.length <= 1) {
-      this.phase = "gameOver";
       this.wheelSpinnerId = null;
+      // One survivor → the escape begins (§3.3/§3.6). Fallback: gameOver.
+      if (this.finaleCats.length > 0) return this.startFinale();
+      this.phase = "gameOver";
       return { phase: "gameOver", deadline: null };
     }
     this.wheelSpinnerId = this.nextAliveAfter(this.wheelSpinnerId);
@@ -397,11 +447,76 @@ export class KhooniSawaalEngine implements GameEngine {
     return { phase: "wheel", deadline: this.now() + this.kt.wheelSpinMs };
   }
 
+  // --- Aakhri Darwaza (§3.6, M4) --------------------------------------------
+  private startFinale(): EnginePhase {
+    const living = this.players.find((p) => p.alive);
+    if (living === undefined || this.finaleCats.length === 0) {
+      this.phase = "gameOver";
+      return { phase: "gameOver", deadline: null };
+    }
+    const ghosts = this.players
+      .filter((p) => !p.alive)
+      .map((p) => ({ id: p.id, name: p.name, money: p.money }));
+    const audience = this.audienceEnabled && this.audienceCount() > 0;
+    this.finale = new AakhriDarwazaFinale(
+      { id: living.id, name: living.name, money: living.money },
+      ghosts,
+      this.finaleCats,
+      { rand: this.rand, audience, timers: this.opts.finaleTimers ?? {} },
+    );
+    this.phase = "finaleIntro";
+    return { phase: "finaleIntro", deadline: this.finale.deadline(this.now()) };
+  }
+
+  private finaleTimeout(): EnginePhase | null {
+    const f = this.finale;
+    if (f === null) return null;
+    const finished = f.onTimeout();
+    if (finished) return this.applyFinaleOutcome();
+    this.phase = f.subPhase() === "intro" ? "finaleIntro" : "finaleTurn";
+    return { phase: this.phase, deadline: f.deadline(this.now()) };
+  }
+
+  private finaleAction(playerId: string, payload: unknown, meta: ActionMeta): EnginePhase | null {
+    const f = this.finale;
+    if (f === null) return null;
+    // Audience members vote for the collective audience runner (§3.6); the
+    // role comes from the room's authoritative meta, with an id fallback.
+    const isAudience = meta.role === "audience" || !this.players.some((p) => p.id === playerId);
+    const before = f.subPhase();
+    const changed = f.onInput(playerId, payload, isAudience);
+    if (!changed) return null;
+    if (f.subPhase() !== before) {
+      // All player runners locked early → the turn resolved.
+      this.phase = "finaleTurn";
+      return { phase: "finaleTurn", deadline: f.deadline(this.now()) };
+    }
+    return null;
+  }
+
+  /** The race is over: the winner takes the crown regardless of money (§3.6). */
+  private applyFinaleOutcome(): EnginePhase {
+    const f = this.finale!;
+    this.finaleWinner = f.winnerId();
+    this.finaleResult = { escaped: f.didEscape(), audienceEscaped: f.didAudienceEscape() };
+    const someoneOut = f.didEscape() || f.didAudienceEscape();
+    for (const p of this.players) {
+      // Escape: only the crowned player leaves alive (a body-thief included).
+      // Nobody out: the darkness kept everyone — all dead, richest crowned.
+      p.alive = someoneOut && p.id === this.finaleWinner;
+    }
+    this.finale = null;
+    this.phase = "gameOver";
+    return { phase: "gameOver", deadline: null };
+  }
+
   private nextAliveAfter(id: string): string {
-    const idx = this.players.findIndex((p) => p.id === id);
-    for (let step = 1; step <= this.players.length; step++) {
-      const candidate = this.players[(idx + step) % this.players.length]!;
-      if (candidate.alive) return candidate.id;
+    const order = this.wheelOrder.length > 0 ? this.wheelOrder : this.players.map((p) => p.id);
+    const idx = order.indexOf(id);
+    for (let step = 1; step <= order.length; step++) {
+      const candidateId = order[(idx + step) % order.length]!;
+      const candidate = this.players.find((p) => p.id === candidateId);
+      if (candidate?.alive === true) return candidateId;
     }
     return id; // unreachable while 2+ alive
   }
@@ -441,6 +556,9 @@ export class KhooniSawaalEngine implements GameEngine {
     if (this.phase === "khooniKamra" && this.kamra !== null) {
       return this.kamra.publicPhase(this.now());
     }
+    if ((this.phase === "finaleIntro" || this.phase === "finaleTurn") && this.finale !== null) {
+      return this.finale.publicPhase();
+    }
     if (this.phase === "wheel" && this.wheelSpinnerId !== null) {
       const spinner = this.players.find((p) => p.id === this.wheelSpinnerId);
       return {
@@ -456,16 +574,24 @@ export class KhooniSawaalEngine implements GameEngine {
               : VO.wheelLife,
       };
     }
-    return { kind: "gameOver", standings: this.standings(), winnerId: this.winnerId(), vo: VO.gameOver };
+    return {
+      kind: "gameOver",
+      standings: this.standings(),
+      winnerId: this.finaleWinner ?? this.winnerId(),
+      ...(this.finaleResult !== null ? { finale: this.finaleResult } : {}),
+      vo: VO.gameOver,
+    };
   }
 
   privatePhaseData(playerId: string): KsPrivatePhase {
     const p = this.players.find((x) => x.id === playerId);
+    const isAudience = p === undefined;
     return {
       myAnswer: p?.answer ?? null,
       answered: p?.answer != null,
       alive: p?.alive ?? true,
       kamra: this.kamra !== null ? this.kamra.privateFor(playerId) : null,
+      finale: this.finale !== null ? this.finale.privateFor(playerId, isAudience) : null,
     };
   }
 

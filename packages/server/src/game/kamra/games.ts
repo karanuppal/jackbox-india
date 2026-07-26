@@ -95,12 +95,17 @@ abstract class Base implements Minigame {
 export class HisaabKitaab extends Base {
   readonly kind = "hisaabKitaab" as const;
   readonly title = "Hisaab-Kitaab";
-  readonly rules = "Jaldi-jaldi jod-ghata karo. Sabse kam sahi jawab wala… gaya.";
   private q = new Map<string, { a: number; b: number; op: "+" | "-" }>();
 
   constructor(floor: FloorInit[], deps: MinigameDeps) {
     super(floor, deps);
     for (const s of this.seats) this.q.set(s.playerId, this.gen());
+  }
+  /** Solo visits state the actual survival bar (UT-M3-9). */
+  get rules(): string {
+    return this.solo
+      ? `Akele ho. ${SOLO_MATH_SURVIVAL} sahi jawab do — warna yahin rahoge.`
+      : "Jaldi-jaldi jod-ghata karo. Sabse kam sahi jawab wala… gaya.";
   }
   private gen(): { a: number; b: number; op: "+" | "-" } {
     const a = Math.floor(this.deps.rand() * 20);
@@ -109,7 +114,15 @@ export class HisaabKitaab extends Base {
   }
   override privateFor(playerId: string): unknown {
     const q = this.q.get(playerId);
-    return q === undefined ? null : { a: q.a, b: q.b, op: q.op };
+    if (q === undefined) return null;
+    // score/solo bar included so the phone can show progress (UT-M3-9)
+    return {
+      a: q.a,
+      b: q.b,
+      op: q.op,
+      score: this.seat(playerId)?.score ?? 0,
+      soloBar: this.solo ? SOLO_MATH_SURVIVAL : null,
+    };
   }
   onInput(playerId: string, action: KsAction): boolean {
     if (action.type !== "kmMath") return false;
@@ -410,22 +423,25 @@ abstract class VotingBase extends Base {
   protected censored = new Set<string>();
 
   override voteEntries(): KamraVoteEntry[] {
-    return this.seats
-      .filter((s) => !this.censored.has(s.playerId))
-      .map((s) => {
-        const a = this.answers.get(s.playerId);
-        const against = [...this.votes.values()].filter((t) => t === s.playerId).length;
-        return {
-          playerId: s.playerId,
-          name: s.name,
-          text: a?.text ?? null,
-          strokes: a?.strokes ?? null,
-          votesAgainst: against,
-        };
-      });
+    // Censored entries STAY on the ballot as blank cards — content hidden but
+    // still votable and death-eligible; censorship is moderation, not an
+    // immunity or an assassination lever (UT-M3-2/SEC-M3-4).
+    return this.seats.map((s) => {
+      const a = this.answers.get(s.playerId);
+      const censored = this.censored.has(s.playerId);
+      const against = [...this.votes.values()].filter((t) => t === s.playerId).length;
+      return {
+        playerId: s.playerId,
+        name: s.name,
+        text: censored ? null : a?.text ?? null,
+        strokes: censored ? null : a?.strokes ?? null,
+        censored,
+        votesAgainst: against,
+      };
+    });
   }
   override onVote(voterId: string, targetId: string): void {
-    if (this.seats.some((s) => s.playerId === targetId) && !this.censored.has(targetId)) {
+    if (this.seats.some((s) => s.playerId === targetId)) {
       this.votes.set(voterId, targetId); // one vote per voter; last wins
     }
   }
