@@ -350,8 +350,12 @@ export class Room {
         }
         this.settings = merged;
         // §4.4: turning Moderation on mints the portal password (QA-M7-1).
+        // 12 hex chars = 48 bits (SEC-M7-3); toggling OFF rotates it (nulled
+        // here, re-minted on the next enable).
         if (this.settings.moderation && this.modPassword === null) {
-          this.modPassword = randomUUID().slice(0, 8);
+          this.modPassword = randomUUID().replace(/-/g, "").slice(0, 12);
+        } else if (!this.settings.moderation) {
+          this.modPassword = null;
         }
         return null;
       }
@@ -368,14 +372,12 @@ export class Room {
         if (this.paused) this.resumeInternal();
         return null;
       case "kick": {
-        // §4.2: kick players — never below the minimum mid-game.
+        // §4.2: kick players — never below the minimum, in ANY phase (a
+        // hostile moderator must not be able to empty the lobby, SEC-M7-1).
+        // Kick is not a ban (SEC-M7-2, Jackbox parity — PLAN-pinned).
         const target = this.players.get(action.playerId);
         if (target === undefined) return "NOT_ALLOWED";
-        if (
-          target.role === "player" &&
-          this.phase !== "lobby" &&
-          this.activePlayers().length <= MIN_PLAYERS
-        ) {
+        if (target.role === "player" && this.activePlayers().length <= MIN_PLAYERS) {
           return "NOT_ALLOWED";
         }
         this.players.delete(action.playerId);
