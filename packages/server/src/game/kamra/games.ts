@@ -1,5 +1,6 @@
 import {
   MAX_STROKES,
+  SOLO_MATH_SURVIVAL,
   type KamraFloorPlayer,
   type KamraVoteEntry,
   type KsAction,
@@ -64,6 +65,12 @@ abstract class Base implements Minigame {
   resolveDeaths(): string[] {
     return lowestScorersDie(this.seats);
   }
+  payouts(): { playerId: string; amount: number }[] {
+    return [];
+  }
+  protected get solo(): boolean {
+    return this.seats.length === 1;
+  }
   protected seat(id: string): Seat | undefined {
     return this.seats.find((s) => s.playerId === id);
   }
@@ -104,6 +111,19 @@ export class HisaabKitaab extends Base {
   finish(): void {
     for (const s of this.seats) s.done = true;
   }
+  /** §3.4 solo floor: death possible but not guaranteed — a solo player
+   *  survives by clearing the bar instead of "lowest dies". */
+  override resolveDeaths(): string[] {
+    if (this.solo) {
+      const s = this.seats[0]!;
+      return s.score >= SOLO_MATH_SURVIVAL ? [] : [s.playerId];
+    }
+    return lowestScorersDie(this.seats);
+  }
+  /** §3.7: ₹25 per correct sum. */
+  override payouts(): { playerId: string; amount: number }[] {
+    return this.seats.map((s) => ({ playerId: s.playerId, amount: s.score * 25 }));
+  }
 }
 
 // K7 — Zeher Wali Chai: each floor player picks a cutting-chai glass; one (or
@@ -141,10 +161,15 @@ export class ZeharWaliChai extends Base {
     return true;
   }
   override resolveDeaths(): string[] {
+    // A never-picked cup counts as drinking blind — un-picked players are
+    // eligible for the poison fallback below but don't auto-die.
     const dead = this.seats.filter((s) => this.poisoned.has(this.picks.get(s.playerId) ?? -1)).map((s) => s.playerId);
     if (dead.length > 0) return dead;
-    // Nobody drank the poison — the room still claims one (§3.4 "at least one
-    // dies"): the last to pick meets a different fate.
+    // §3.4 solo floor: pure luck, death NOT guaranteed — dodging the poison
+    // solo means surviving the visit.
+    if (this.solo) return [];
+    // Multi floor, nobody drank the poison — the room still claims one (§3.4
+    // "at least one dies"): a random floor player meets a different fate.
     const fallback = this.seats[Math.floor(this.deps.rand() * this.seats.length)];
     return fallback !== undefined ? [fallback.playerId] : [];
   }
@@ -176,18 +201,22 @@ export class Dhokha extends Base {
     const choices = this.seats.map((s) => ({ id: s.playerId, c: this.choice.get(s.playerId) ?? "spare" }));
     const betrayers = choices.filter((x) => x.c === "betray");
     if (betrayers.length === 0) {
-      // Everyone loyal → the floor is spared entirely, but the room must claim
-      // one: the game picks the player who locked in last is unknowable here;
-      // §3.4 says universal loyalty = "survive, forfeit money" — but the Kamra
-      // guarantees >=1 death, so a coin-flip victim is chosen among the loyal.
-      const victim = this.seats[Math.floor(this.deps.rand() * this.seats.length)];
-      return victim !== undefined ? [victim.playerId] : [];
+      // §3.4/§3.7 loyalty table: universal loyalty → EVERYONE survives (the
+      // one sanctioned exception to "at least one dies") but forfeits the
+      // round's pot — nobody profits.
+      return [];
     }
     if (betrayers.length === this.seats.length) {
       return this.seats.map((s) => s.playerId); // everyone betrayed → all die
     }
     // Mixed: the loyal (spare) players die; the betrayers escape.
     return choices.filter((x) => x.c === "spare").map((x) => x.id);
+  }
+  /** §3.7: a UNIQUE betrayer takes the pot (₹1,000). Everyone else gets 0. */
+  override payouts(): { playerId: string; amount: number }[] {
+    const betrayers = this.seats.filter((s) => this.choice.get(s.playerId) === "betray");
+    if (betrayers.length !== 1) return [];
+    return [{ playerId: betrayers[0]!.playerId, amount: 1000 }];
   }
 }
 
@@ -219,6 +248,13 @@ export class Yaaddasht extends Base {
     s.score = score;
     s.done = true;
     return true;
+  }
+  /** §3.7: ₹1,000 × proportion of the grid judged correctly. */
+  override payouts(): { playerId: string; amount: number }[] {
+    return this.seats.map((s) => ({
+      playerId: s.playerId,
+      amount: Math.round((1000 * s.score) / this.size),
+    }));
   }
 }
 
@@ -280,6 +316,21 @@ export class SpellingShelling extends Base {
     s.score = action.word.trim().toLowerCase() === this.word.toLowerCase() ? 1 : 0;
     s.done = true;
     return true;
+  }
+  /** §3.4 solo floor: spell it right and you walk out alive. */
+  override resolveDeaths(): string[] {
+    if (this.solo) {
+      const s = this.seats[0]!;
+      return s.score === 1 ? [] : [s.playerId];
+    }
+    return lowestScorersDie(this.seats);
+  }
+  /** §3.7: ₹100 × word length for a correct spelling. */
+  override payouts(): { playerId: string; amount: number }[] {
+    return this.seats.map((s) => ({
+      playerId: s.playerId,
+      amount: s.score * 100 * this.word.length,
+    }));
   }
 }
 

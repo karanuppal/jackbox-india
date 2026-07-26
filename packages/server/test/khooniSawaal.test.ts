@@ -22,12 +22,22 @@ function bank(n = 12): Question[] {
 
 const meta = { role: "player" as const, active: true };
 
-function makeEngine(playerIds: string[], opts?: { skipTutorial?: boolean; timerMode?: "normal" | "extended" | "off" }) {
+function makeEngine(
+  playerIds: string[],
+  opts?: {
+    skipTutorial?: boolean;
+    timerMode?: "normal" | "extended" | "off";
+    rand?: () => number;
+  },
+) {
   let t = 1000;
   const clock = { now: () => t, set: (v: number) => (t = v), advance: (d: number) => (t += d) };
   const engine = new KhooniSawaalEngine(bank(), {
     // deterministic: take first n, keep order
     pickQuestions: (b, count) => b.slice(0, count),
+    // deterministic kamra/wheel randomness (defaults to always-0: first
+    // minigame in the pool, wheel always lands on death)
+    rand: opts?.rand ?? (() => 0),
   });
   const ctx: GameContext = {
     players: playerIds.map((id) => ({ id, name: id, avatar: 0 })),
@@ -45,6 +55,17 @@ function makeEngine(playerIds: string[], opts?: { skipTutorial?: boolean; timerM
 const answer = (qid: string, idx: number) => ({ type: "answer", questionId: qid, optionIndex: idx });
 function pub(engine: KhooniSawaalEngine): KsPublicPhase {
   return engine.publicPhaseData();
+}
+
+/** Drive timeouts until the engine leaves the khooniKamra phase (a visit is
+ *  at most intro → play → vote → result = 4 timeouts). */
+function driveKamra(engine: KhooniSawaalEngine) {
+  let last = null;
+  for (let i = 0; i < 8; i++) {
+    last = engine.onTimeout();
+    if (last === null || last.phase !== "khooniKamra") break;
+  }
+  return last;
 }
 
 describe("KhooniSawaalEngine — flow", () => {
@@ -71,7 +92,7 @@ describe("KhooniSawaalEngine — flow", () => {
 });
 
 describe("KhooniSawaalEngine — scoring & death", () => {
-  it("awards 1000 for correct and kills a wrong living player", () => {
+  it("awards 1000 for correct and sentences a wrong living player to the Khooni Kamra (§3.4)", () => {
     const { engine } = makeEngine(["a", "b"]);
     engine.onTimeout(); // → question 1 (correct = 0)
     const qid = "q_0001";
@@ -79,14 +100,24 @@ describe("KhooniSawaalEngine — scoring & death", () => {
     const next = engine.onAction("b", answer(qid, 2), meta); // wrong → all answered → reveal
     expect(next?.phase).toBe("reveal");
     expect(engine.playerState("a")).toEqual({ alive: true, money: 1000, answered: true });
-    expect(engine.playerState("b")).toEqual({ alive: false, money: 0, answered: true });
+    // b is sentenced, NOT dead yet — the kamra decides (§3.4)
+    expect(engine.playerState("b")!.alive).toBe(true);
     const r = pub(engine);
     if (r.kind === "reveal") {
-      expect(r.deaths).toEqual(["b"]);
+      expect(r.deaths).toEqual([]); // nobody dies AT the reveal in M3
+      expect(r.floor).toEqual(["b"]);
       expect(r.mercy).toBe(false);
       expect(r.allCorrect).toBe(false);
       expect(r.correct).toBe(0);
     }
+    // reveal timeout → khooniKamra (solo floor → luck/skill game)
+    const kamra = engine.onTimeout();
+    expect(kamra?.phase).toBe("khooniKamra");
+    expect(pub(engine).kind).toBe("kamraIntro");
+    // b never plays → solo math score 0 < survival bar → dies in the kamra
+    const after = driveKamra(engine);
+    expect(after?.phase).toBe("question"); // game moves on to question 2
+    expect(engine.playerState("b")!.alive).toBe(false);
   });
 
   it("mercy rule: if ALL living players are wrong, nobody dies", () => {
@@ -123,8 +154,9 @@ describe("KhooniSawaalEngine — scoring & death", () => {
     engine.onTimeout(); // q1
     engine.onAction("a", answer("q_0001", 0), meta); // a correct
     engine.onAction("b", answer("q_0001", 0), meta); // b correct
-    engine.onAction("c", answer("q_0001", 3), meta); // c wrong → ghost, 2 alive remain
-    engine.onTimeout(); // reveal → q2
+    engine.onAction("c", answer("q_0001", 3), meta); // c wrong → sentenced
+    engine.onTimeout(); // reveal → khooniKamra
+    driveKamra(engine); // c never plays the solo game → dies → q2
     expect(engine.playerState("c")!.alive).toBe(false);
     engine.onAction("a", answer("q_0002", 0), meta);
     engine.onAction("b", answer("q_0002", 0), meta);
@@ -132,13 +164,17 @@ describe("KhooniSawaalEngine — scoring & death", () => {
     expect(engine.playerState("c")!.money).toBe(1000); // earned as a ghost
   });
 
-  it("times out unanswered players as wrong", () => {
+  it("times out unanswered players as wrong (sentenced, then dies in the kamra)", () => {
     const { engine } = makeEngine(["a", "b"]);
     engine.onTimeout(); // q1
     engine.onAction("a", answer("q_0001", 0), meta); // a correct; b never answers
     const next = engine.onTimeout(); // question timer elapses → reveal
     expect(next?.phase).toBe("reveal");
-    expect(engine.playerState("b")!.alive).toBe(false); // unanswered = wrong = death
+    const r = pub(engine);
+    if (r.kind === "reveal") expect(r.floor).toEqual(["b"]); // unanswered = wrong = sentenced
+    engine.onTimeout(); // → khooniKamra
+    driveKamra(engine);
+    expect(engine.playerState("b")!.alive).toBe(false);
   });
 
   it("rejects stale answers for a prior question and double-answers", () => {
@@ -159,8 +195,10 @@ describe("KhooniSawaalEngine — termination", () => {
     const { engine } = makeEngine(["a", "b"]);
     engine.onTimeout(); // q1
     engine.onAction("a", answer("q_0001", 0), meta); // correct
-    engine.onAction("b", answer("q_0001", 3), meta); // wrong → dead, only a alive
-    const next = engine.onTimeout(); // reveal → afterReveal → NEXT question, not gameOver
+    engine.onAction("b", answer("q_0001", 3), meta); // wrong → sentenced
+    engine.onTimeout(); // reveal → khooniKamra
+    const next = driveKamra(engine); // b dies on the floor
+    expect(engine.playerState("b")!.alive).toBe(false);
     expect(next?.phase).toBe("question"); // continues despite 1 alive
     expect(engine.isOver()).toBe(false);
   });
@@ -182,7 +220,8 @@ describe("KhooniSawaalEngine — termination", () => {
     expect(engine.playerState("solo")!.alive).toBe(true); // survived via mercy
   });
 
-  it("ends after the question budget with survivors, ranked by money", () => {
+  it("budget exhausted with 2+ alive → Maut Ka Chakra spins until one remains (§3.3)", () => {
+    // default rand()=0 → every spin lands on death
     const { engine } = makeEngine(["a", "b", "c"]);
     engine.onTimeout(); // q1
     // play 10 questions; everyone answers correctly (all-correct, no deaths)
@@ -192,13 +231,57 @@ describe("KhooniSawaalEngine — termination", () => {
       engine.onAction("b", answer(qid, 0), meta);
       const res = engine.onAction("c", answer(qid, 0), meta); // → reveal
       expect(res?.phase).toBe("reveal");
-      const after = engine.onTimeout(); // reveal → next or gameOver
+      const after = engine.onTimeout(); // reveal → next question or the wheel
       if (q < 10) expect(after?.phase).toBe("question");
-      else expect(after?.phase).toBe("gameOver");
+      else expect(after?.phase).toBe("wheel");
     }
+    // a spins: land (death) + apply → b spins: land (death) + apply → 1 alive
+    let w = pub(engine);
+    if (w.kind === "wheel") {
+      expect(w.spinnerId).toBe("a");
+      expect(w.outcome).toBeNull();
+    }
+    engine.onTimeout(); // a's spin lands
+    w = pub(engine);
+    if (w.kind === "wheel") expect(w.outcome).toBe("death");
+    engine.onTimeout(); // applied: a dead, wheel passes to b
+    expect(engine.playerState("a")!.alive).toBe(false);
+    engine.onTimeout(); // b's spin lands (death)
+    const end = engine.onTimeout(); // applied: b dead → 1 alive → gameOver
+    expect(end?.phase).toBe("gameOver");
     expect(engine.isOver()).toBe(true);
     const go = pub(engine);
-    if (go.kind === "gameOver") expect(go.standings).toHaveLength(3);
+    if (go.kind === "gameOver") {
+      expect(go.standings).toHaveLength(3);
+      expect(go.winnerId).toBe("c"); // the last one standing
+    }
+  });
+
+  it("the wheel can land on life (1-in-6) and pass the spin on (§3.3)", () => {
+    // rand sequence: q-pick unaffected; wheel: first spin life, second death, third death
+    const outcomes = [0.99, 0, 0]; // 0.99*6 = 5.94 ≥ 5 → life; 0 → death
+    let i = 0;
+    const { engine } = makeEngine(["a", "b"], { rand: () => outcomes[i++ % outcomes.length]! });
+    engine.onTimeout(); // q1
+    for (let q = 1; q <= 10; q++) {
+      const qid = `q_${String(q).padStart(4, "0")}`;
+      engine.onAction("a", answer(qid, 0), meta);
+      engine.onAction("b", answer(qid, 0), meta);
+      engine.onTimeout(); // reveal → next / wheel
+    }
+    expect(pub(engine).kind).toBe("wheel");
+    engine.onTimeout(); // a's spin lands: LIFE
+    let w = pub(engine);
+    if (w.kind === "wheel") expect(w.outcome).toBe("life");
+    engine.onTimeout(); // applied: a survives, wheel passes to b
+    expect(engine.playerState("a")!.alive).toBe(true);
+    w = pub(engine);
+    if (w.kind === "wheel") expect(w.spinnerId).toBe("b");
+    engine.onTimeout(); // b's spin lands: DEATH
+    const end = engine.onTimeout(); // applied → 1 alive → gameOver
+    expect(end?.phase).toBe("gameOver");
+    const go = pub(engine);
+    if (go.kind === "gameOver") expect(go.winnerId).toBe("a");
   });
 });
 
@@ -277,7 +360,12 @@ describe("KhooniSawaalEngine — M2 fixes", () => {
     expect(engine.publicPhaseData().kind).toBe("question"); // stuck without forfeit
     const next = engine.onPlayerLeft("b"); // b disconnects → forfeit → resolve
     expect(next?.phase).toBe("reveal");
-    expect(engine.playerState("b")!.alive).toBe(false); // forfeit scored wrong
+    const r = pub(engine);
+    if (r.kind === "reveal") expect(r.floor).toEqual(["b"]); // forfeit scored wrong → sentenced
+    engine.onTimeout(); // → khooniKamra (always timed, even in off mode)
+    const after = driveKamra(engine); // absent player never plays → dies
+    expect(after?.phase).toBe("question");
+    expect(engine.playerState("b")!.alive).toBe(false);
   });
 
   it("onPlayerLeft is a no-op outside a question or for an already-answered player", () => {
@@ -322,6 +410,177 @@ describe("KhooniSawaalEngine — M2 fixes", () => {
   });
 
   it("rejects a malformed answer payload via the shared schema (QA-M2-7)", () => {
+    const { engine } = makeEngine(["a", "b"]);
+    engine.onTimeout(); // q1
+    expect(engine.onAction("a", { type: "answer", questionId: "q_0001", optionIndex: "0" }, meta)).toBeNull();
+    expect(engine.onAction("a", { type: "answer", questionId: "bad", optionIndex: 0 }, meta)).toBeNull();
+    expect(engine.onAction("a", { nope: true }, meta)).toBeNull();
+    expect(engine.playerState("a")!.answered).toBe(false);
+  });
+});
+
+describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
+  it("mercy sends nobody to the kamra — straight to the next question", () => {
+    const { engine } = makeEngine(["a", "b"]);
+    engine.onTimeout(); // q1
+    engine.onAction("a", answer("q_0001", 1), meta); // wrong
+    engine.onAction("b", answer("q_0001", 2), meta); // wrong → all living wrong = mercy
+    const r = pub(engine);
+    if (r.kind === "reveal") {
+      expect(r.mercy).toBe(true);
+      expect(r.floor).toEqual([]);
+    }
+    const after = engine.onTimeout(); // reveal → next question, NO kamra
+    expect(after?.phase).toBe("question");
+    expect(engine.playerState("a")!.alive).toBe(true);
+    expect(engine.playerState("b")!.alive).toBe(true);
+  });
+
+  it("a solo floor player can SURVIVE a luck/skill game (§3.4): 3 correct sums", () => {
+    const { engine } = makeEngine(["a", "b"]); // rand()=0 → solo pool → Hisaab-Kitaab
+    engine.onTimeout(); // q1
+    engine.onAction("a", answer("q_0001", 0), meta); // correct
+    engine.onAction("b", answer("q_0001", 3), meta); // wrong → sentenced solo
+    engine.onTimeout(); // reveal → khooniKamra (intro)
+    expect(pub(engine).kind).toBe("kamraIntro");
+    engine.onTimeout(); // intro → play
+    expect(pub(engine).kind).toBe("kamraPlay");
+    // b's private math question is deterministic under rand()=0: 0 + 0
+    const priv = engine.privatePhaseData("b");
+    expect(priv.kamra?.onFloor).toBe(true);
+    expect(priv.kamra?.data).toEqual({ a: 0, b: 0, op: "+" });
+    // three correct answers clears the solo survival bar (§3.4)
+    engine.onAction("b", { type: "kmMath", value: 0 }, meta);
+    engine.onAction("b", { type: "kmMath", value: 0 }, meta);
+    engine.onAction("b", { type: "kmMath", value: 0 }, meta);
+    const after = driveKamra(engine); // play timeout → result (no deaths) → next q
+    expect(after?.phase).toBe("question");
+    expect(engine.playerState("b")!.alive).toBe(true); // survived the kamra
+    expect(engine.playerState("b")!.money).toBe(75); // §3.7: ₹25 × 3 correct
+  });
+
+  it("voting game: submissions, votes, VIP censor, and the worst answer dies", () => {
+    // uuids because kmVote/censor targetIds are schema-validated as uuids
+    const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    // rand()=0.5 → MINIGAME_KINDS[4] = sabseGhatiyaJawaab (floor 2 + 1 voter)
+    const { engine } = makeEngine([A, B, C], { rand: () => 0.5 });
+    engine.onTimeout(); // q1
+    engine.onAction(A, answer("q_0001", 1), meta); // wrong → floor
+    engine.onAction(B, answer("q_0001", 2), meta); // wrong → floor
+    engine.onAction(C, answer("q_0001", 0), meta); // correct → voter
+    engine.onTimeout(); // reveal → kamra intro
+    engine.onTimeout(); // intro → play
+    expect(pub(engine).kind).toBe("kamraPlay");
+    // floor submits answers; early-advance to the vote when both lock in
+    engine.onAction(A, { type: "kmAnswer", text: "chai peelo" }, meta);
+    const adv = engine.onAction(B, { type: "kmAnswer", text: "ghatiya jawab" }, meta);
+    expect(adv?.phase).toBe("khooniKamra"); // sub-phase changed → new deadline
+    expect(pub(engine).kind).toBe("kamraVote");
+    // the VIP censors A's submission — it can no longer win "worst" (§4.3)
+    expect(engine.onAction(C, { type: "censor", targetId: A }, { ...meta, vip: true })).toBeNull();
+    const vote = pub(engine);
+    if (vote.kind === "kamraVote") {
+      expect(vote.entries.map((e) => e.playerId)).toEqual([B]); // A censored out
+    }
+    // a non-VIP cannot censor
+    engine.onAction(C, { type: "censor", targetId: B }, { ...meta, vip: false });
+    const vote2 = pub(engine);
+    if (vote2.kind === "kamraVote") expect(vote2.entries).toHaveLength(1);
+    // the living non-floor voter votes against B
+    engine.onAction(C, { type: "kmVote", targetId: B }, meta);
+    engine.onTimeout(); // vote timeout → result (deaths resolved)
+    const res = pub(engine);
+    if (res.kind === "kamraResult") {
+      expect(res.deaths).toEqual([B]);
+      expect(res.survivors).toEqual([A]);
+    }
+    const after = engine.onTimeout(); // result → next question
+    expect(after?.phase).toBe("question");
+    expect(engine.playerState(B)!.alive).toBe(false);
+    expect(engine.playerState(A)!.alive).toBe(true);
+  });
+
+  it("floor players cannot vote and ghosts cannot play the minigame", () => {
+    const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const { engine } = makeEngine([A, B, C], { rand: () => 0.5 }); // sabseGhatiyaJawaab
+    engine.onTimeout();
+    engine.onAction(A, answer("q_0001", 1), meta);
+    engine.onAction(B, answer("q_0001", 2), meta);
+    engine.onAction(C, answer("q_0001", 0), meta);
+    engine.onTimeout(); // → intro
+    engine.onTimeout(); // → play
+    // the voter (not on the floor) cannot submit an answer
+    expect(engine.onAction(C, { type: "kmAnswer", text: "nahi" }, meta)).toBeNull();
+    engine.onAction(A, { type: "kmAnswer", text: "x" }, meta);
+    engine.onAction(B, { type: "kmAnswer", text: "y" }, meta); // → vote
+    // floor players cannot vote
+    expect(engine.onAction(A, { type: "kmVote", targetId: B }, meta)).toBeNull();
+    const v = pub(engine);
+    if (v.kind === "kamraVote") {
+      expect(v.entries.find((e) => e.playerId === B)?.votesAgainst).toBe(0);
+    }
+  });
+
+  it("trivia answers are ignored during the kamra; kamra input ignored during questions", () => {
+    const { engine } = makeEngine(["a", "b"]);
+    engine.onTimeout(); // q1
+    expect(engine.onAction("a", { type: "kmMath", value: 3 }, meta)).toBeNull(); // not in kamra
+    engine.onAction("a", answer("q_0001", 0), meta);
+    engine.onAction("b", answer("q_0001", 3), meta);
+    engine.onTimeout(); // reveal → kamra
+    engine.onTimeout(); // intro → play
+    expect(engine.onAction("b", answer("q_0001", 0), meta)).toBeNull(); // trivia ignored in kamra
+    expect(engine.playerState("b")!.alive).toBe(true); // nothing applied yet
+  });
+
+  it("kamra timers ignore the extended/off timer modes (killing floor is a race)", () => {
+    const { engine, clock } = makeEngine(["a", "b"], { timerMode: "extended" });
+    engine.onTimeout(); // q1 (extended: 60s)
+    engine.onAction("a", answer("q_0001", 0), meta);
+    engine.onAction("b", answer("q_0001", 3), meta);
+    const kamra = engine.onTimeout(); // reveal → kamra intro
+    expect(kamra?.deadline).toBe(clock.now() + 3500); // introMs, NOT doubled
+  });
+
+  it("minigames rotate without repeats until all legal ones are seen (LRU §3.4)", () => {
+    // Multi-player floors with no voters (2 players, both wrong is mercy —
+    // so use 3 players where 2 are wrong each round; the third is the voter).
+    const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const D = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    const { engine } = makeEngine([A, B, C, D], { rand: () => 0 });
+    engine.onTimeout(); // q1
+    const seen: string[] = [];
+    // Visit 1: A+B on the floor (both idle → both die). Visit 2: C solo floor.
+    engine.onAction(A, answer("q_0001", 1), meta);
+    engine.onAction(B, answer("q_0001", 2), meta);
+    engine.onAction(C, answer("q_0001", 0), meta);
+    engine.onAction(D, answer("q_0001", 0), meta);
+    engine.onTimeout(); // → kamra intro (visit 1)
+    const p1 = pub(engine);
+    if (p1.kind === "kamraIntro") seen.push(p1.minigame);
+    driveKamra(engine);
+    // next question: C wrong this time (solo floor), D correct
+    const q2 = "q_0002";
+    engine.onAction(A, answer(q2, 0), meta);
+    engine.onAction(B, answer(q2, 0), meta);
+    engine.onAction(C, answer(q2, 1), meta);
+    engine.onAction(D, answer(q2, 0), meta);
+    engine.onTimeout(); // → kamra intro (visit 2)
+    const p2 = pub(engine);
+    if (p2.kind === "kamraIntro") seen.push(p2.minigame);
+    expect(seen).toHaveLength(2);
+    expect(seen[0]).not.toBe(seen[1]); // LRU: no repeat while fresh games remain
+  });
+});
+
+describe("KhooniSawaalEngine — M2 fixes (schema)", () => {
+  it("rejects malformed payload variants (QA-M2-7 recheck)", () => {
     const { engine } = makeEngine(["a", "b"]);
     engine.onTimeout(); // q1
     expect(engine.onAction("a", { type: "answer", questionId: "q_0001", optionIndex: "0" }, meta)).toBeNull();

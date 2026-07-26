@@ -69,11 +69,27 @@ describe("K8 Dhokha (betrayal)", () => {
     g.onInput("b", answer({ type: "kmChoice", choice: "betray" }));
     expect(g.resolveDeaths().sort()).toEqual(["a", "b"]);
   });
-  it("everyone loyal: the room still claims one", () => {
+  it("everyone loyal: ALL survive — the §3.4/§3.7 loyalty exception", () => {
     const g = new Dhokha(floor("a", "b"), deps(() => 0));
     g.onInput("a", answer({ type: "kmChoice", choice: "spare" }));
     g.onInput("b", answer({ type: "kmChoice", choice: "spare" }));
-    expect(g.resolveDeaths()).toHaveLength(1);
+    expect(g.resolveDeaths()).toEqual([]);
+    expect(g.payouts()).toEqual([]); // nobody profits from universal loyalty
+  });
+
+  it("a UNIQUE betrayer takes the ₹1,000 pot (§3.7)", () => {
+    const g = new Dhokha(floor("a", "b", "c"), deps(() => 0));
+    g.onInput("a", answer({ type: "kmChoice", choice: "betray" }));
+    g.onInput("b", answer({ type: "kmChoice", choice: "spare" }));
+    g.onInput("c", answer({ type: "kmChoice", choice: "spare" }));
+    expect(g.resolveDeaths().sort()).toEqual(["b", "c"]);
+    expect(g.payouts()).toEqual([{ playerId: "a", amount: 1000 }]);
+    // two betrayers → no pot for anyone
+    const g2 = new Dhokha(floor("a", "b", "c"), deps(() => 0));
+    g2.onInput("a", answer({ type: "kmChoice", choice: "betray" }));
+    g2.onInput("b", answer({ type: "kmChoice", choice: "betray" }));
+    g2.onInput("c", answer({ type: "kmChoice", choice: "spare" }));
+    expect(g2.payouts()).toEqual([]);
   });
 });
 

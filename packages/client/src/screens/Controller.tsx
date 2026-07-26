@@ -5,6 +5,7 @@ import { S } from "../ui/styles.css.js";
 import { COLORS, avatarLabel } from "../ui/theme.js";
 import { errorText } from "../net/errors.js";
 import { Countdown } from "../ui/Countdown.js";
+import { ControllerKamra } from "./kamra.js";
 
 /**
  * Phone controller. In M1 this shows the lobby "waiting" state and, for the
@@ -61,6 +62,7 @@ export function Controller({ state, onAction }: { state: ClientState; onAction: 
           deadline={state.public.deadline}
           isVip={isVip}
           isAudience={isAudience}
+          youId={you?.id ?? null}
           onAction={onAction}
         />
       )}
@@ -79,6 +81,7 @@ function GamePhase({
   deadline,
   isVip,
   isAudience,
+  youId,
   onAction,
 }: {
   pub: KsPublicPhase | null;
@@ -86,10 +89,32 @@ function GamePhase({
   deadline: number | null;
   isVip: boolean;
   isAudience: boolean;
+  youId: string | null;
   onAction: (p: unknown) => void;
 }) {
   if (pub === null) return <p style={{ textAlign: "center" }}>Screen ki taraf dekho…</p>;
   const ghost = priv !== null && !priv.alive;
+
+  if (
+    pub.kind === "kamraIntro" ||
+    pub.kind === "kamraPlay" ||
+    pub.kind === "kamraVote" ||
+    pub.kind === "kamraResult" ||
+    pub.kind === "wheel"
+  ) {
+    return (
+      <ControllerKamra
+        pub={pub}
+        kamra={priv?.kamra ?? null}
+        youId={youId}
+        isVip={isVip}
+        isAudience={isAudience}
+        alive={priv?.alive ?? true}
+        deadline={deadline}
+        onAction={onAction}
+      />
+    );
+  }
 
   if (pub.kind === "tutorial") {
     return (

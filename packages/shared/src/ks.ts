@@ -2,6 +2,8 @@
 // renderer. The platform protocol stays game-agnostic (phaseData is `unknown`);
 // these types are how the KS game module and its screens agree on that payload.
 
+import type { KamraPrivate, KamraPublicPhase } from "./kamra.js";
+
 export const QUESTION_BUDGET = 10;
 export const CORRECT_REWARD = 1000;
 
@@ -36,8 +38,14 @@ export interface KsRevealPublic {
   options: [string, string, string, string];
   correct: number;
   tally: KsRevealOptionTally[];
-  /** Player ids who answered wrong and died this question (empty on mercy/all-correct). */
+  /**
+   * Player ids who died AT the reveal. Since M3 wrong answers send players to
+   * the Khooni Kamra instead of killing directly, this is only non-empty for
+   * edge paths; kamra deaths are announced in the kamraResult phase (§3.4).
+   */
   deaths: string[];
+  /** Living players sentenced to the Khooni Kamra this question (§3.4). */
+  floor: string[];
   mercy: boolean;
   allCorrect: boolean;
   vo: string;
@@ -66,7 +74,8 @@ export type KsPublicPhase =
   | KsTutorialPublic
   | KsQuestionPublic
   | KsRevealPublic
-  | KsGameOverPublic;
+  | KsGameOverPublic
+  | KamraPublicPhase;
 
 export interface KsPrivatePhase {
   /** For the question phase: this player's locked choice, or null. */
@@ -74,4 +83,6 @@ export interface KsPrivatePhase {
   answered: boolean;
   /** Ghosts still play but the UI frames it differently. */
   alive: boolean;
+  /** Khooni Kamra per-player state; null outside the kamra phase (§3.4). */
+  kamra: KamraPrivate | null;
 }

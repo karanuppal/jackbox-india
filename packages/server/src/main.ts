@@ -2,13 +2,22 @@ import { startServer, WS_PATH } from "./app.js";
 import { RoomRegistry } from "./rooms/registry.js";
 import { Hub } from "./ws/hub.js";
 import { createKhooniSawaalEngine } from "./game/khooniSawaal.js";
-import { loadQuestionBank } from "./content/load.js";
+import { loadKamraContent, loadQuestionBank } from "./content/load.js";
 import { ConcurrencyLimiter, IpRateLimiter } from "./net/ipLimits.js";
 import { LOOKUP_RATE_LIMIT_PER_MIN } from "@tamasha/shared";
 
 const port = Number(process.env.PORT ?? 8787);
 const questionBank = loadQuestionBank();
-const registry = new RoomRegistry(createKhooniSawaalEngine(questionBank));
+const kamraContent = loadKamraContent();
+const registry = new RoomRegistry(
+  createKhooniSawaalEngine(questionBank, {
+    kamraContent: {
+      spellingWords: kamraContent.spellingWords.map((w) => ({ word: w.word, adult: w.adult })),
+      worstPrompts: kamraContent.worstPrompts.map((p) => ({ text: p.text, adult: p.adult })),
+      drawPrompts: kamraContent.drawPrompts.map((p) => ({ text: p.text, adult: p.adult })),
+    },
+  }),
+);
 
 // Per-IP abuse limiters (SEC-M1-1/2/3).
 const createLimiter = new IpRateLimiter(10, 60_000); // room creation

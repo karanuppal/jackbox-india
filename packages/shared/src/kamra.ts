@@ -19,14 +19,33 @@ export type MinigameKind = (typeof MINIGAME_KINDS)[number];
 // Minigames that require >=2 floor players and >=1 living voter (§3.4).
 export const VOTING_MINIGAMES: readonly MinigameKind[] = ["sabseGhatiyaJawaab", "gandaChitra"];
 
-/** Timers (ms) for the killing-floor sub-phases. */
+/** Timers (ms) for the killing-floor sub-phases. Kamra phases are ALWAYS
+ *  timed regardless of the room's timerMode — the killing floor is a race
+ *  (mirroring TMP; the finale likewise ignores extended timers, §3.6). */
 export const KAMRA_TIMERS = {
   introMs: 3500,
   playMs: 25000,
   voteMs: 15000,
   resultMs: 5000,
   wheelSpinMs: 4000,
+  /** Pause on the landed wheel outcome before the next spin. */
+  wheelLandMs: 2500,
 } as const;
+
+/** Maut Ka Chakra odds (§3.3): 5 death segments : 1 life segment. */
+export const WHEEL_DEATH_SEGMENTS = 5;
+export const WHEEL_TOTAL_SEGMENTS = 6;
+
+/** §3.4: a solo floor player faces luck/skill games only (no vote, no memory),
+ *  and death is possible but NOT guaranteed. */
+export const SOLO_MINIGAMES: readonly MinigameKind[] = [
+  "hisaabKitaab",
+  "spellingShelling",
+  "zeharWaliChai",
+];
+
+/** Solo Hisaab-Kitaab survival bar: at least this many correct sums. */
+export const SOLO_MATH_SURVIVAL = 3;
 
 // --- per-floor-player state visible on the host screen --------------------
 export interface KamraFloorPlayer {

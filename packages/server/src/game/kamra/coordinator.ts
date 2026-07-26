@@ -1,6 +1,7 @@
 import {
   KAMRA_TIMERS,
   MINIGAME_KINDS,
+  SOLO_MINIGAMES,
   VOTING_MINIGAMES,
   type KamraPublicPhase,
   type KsAction,
@@ -20,7 +21,26 @@ import {
 
 export type KamraSubPhase = "intro" | "play" | "vote" | "result";
 
-function makeMinigame(kind: MinigameKind, floor: FloorInit[], deps: MinigameDeps): Minigame {
+/** Content + timing knobs the engine passes down (defaults built in). */
+export interface KamraOptions {
+  timers?: Partial<typeof KAMRA_TIMERS>;
+  /** Content pools (M5 fills these from /content); one is picked per visit. */
+  spellingWords?: string[];
+  worstPrompts?: string[];
+  drawPrompts?: string[];
+}
+
+function pickFrom(pool: string[] | undefined, rand: () => number): string | undefined {
+  if (pool === undefined || pool.length === 0) return undefined;
+  return pool[Math.floor(rand() * pool.length)];
+}
+
+function makeMinigame(
+  kind: MinigameKind,
+  floor: FloorInit[],
+  deps: MinigameDeps,
+  opts: KamraOptions,
+): Minigame {
   switch (kind) {
     case "hisaabKitaab":
       return new HisaabKitaab(floor, deps);
@@ -28,12 +48,18 @@ function makeMinigame(kind: MinigameKind, floor: FloorInit[], deps: MinigameDeps
       return new Yaaddasht(floor, deps);
     case "taashKePatte":
       return new TaashKePatte(floor, deps);
-    case "spellingShelling":
-      return new SpellingShelling(floor, deps);
-    case "sabseGhatiyaJawaab":
-      return new SabseGhatiyaJawaab(floor, deps);
-    case "gandaChitra":
-      return new GandaChitra(floor, deps);
+    case "spellingShelling": {
+      const word = pickFrom(opts.spellingWords, deps.rand);
+      return word !== undefined ? new SpellingShelling(floor, deps, word) : new SpellingShelling(floor, deps);
+    }
+    case "sabseGhatiyaJawaab": {
+      const p = pickFrom(opts.worstPrompts, deps.rand);
+      return p !== undefined ? new SabseGhatiyaJawaab(floor, deps, p) : new SabseGhatiyaJawaab(floor, deps);
+    }
+    case "gandaChitra": {
+      const p = pickFrom(opts.drawPrompts, deps.rand);
+      return p !== undefined ? new GandaChitra(floor, deps, p) : new GandaChitra(floor, deps);
+    }
     case "zeharWaliChai":
       return new ZeharWaliChai(floor, deps);
     case "dhokha":
@@ -52,6 +78,7 @@ export class KamraCoordinator {
   private sub: KamraSubPhase = "intro";
   private readonly deps: MinigameDeps;
   private readonly voterIds: Set<string>;
+  private readonly t: typeof KAMRA_TIMERS;
   private deaths: string[] = [];
 
   constructor(
@@ -59,12 +86,14 @@ export class KamraCoordinator {
     voterIds: string[],
     seen: Set<MinigameKind>,
     deps: MinigameDeps,
+    opts: KamraOptions = {},
   ) {
     this.deps = deps;
     this.voterIds = new Set(voterIds);
+    this.t = { ...KAMRA_TIMERS, ...opts.timers };
     const kind = pickMinigame(floor.length, voterIds.length, seen, deps.rand);
     seen.add(kind);
-    this.game = makeMinigame(kind, floor, deps);
+    this.game = makeMinigame(kind, floor, deps, opts);
   }
 
   subPhase(): KamraSubPhase {
@@ -75,13 +104,13 @@ export class KamraCoordinator {
   deadline(now: number): number | null {
     switch (this.sub) {
       case "intro":
-        return now + KAMRA_TIMERS.introMs;
+        return now + this.t.introMs;
       case "play":
-        return now + KAMRA_TIMERS.playMs;
+        return now + this.t.playMs;
       case "vote":
-        return now + KAMRA_TIMERS.voteMs;
+        return now + this.t.voteMs;
       case "result":
-        return now + KAMRA_TIMERS.resultMs;
+        return now + this.t.resultMs;
     }
   }
 
@@ -154,6 +183,10 @@ export class KamraCoordinator {
   getDeaths(): string[] {
     return this.deaths;
   }
+  /** Money earned inside the minigame (§3.7), applied by the engine. */
+  getPayouts(): { playerId: string; amount: number }[] {
+    return this.game.payouts();
+  }
   isFinished(): boolean {
     return this.sub === "result";
   }
@@ -186,7 +219,8 @@ export class KamraCoordinator {
   }
 }
 
-/** Least-recently-used minigame selection respecting voting constraints. */
+/** Least-recently-used minigame selection respecting voting constraints and
+ *  the §3.4 solo rule (a lone floor player gets luck/skill games only). */
 export function pickMinigame(
   floorSize: number,
   voterCount: number,
@@ -194,10 +228,14 @@ export function pickMinigame(
   rand: () => number,
 ): MinigameKind {
   const votingOk = floorSize >= 2 && voterCount >= 1;
-  let pool = MINIGAME_KINDS.filter((k) => votingOk || !VOTING_MINIGAMES.includes(k));
+  const base =
+    floorSize === 1
+      ? MINIGAME_KINDS.filter((k) => SOLO_MINIGAMES.includes(k))
+      : MINIGAME_KINDS.filter((k) => votingOk || !VOTING_MINIGAMES.includes(k));
+  let pool = base;
   const fresh = pool.filter((k) => !seen.has(k));
   if (fresh.length > 0) pool = fresh; // prefer unseen until all used
-  if (pool.length === 0) pool = [...MINIGAME_KINDS]; // safety
+  if (pool.length === 0) pool = [...base]; // all seen → allow repeats within the legal pool
   return pool[Math.floor(rand() * pool.length)]!;
 }
 

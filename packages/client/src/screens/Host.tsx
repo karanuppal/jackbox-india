@@ -5,6 +5,7 @@ import { S } from "../ui/styles.css.js";
 import { COLORS, avatarLabel } from "../ui/theme.js";
 import { joinUrl, qrSvg } from "../net/qr.js";
 import { Countdown } from "../ui/Countdown.js";
+import { HostKamraScene } from "./kamra.js";
 
 /**
  * Host screen (the shared "show" display). M1: lobby with room code, QR, the
@@ -127,7 +128,7 @@ function GameScene({
     );
   }
   if (pub.kind === "reveal") {
-    const diedNames = pub.deaths.map(nameOf);
+    const floorNames = pub.floor.map(nameOf);
     return (
       <div style={{ textAlign: "center", width: "100%" }}>
         <h2 style={{ fontSize: "1.75rem", maxWidth: "45rem", margin: "0.5rem auto" }}>{pub.text}</h2>
@@ -139,12 +140,21 @@ function GameScene({
           <p style={{ color: COLORS.marigold }}>Sab ne sahi jawab diya!</p>
         ) : (
           <p style={{ color: COLORS.blood, fontSize: "1.25rem" }}>
-            {`💀 ${diedNames.join(", ")} — Khooni Kamra ki taraf…`}
+            {`🚪 ${floorNames.join(", ")} — Khooni Kamre ki taraf…`}
           </p>
         )}
         <Subtitle vo={pub.vo} />
       </div>
     );
+  }
+  if (
+    pub.kind === "kamraIntro" ||
+    pub.kind === "kamraPlay" ||
+    pub.kind === "kamraVote" ||
+    pub.kind === "kamraResult" ||
+    pub.kind === "wheel"
+  ) {
+    return <HostKamraScene pub={pub} players={players} deadline={deadline} subtitles={subtitles} />;
   }
   // gameOver
   return (

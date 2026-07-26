@@ -25,6 +25,8 @@ export interface ActionMeta {
   role: "player" | "audience";
   /** True if this is an active (alive) player, not a ghost/audience. */
   active: boolean;
+  /** True if the caller is the room VIP (may censor kamra submissions, §4.3). */
+  vip?: boolean;
 }
 
 export interface GameContext {

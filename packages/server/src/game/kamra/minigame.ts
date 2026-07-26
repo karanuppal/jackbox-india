@@ -40,8 +40,14 @@ export interface Minigame {
   /** Record a vote AGAINST a floor player (voter is any living non-floor player). */
   onVote(voterId: string, targetId: string): void;
 
-  /** Compute who dies this visit (always >= 1 unless the floor is empty). */
+  /** Compute who dies this visit (always >= 1 unless the floor is empty).
+   *  Exceptions (§3.4/§3.7): a SOLO floor player can survive luck/skill games,
+   *  and universal Dhokha loyalty spares the whole floor. */
   resolveDeaths(): string[];
+
+  /** Money earned inside the minigame (§3.7: K1 ₹25/correct, K2 ₹1000 ×
+   *  proportion, K4 ₹100 × word length, K8 pot). Empty for the rest. */
+  payouts(): { playerId: string; amount: number }[];
 }
 
 /** Shared helper: the lowest-scorer(s) die; ties break by killing all tied. */

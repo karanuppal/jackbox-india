@@ -346,7 +346,7 @@ export class Room {
     if (this.engine === null || playerId === null) return "NOT_ALLOWED";
     const p = this.players.get(playerId);
     if (p === undefined) return "NOT_ALLOWED";
-    const meta: ActionMeta = { role: p.role, active: p.role === "player" && p.alive };
+    const meta: ActionMeta = { role: p.role, active: p.role === "player" && p.alive, vip: p.vip };
     const next = this.engine.onAction(playerId, payload, meta);
     if (next !== null) {
       this.phase = next.phase as Phase;

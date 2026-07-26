@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { renderToString } from "react-dom/server";
 import { createRoot, type Root } from "react-dom/client";
-import type { KsPublicPhase, PlayerPublic, RoomPublicState } from "@tamasha/shared";
+import type { KsPublicPhase, KsRevealPublic, PlayerPublic, RoomPublicState } from "@tamasha/shared";
 import { Controller } from "../src/screens/Controller.js";
 import { Host } from "../src/screens/Host.js";
 import { initialState, type ClientState } from "../src/net/store.js";
@@ -24,10 +24,10 @@ const question: KsPublicPhase = {
   kind: "question", questionId: "q_0001", text: "Sholay mein kya hua?",
   options: ["ek", "do", "teen", "chaar"], number: 3, total: 10, vo: "Dhyaan se…",
 };
-const reveal: KsPublicPhase = {
+const reveal: KsRevealPublic = {
   kind: "reveal", questionId: "q_0001", text: "Sholay mein kya hua?", options: ["ek", "do", "teen", "chaar"],
   correct: 0, tally: [{ index: 0, count: 2, correct: true }, { index: 1, count: 0, correct: false }, { index: 2, count: 1, correct: false }, { index: 3, count: 0, correct: false }],
-  deaths: ["p2"], mercy: false, allCorrect: false, vo: "Kuch mehmaan…",
+  deaths: [], floor: ["p2"], mercy: false, allCorrect: false, vo: "Kuch mehmaan…",
 };
 const gameOver: KsPublicPhase = {
   kind: "gameOver",
@@ -63,7 +63,7 @@ describe("Controller — trivia phases", () => {
   });
 
   it("shows mercy text on a mercy reveal", () => {
-    const mercyReveal: KsPublicPhase = { ...reveal, mercy: true, deaths: [] };
+    const mercyReveal: KsRevealPublic = { ...reveal, mercy: true, deaths: [], floor: [] };
     const state = joined({ public: base("reveal", mercyReveal), private: { you: player(), role: "player", phaseData: { myAnswer: 1, answered: true, alive: true } } });
     const html = renderToString(<Controller state={state} onAction={() => {}} />);
     expect(html).toContain("Sab bach gaye");
@@ -78,9 +78,9 @@ describe("Host — game scenes", () => {
     expect(html).toContain("Dhyaan se"); // subtitle
   });
 
-  it("renders the reveal with the correct answer highlighted and a death count", () => {
+  it("renders the reveal with the correct answer highlighted and the sentenced named", () => {
     const html = renderToString(<Host state={joined({ public: base("reveal", reveal) })} origin="http://localhost" />);
-    expect(html).toContain("Khooni Kamra ki taraf");
+    expect(html).toContain("Khooni Kamre ki taraf");
   });
 
   it("renders the game-over standings with the winner crowned", () => {
@@ -158,11 +158,11 @@ describe("Host — M2 UX (podium, death names, tally legend)", () => {
     expect(html).toContain("taiyaar"); // Karan has locked in
   });
 
-  it("names who died on the reveal, not just a count (UT-M2-1)", () => {
-    const deathReveal: KsPublicPhase = { ...reveal, deaths: ["p2"], mercy: false, allCorrect: false };
+  it("names who was sentenced on the reveal, not just a count (UT-M2-1/M3)", () => {
+    const deathReveal: KsRevealPublic = { ...reveal, floor: ["p2"], mercy: false, allCorrect: false };
     const html = renderToString(<Host state={joined({ public: base("reveal", deathReveal, { players: twoPlayers }) })} origin="http://localhost" />);
     expect(html).toContain("Bunty"); // named
-    expect(html).toContain("Khooni Kamra ki taraf");
+    expect(html).toContain("Khooni Kamre ki taraf");
   });
 
   it("shows the tally legend on the reveal (UT-M2-7)", () => {

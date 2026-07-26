@@ -1,15 +1,21 @@
 import {
+  censorActionSchema,
   CORRECT_REWARD,
+  KAMRA_TIMERS,
   ksActionSchema,
   QUESTION_BUDGET,
   TIMERS,
+  WHEEL_DEATH_SEGMENTS,
+  WHEEL_TOTAL_SEGMENTS,
   type KsPrivatePhase,
   type KsPublicPhase,
   type KsRevealOptionTally,
   type KsStanding,
+  type MinigameKind,
   type Question,
 } from "@tamasha/shared";
 import type { ActionMeta, EnginePhase, GameContext, GameEngine } from "./engine.js";
+import { KamraCoordinator, type KamraOptions } from "./kamra/coordinator.js";
 
 // Sentinel written into a player's answer slot when they forfeit (disconnect
 // or auto-skip) — never equals a real option index (0–3), so it always scores
@@ -22,9 +28,12 @@ const VO = {
     "Aaiye… Manzil Mahal ke is quiz mein aapka swagat hai. Sahi jawab do — paisa milega. Galat jawab do — aur… khair, dekh lenge. Chaliye shuru karein.",
   allCorrect: "Sab ne sahi jawab diya? Hmm. Aaj kisi ki maut nahi. Agla sawaal.",
   mercy: "Sab ke sab galat! Itni nalayaki par toh main bhi kuch nahi kar sakta. Chalo, maaf kiya… is baar.",
-  someDied: "Kuch mehmaan ab hamesha ke liye… mehmaan hi rahenge. Aatma ban ke khelte raho.",
+  sentenced: "Galat jawab. Khooni Kamre ka darwaza khul raha hai… andar chaliye.",
   question: "Dhyaan se suniye…",
   gameOver: "Bas, itna hi. Manzil Mahal ne aaj apna hisaab-kitaab kar liya.",
+  wheelSpin: "Maut Ka Chakra ghoomta hai… kismat se behas mat karna.",
+  wheelDeath: "Chakra ne faisla suna diya. Alvida.",
+  wheelLife: "Zinda. Chakra ne aaj maaf kar diya… agli baari tak.",
 } as const;
 
 interface KsPlayer {
@@ -35,20 +44,32 @@ interface KsPlayer {
   answer: number | null; // index for the current question
 }
 
-type Phase = "tutorial" | "question" | "reveal" | "gameOver";
+type Phase = "tutorial" | "question" | "reveal" | "khooniKamra" | "wheel" | "gameOver";
 
 export interface KsOptions {
   /** Deterministic selection for tests: pick `n` questions from the bank. */
   pickQuestions?: (bank: Question[], n: number, familyFriendly: boolean) => Question[];
   /** Override phase durations (ms) — used by tests for fast timer-driver runs. */
   timers?: Partial<Record<keyof typeof TIMERS, number>>;
+  /** Override Khooni Kamra / wheel durations (ms) for tests. */
+  kamraTimers?: Partial<typeof KAMRA_TIMERS>;
+  /** Deterministic randomness (minigame pick, wheel, content pick). */
+  rand?: () => number;
+  /** Content pools for the kamra minigames (adult items are filtered out in
+   *  family-friendly rooms at game start, §6.4). */
+  kamraContent?: {
+    spellingWords?: { word: string; adult: boolean }[];
+    worstPrompts?: { text: string; adult: boolean }[];
+    drawPrompts?: { text: string; adult: boolean }[];
+  };
 }
 
 /**
- * Khooni Sawaal trivia engine (PLAN.md §3.3). M2 covers the trivia loop:
- * tutorial → 10 questions with reveal + scoring + ghosts + mercy → gameOver.
- * The Khooni Kamra killing-floor (M3) and the Aakhri Darwaza finale (M4)
- * replace the direct wrong→ghost death and the placeholder ending later.
+ * Khooni Sawaal trivia engine (PLAN.md §3.3–§3.4). M3 covers the full loop:
+ * tutorial → questions with reveal/scoring/ghosts/mercy → Khooni Kamra
+ * killing-floor visits for wrong answers → Maut Ka Chakra wheel when the
+ * budget ends with 2+ alive. The Aakhri Darwaza finale (M4) replaces the
+ * wheel/attrition ending's direct jump to gameOver.
  */
 export class KhooniSawaalEngine implements GameEngine {
   private phase: Phase = "tutorial";
@@ -59,18 +80,33 @@ export class KhooniSawaalEngine implements GameEngine {
   private questionMs: number = TIMERS.questionMs;
   private lastReveal: {
     deaths: string[];
+    floor: string[];
     mercy: boolean;
     allCorrect: boolean;
     tally: KsRevealOptionTally[];
   } | null = null;
 
+  // --- Khooni Kamra state (§3.4) ------------------------------------------
+  private kamra: KamraCoordinator | null = null;
+  private pendingFloor: string[] = [];
+  private readonly seenMinigames = new Set<MinigameKind>();
+  private kamraOpts: KamraOptions = {};
+
+  // --- Maut Ka Chakra state (§3.3) ----------------------------------------
+  private wheelSpinnerId: string | null = null;
+  private wheelOutcome: "life" | "death" | null = null;
+
   private readonly t: Record<keyof typeof TIMERS, number>;
+  private readonly kt: typeof KAMRA_TIMERS;
+  private readonly rand: () => number;
 
   constructor(
     private readonly bank: Question[],
     private readonly opts: KsOptions = {},
   ) {
     this.t = { ...TIMERS, ...opts.timers };
+    this.kt = { ...KAMRA_TIMERS, ...opts.kamraTimers };
+    this.rand = opts.rand ?? Math.random;
   }
 
   start(ctx: GameContext): EnginePhase {
@@ -84,6 +120,16 @@ export class KhooniSawaalEngine implements GameEngine {
         : ctx.settings.timerMode === "off"
           ? 0 // untimed: the question resolves only when everyone answers (§3.3)
           : this.t.questionMs;
+    // Kamra content pools, family-friendly filtered once at start (§6.4).
+    const ff = ctx.settings.familyFriendly;
+    const kc = this.opts.kamraContent;
+    this.kamraOpts = { timers: this.opts.kamraTimers ?? {} };
+    const words = kc?.spellingWords?.filter((w) => !ff || !w.adult).map((w) => w.word) ?? [];
+    const worst = kc?.worstPrompts?.filter((p) => !ff || !p.adult).map((p) => p.text) ?? [];
+    const draw = kc?.drawPrompts?.filter((p) => !ff || !p.adult).map((p) => p.text) ?? [];
+    if (words.length > 0) this.kamraOpts.spellingWords = words;
+    if (worst.length > 0) this.kamraOpts.worstPrompts = worst;
+    if (draw.length > 0) this.kamraOpts.drawPrompts = draw;
     // Empty selection guard (QA-M2-4/SEC-M2-3): if a custom picker returned
     // nothing, fall back to the bank — but RESPECT the family-friendly filter
     // in the fallback so we never serve adult content in FF mode (QA-M2-R1).
@@ -122,12 +168,17 @@ export class KhooniSawaalEngine implements GameEngine {
         return this.resolveQuestion();
       case "reveal":
         return this.afterReveal();
+      case "khooniKamra":
+        return this.kamraTimeout();
+      case "wheel":
+        return this.wheelTimeout();
       case "gameOver":
         return null;
     }
   }
 
-  onAction(playerId: string, payload: unknown, _meta: ActionMeta): EnginePhase | null {
+  onAction(playerId: string, payload: unknown, meta: ActionMeta): EnginePhase | null {
+    if (this.phase === "khooniKamra") return this.kamraAction(playerId, payload, meta);
     if (this.phase !== "question") return null;
     const p = this.players.find((x) => x.id === playerId);
     if (p === undefined) return null; // audience / unknown — ignored
@@ -139,7 +190,8 @@ export class KhooniSawaalEngine implements GameEngine {
   }
 
   /** A player disconnected — forfeit their pending answer so the round can
-   *  still resolve in no-timer mode (§4.2, QA-M2-2). */
+   *  still resolve in no-timer mode (§4.2, QA-M2-2). Kamra phases are always
+   *  timed, so a mid-kamra disconnect resolves at the play/vote deadline. */
   onPlayerLeft(playerId: string): EnginePhase | null {
     if (this.phase !== "question") return null;
     const p = this.players.find((x) => x.id === playerId);
@@ -154,7 +206,9 @@ export class KhooniSawaalEngine implements GameEngine {
     return null;
   }
 
-  /** Score the question, apply deaths/mercy, and enter the reveal phase. */
+  /** Score the question, sentence wrong-answering living players to the
+   *  Khooni Kamra (§3.4), and enter the reveal phase. Nobody dies AT the
+   *  reveal anymore — deaths come from the kamra minigame (M3). */
   private resolveQuestion(): EnginePhase {
     const q = this.currentQuestion();
     const correct = q.correct;
@@ -167,20 +221,15 @@ export class KhooniSawaalEngine implements GameEngine {
     const livingCount = this.players.filter((p) => p.alive).length;
     const allLivingWrong = livingWrong.length === livingCount && livingCount > 0;
     const allCorrect = livingWrong.length === 0;
-    // Mercy: everyone alive was wrong → nobody dies (§3.3).
-    const deaths: string[] = [];
-    if (!allLivingWrong) {
-      for (const p of livingWrong) {
-        p.alive = false;
-        deaths.push(p.id);
-      }
-    }
+    // Mercy: everyone alive was wrong → nobody is sentenced (§3.3).
+    this.pendingFloor = allLivingWrong ? [] : livingWrong.map((p) => p.id);
     const counts = [0, 0, 0, 0];
     for (const p of this.players) {
       if (p.answer !== null && p.answer >= 0 && p.answer <= 3) counts[p.answer]! += 1;
     }
     this.lastReveal = {
-      deaths,
+      deaths: [],
+      floor: [...this.pendingFloor],
       mercy: allLivingWrong,
       allCorrect,
       tally: counts.map((count, index) => ({ index, count, correct: index === correct })),
@@ -190,18 +239,125 @@ export class KhooniSawaalEngine implements GameEngine {
   }
 
   private afterReveal(): EnginePhase {
-    // M2 ends only when the question budget is exhausted, so a solo player (and
-    // a game attrited to one survivor) plays the full 10 questions (§3.2
-    // "fully playable solo"). §3.3's early transitions are deferred:
-    //   • budget exhausted with 2+ alive → Maut Ka Chakra wheel  → M3/M4
-    //   • 1 living player remaining        → Aakhri Darwaza finale → M4
-    // Until those land, the game reaches gameOver at the budget (QA-M2-3/6).
+    // Sentenced players go to the Khooni Kamra before the game moves on (§3.4).
+    if (this.pendingFloor.length > 0) return this.startKamra();
+    return this.advanceOrEnd();
+  }
+
+  /** Next question, or the endgame: budget exhausted with 2+ alive spins the
+   *  Maut Ka Chakra (§3.3); otherwise gameOver (M4 replaces with the finale). */
+  private advanceOrEnd(): EnginePhase {
     const done = this.index >= this.questions.length - 1;
-    if (done) {
+    if (!done) return this.beginQuestion();
+    const alive = this.players.filter((p) => p.alive);
+    if (alive.length >= 2) return this.startWheel();
+    this.phase = "gameOver";
+    return { phase: "gameOver", deadline: null };
+  }
+
+  // --- Khooni Kamra (§3.4) --------------------------------------------------
+  private startKamra(): EnginePhase {
+    const floor = this.pendingFloor
+      .map((id) => this.players.find((p) => p.id === id))
+      .filter((p): p is KsPlayer => p !== undefined)
+      .map((p) => ({ playerId: p.id, name: p.name }));
+    const voters = this.players
+      .filter((p) => p.alive && !this.pendingFloor.includes(p.id))
+      .map((p) => p.id);
+    this.kamra = new KamraCoordinator(
+      floor,
+      voters,
+      this.seenMinigames,
+      { now: this.now, rand: this.rand },
+      this.kamraOpts,
+    );
+    this.pendingFloor = [];
+    this.phase = "khooniKamra";
+    return { phase: "khooniKamra", deadline: this.kamra.deadline(this.now()) };
+  }
+
+  private kamraTimeout(): EnginePhase | null {
+    const k = this.kamra;
+    if (k === null) return null;
+    const finished = k.onTimeout();
+    if (!finished) return { phase: "khooniKamra", deadline: k.deadline(this.now()) };
+    return this.applyKamraOutcome();
+  }
+
+  /** The visit is over: pay minigame winnings (§3.7), apply deaths, move on. */
+  private applyKamraOutcome(): EnginePhase {
+    const k = this.kamra!;
+    for (const { playerId, amount } of k.getPayouts()) {
+      const p = this.players.find((x) => x.id === playerId);
+      if (p !== undefined) p.money += amount;
+    }
+    for (const id of k.getDeaths()) {
+      const p = this.players.find((x) => x.id === id);
+      if (p !== undefined) p.alive = false;
+    }
+    this.kamra = null;
+    return this.advanceOrEnd();
+  }
+
+  private kamraAction(playerId: string, payload: unknown, meta: ActionMeta): EnginePhase | null {
+    const k = this.kamra;
+    if (k === null) return null;
+    // VIP censor of a floor submission (§4.3) — only the VIP's phone sends it.
+    const cz = censorActionSchema.safeParse(payload);
+    if (cz.success) {
+      if (meta.vip !== true) return null;
+      k.censor(cz.data.targetId);
+      return null; // no phase change; snapshots rebroadcast regardless
+    }
+    const parsed = ksActionSchema.safeParse(payload);
+    if (!parsed.success || parsed.data.type === "answer") return null;
+    const before = k.subPhase();
+    const changed = k.onInput(playerId, parsed.data);
+    if (!changed) return null;
+    if (k.subPhase() !== before) {
+      // Early advance (all floor players locked in) → new sub-phase deadline.
+      return { phase: "khooniKamra", deadline: k.deadline(this.now()) };
+    }
+    return null;
+  }
+
+  // --- Maut Ka Chakra (§3.3) ------------------------------------------------
+  private startWheel(): EnginePhase {
+    this.phase = "wheel";
+    this.wheelSpinnerId = this.players.find((p) => p.alive)!.id;
+    this.wheelOutcome = null;
+    return { phase: "wheel", deadline: this.now() + this.kt.wheelSpinMs };
+  }
+
+  private wheelTimeout(): EnginePhase | null {
+    if (this.wheelSpinnerId === null) return null;
+    if (this.wheelOutcome === null) {
+      // The spin lands: 5 death segments : 1 life segment (§3.3).
+      this.wheelOutcome =
+        this.rand() * WHEEL_TOTAL_SEGMENTS < WHEEL_DEATH_SEGMENTS ? "death" : "life";
+      return { phase: "wheel", deadline: this.now() + this.kt.wheelLandMs };
+    }
+    // Apply the landed outcome, then pass the wheel on (or end).
+    const spinner = this.players.find((p) => p.id === this.wheelSpinnerId);
+    if (spinner !== undefined && this.wheelOutcome === "death") spinner.alive = false;
+    const alive = this.players.filter((p) => p.alive);
+    if (alive.length <= 1) {
       this.phase = "gameOver";
+      this.wheelSpinnerId = null;
       return { phase: "gameOver", deadline: null };
     }
-    return this.beginQuestion();
+    this.wheelSpinnerId = this.nextAliveAfter(this.wheelSpinnerId);
+    this.wheelOutcome = null;
+    return { phase: "wheel", deadline: this.now() + this.kt.wheelSpinMs };
+  }
+
+  private nextAliveAfter(id: string): string {
+    const idx = this.players.findIndex((p) => p.id === id);
+    for (let step = 1; step <= this.players.length; step++) {
+      const candidate = this.players[(idx + step) % this.players.length]!;
+      if (candidate.alive) return candidate.id;
+    }
+    return id; // unreachable while 2+ alive
   }
 
   // --- snapshots -------------------------------------------------------------
@@ -230,9 +386,28 @@ export class KhooniSawaalEngine implements GameEngine {
         correct: q.correct,
         tally: r.tally,
         deaths: r.deaths,
+        floor: r.floor,
         mercy: r.mercy,
         allCorrect: r.allCorrect,
-        vo: r.mercy ? VO.mercy : r.allCorrect ? VO.allCorrect : VO.someDied,
+        vo: r.mercy ? VO.mercy : r.allCorrect ? VO.allCorrect : VO.sentenced,
+      };
+    }
+    if (this.phase === "khooniKamra" && this.kamra !== null) {
+      return this.kamra.publicPhase(this.now());
+    }
+    if (this.phase === "wheel" && this.wheelSpinnerId !== null) {
+      const spinner = this.players.find((p) => p.id === this.wheelSpinnerId);
+      return {
+        kind: "wheel",
+        spinnerId: this.wheelSpinnerId,
+        spinnerName: spinner?.name ?? "?",
+        outcome: this.wheelOutcome,
+        vo:
+          this.wheelOutcome === null
+            ? VO.wheelSpin
+            : this.wheelOutcome === "death"
+              ? VO.wheelDeath
+              : VO.wheelLife,
       };
     }
     return { kind: "gameOver", standings: this.standings(), winnerId: this.winnerId(), vo: VO.gameOver };
@@ -244,17 +419,22 @@ export class KhooniSawaalEngine implements GameEngine {
       myAnswer: p?.answer ?? null,
       answered: p?.answer != null,
       alive: p?.alive ?? true,
+      kamra: this.kamra !== null ? this.kamra.privateFor(playerId) : null,
     };
   }
 
   playerState(playerId: string): { alive: boolean; money: number; answered: boolean } | null {
     const p = this.players.find((x) => x.id === playerId);
     if (p === undefined) return null;
-    return { alive: p.alive, money: p.money, answered: p.answer !== null };
+    const answered =
+      this.phase === "khooniKamra" && this.kamra !== null
+        ? this.kamra.privateFor(playerId).done
+        : p.answer !== null;
+    return { alive: p.alive, money: p.money, answered };
   }
 
   progress(): { number: number; total: number } {
-    if (this.phase === "question" || this.phase === "reveal") {
+    if (this.phase === "question" || this.phase === "reveal" || this.phase === "khooniKamra") {
       return { number: this.index + 1, total: this.questions.length };
     }
     return { number: 0, total: 0 };

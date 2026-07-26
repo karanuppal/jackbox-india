@@ -18,3 +18,12 @@ h1 {
 * {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Maut Ka Chakra spin (M3). Honors reduced-motion at the OS level. */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; }
+}

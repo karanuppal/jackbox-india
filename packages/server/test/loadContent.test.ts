@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadQuestionBank } from "../src/content/load.js";
+import { loadFinaleBank, loadKamraContent, loadQuestionBank } from "../src/content/load.js";
 
 function dirWith(name: string, contents: string): string {
   const d = mkdtempSync(join(tmpdir(), "tamasha-content-"));
@@ -32,3 +32,30 @@ describe("loadQuestionBank (QA-M2-8)", () => {
     expect(() => loadQuestionBank(d)).toThrow();
   });
 });
+
+describe("loadKamraContent / loadFinaleBank (M3)", () => {
+  it("loads and validates the shipped kamra pools", () => {
+    const c = loadKamraContent();
+    expect(c.spellingWords.length).toBeGreaterThan(0);
+    expect(c.worstPrompts.length).toBeGreaterThan(0);
+    expect(c.drawPrompts.length).toBeGreaterThan(0);
+    expect(c.spellingWords[0]!.word).toMatch(/^[a-z]+$/);
+  });
+
+  it("loads and validates the shipped finale categories", () => {
+    const f = loadFinaleBank();
+    expect(f.length).toBeGreaterThan(0);
+    expect(f[0]!.options.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("throws on a schema-invalid spelling pool", () => {
+    const d = dirWith("spelling.json", JSON.stringify([{ id: "sw_0001", word: "NOPE UPPER", vo: "sw_0001.ogg", adult: false }]));
+    writeFileToDir(d, "prompts-worst.json", "[]");
+    writeFileToDir(d, "prompts-drawing.json", "[]");
+    expect(() => loadKamraContent(d)).toThrow();
+  });
+});
+
+function writeFileToDir(dir: string, name: string, contents: string): void {
+  writeFileSync(join(dir, name), contents);
+}
