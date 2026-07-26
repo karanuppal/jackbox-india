@@ -491,8 +491,8 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
     const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
     const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
-    // rand()=0.5 → MINIGAME_KINDS[4] = sabseGhatiyaJawaab (floor 2 + 1 voter)
-    const { engine } = makeEngine([A, B, C], { rand: () => 0.5 });
+    // rand()=0.6 over the 7-kind first-visit pool (chai avoided) → sabseGhatiyaJawaab
+    const { engine } = makeEngine([A, B, C], { rand: () => 0.6 });
     engine.onTimeout(); // q1
     engine.onAction(A, answer("q_0001", 1), meta); // wrong → floor
     engine.onAction(B, answer("q_0001", 2), meta); // wrong → floor
@@ -539,7 +539,7 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
     const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
     const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
-    const { engine } = makeEngine([A, B, C], { rand: () => 0.5 }); // sabseGhatiyaJawaab
+    const { engine } = makeEngine([A, B, C], { rand: () => 0.6 }); // sabseGhatiyaJawaab
     engine.onTimeout();
     engine.onAction(A, answer("q_0001", 1), meta);
     engine.onAction(B, answer("q_0001", 2), meta);
@@ -593,7 +593,7 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
     const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
     const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
-    const { engine } = makeEngine([A, B, C], { rand: () => 0.5 }); // sabseGhatiyaJawaab
+    const { engine } = makeEngine([A, B, C], { rand: () => 0.6 }); // sabseGhatiyaJawaab
     engine.onTimeout(); // q1
     engine.onAction(A, answer("q_0001", 1), meta);
     engine.onAction(B, answer("q_0001", 2), meta);
