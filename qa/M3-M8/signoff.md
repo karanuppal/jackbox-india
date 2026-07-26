@@ -44,3 +44,41 @@ no-movement; kick-is-not-a-ban; post-hoc moderation scope; K1 operand floors.
   GCP_PROJECT_ID environment secrets (deploy script staged).
 - M6 TTS voiceover bake-off (Sarvam vs ElevenLabs): needs owner-held provider
   keys; all VO lines ship as subtitles meanwhile.
+
+## Live-deployment gate (2026-07-26, credential-free staging)
+
+Since Cloud Run secrets were still pending, the live gate ran on a real
+public deployment anyway: a GitHub Actions runner boots the production
+server (`tsx src/main.ts` + built client) behind a Cloudflare quick tunnel,
+and `scripts/live-fleet.mjs` plays full games over the PUBLIC https/wss URL
+with 1 host-screen browser + 3 phone-viewport browsers (iPhone UA, touch).
+Results land on the `staging-test-results` branch per run.
+
+| Run | URL host | Verdict | Coverage |
+| --- | --- | --- | --- |
+| #1 (86604e3) | carbon-televisions-…trycloudflare.com | PASS, 0 console errors | 2 sawaal, group Spelling Shelling, last-one-standing early finale, ghost-crown Natija, prefilled rejoin |
+| #2 (dc1b478) | interstate-literary-… | PASS, 0 console errors | solo Hisaab-Kitaab (19 sahi), group Yaaddasht, 13-chakkar finale with darkness eliminations |
+| #3 (afa6e78) | screen-bag-commercial-… | PASS, 0 console errors | Sabse Ghatiya Jawaab + vote, Zeher Wali Chai, solo math, solo spelling, 8 sawaal, post-fix UI verified live |
+
+Reviewer agents audited run #1's 37 screenshots (art-director + game-feel
+lenses): AESTHETICS PASS + GAME-FEEL PASS with 14 findings, ALL fixed and
+regression-tested (AES-LIVE-1..12, GF-LIVE-1..6; 379 → 384 tests):
+- Host: bright question tiles + bold tally chips; one couch-sized centered
+  SubtitleBand on every scene; taller finale track with name chips; hero
+  Natija winner (no duplicate podium strip, tie-aware stats, no
+  winner-repeating stat); readable join URL; vertically centered stage with
+  diya-row set-dressing; quieter settings tray ("Lambe timers").
+- Phones: instant local answer-lock feedback; persistent finale role banner
+  (zinda/aatma/audience + chakkar + door distance) so a runner's phone never
+  matches a ghost's; early-finale bridge line; personal winner verdict +
+  VIP rematch hint; play-again button no longer browser-gray.
+Fix verification: run #3 screenshots show all of the above live.
+
+Test-harness-only bugs found (game unaffected, server kept perfect state
+through both): Playwright 30s default timeouts on stale spelling-key
+locators froze the BOT loop ~124s in runs #1/#3 — fixed by snapshotting
+element handles with bounded reads.
+
+Not exercised live (covered by unit/integration suites instead): Maut Ka
+Chakra wheel (chance-gated; 208 server tests incl. odds/fairness), /mod
+portal over the tunnel (room-level tests cover kick/censor), audience role.
