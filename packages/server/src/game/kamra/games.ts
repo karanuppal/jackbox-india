@@ -82,6 +82,10 @@ abstract class Base implements Minigame {
     const s = this.seat(playerId);
     if (s !== undefined) s.done = true;
   }
+  /** Pause compensation (QA-M4-3) — default: no wall-clock anchors. */
+  shiftClock(_delta: number): void {
+    /* default: nothing */
+  }
   protected get solo(): boolean {
     return this.seats.length === 1;
   }
@@ -283,8 +287,12 @@ export class Yaaddasht extends Base {
   override beginPlay(now: number): void {
     this.playStart = now;
   }
+  override shiftClock(delta: number): void {
+    if (this.playStart !== null) this.playStart += delta; // pause-proof (QA-M4-3)
+  }
   private memorizing(): boolean {
-    return this.playStart === null || this.deps.now() < this.playStart + KAMRA_TIMERS.memorizeMs;
+    const win = this.deps.memorizeMs ?? KAMRA_TIMERS.memorizeMs;
+    return this.playStart === null || this.deps.now() < this.playStart + win;
   }
   override privateFor(playerId: string): unknown {
     return {
@@ -311,11 +319,12 @@ export class Yaaddasht extends Base {
     s.done = true;
     return true;
   }
-  /** §3.7: ₹1,000 × proportion of the PATTERN recalled. */
+  /** §3.7: ₹1,000 × NET proportion (hits − false picks, floored) — selecting
+   *  the whole grid pays nothing, so "spray and die rich" is dead (QA-M4-1). */
   override payouts(): { playerId: string; amount: number }[] {
     return this.seats.map((s) => ({
       playerId: s.playerId,
-      amount: Math.round((1000 * (this.hits.get(s.playerId) ?? 0)) / this.pattern.size),
+      amount: Math.round((1000 * s.score) / this.pattern.size),
     }));
   }
 }
@@ -339,8 +348,12 @@ export class TaashKePatte extends Base {
   override beginPlay(now: number): void {
     this.playStart = now;
   }
+  override shiftClock(delta: number): void {
+    if (this.playStart !== null) this.playStart += delta; // pause-proof (QA-M4-3)
+  }
   private memorizing(): boolean {
-    return this.playStart === null || this.deps.now() < this.playStart + KAMRA_TIMERS.memorizeMs;
+    const win = this.deps.memorizeMs ?? KAMRA_TIMERS.memorizeMs;
+    return this.playStart === null || this.deps.now() < this.playStart + win;
   }
   override privateFor(playerId: string): unknown {
     return {
@@ -545,5 +558,13 @@ export class GandaChitra extends VotingBase {
         s.done = true;
       }
     }
+  }
+  /** A disconnected drawer's draft also goes to the ballot (QA-M4-2). */
+  override forfeit(playerId: string): void {
+    const s = this.seat(playerId);
+    if (s !== undefined && !s.done) {
+      this.answers.set(playerId, { text: null, strokes: this.drafts.get(playerId) ?? [] });
+    }
+    super.forfeit(playerId);
   }
 }

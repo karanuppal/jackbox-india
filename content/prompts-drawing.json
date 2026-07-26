@@ -1,6 +1,284 @@
 [
-  { "id": "pd_0001", "text": "Auto-rickshaw mein baarah log", "vo": "pd_0001.ogg", "adult": false },
-  { "id": "pd_0002", "text": "Monsoon mein Mumbai local", "vo": "pd_0002.ogg", "adult": false },
-  { "id": "pd_0003", "text": "Aunty ka good-morning WhatsApp message", "vo": "pd_0003.ogg", "adult": false },
-  { "id": "pd_0004", "text": "Match ke aakhri over mein bijli jaana", "vo": "pd_0004.ogg", "adult": false }
+ {
+  "id": "pd_0001",
+  "text": "Auto-rickshaw mein baarah log",
+  "vo": "pd_0001.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0002",
+  "text": "Monsoon mein Mumbai local",
+  "vo": "pd_0002.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0003",
+  "text": "Aunty ka good-morning WhatsApp message",
+  "vo": "pd_0003.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0004",
+  "text": "Match ke aakhri over mein bijli jaana",
+  "vo": "pd_0004.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0005",
+  "text": "Aunty haath mein belan leke bhaagti hui",
+  "vo": "pd_0005.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0006",
+  "text": "Sadak ke beech aaram se baithi gai aur peeche traffic jam",
+  "vo": "pd_0006.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0007",
+  "text": "Chai wala ek meter upar se chai udhaalta hua",
+  "vo": "pd_0007.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0008",
+  "text": "Pressure cooker ki seeti se darta hua billa",
+  "vo": "pd_0008.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0009",
+  "text": "Baraat mein nachte hue fufa ji",
+  "vo": "pd_0009.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0010",
+  "text": "Cycle-rickshaw khinchta hua bodybuilder",
+  "vo": "pd_0010.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0011",
+  "text": "Selfie lete waqt gadde mein girta hua aadmi",
+  "vo": "pd_0011.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0012",
+  "text": "Bandar ne uncle ka chasma chura liya",
+  "vo": "pd_0012.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0013",
+  "text": "Dhobi ghat par kapdon ka pahad",
+  "vo": "pd_0013.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0014",
+  "text": "Thali jisme bees chhoti katoriyan hain",
+  "vo": "pd_0014.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0015",
+  "text": "Scooter par poora parivaar aur ek bakri",
+  "vo": "pd_0015.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0016",
+  "text": "Power cut mein haath-pankha jhalti hui dadi",
+  "vo": "pd_0016.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0017",
+  "text": "Chhat par patang ladate hue bachche",
+  "vo": "pd_0017.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0018",
+  "text": "Teekha golgappa khaate hue aansu bahata aadmi",
+  "vo": "pd_0018.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0019",
+  "text": "Gully cricket ki ball se toota khidki ka sheesha",
+  "vo": "pd_0019.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0020",
+  "text": "Mummy ka masala dabba jisme saat dabbe hain",
+  "vo": "pd_0020.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0021",
+  "text": "Nariyal mein straw lagata hua vendor",
+  "vo": "pd_0021.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0022",
+  "text": "Overloaded truck jis par bhoosa hi bhoosa hai",
+  "vo": "pd_0022.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0023",
+  "text": "Kohre mein monkey-cap pehne morning walk karte uncle",
+  "vo": "pd_0023.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0024",
+  "text": "Dabbawala cycle par sau tiffin dabbe",
+  "vo": "pd_0024.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0025",
+  "text": "Shaadi ke buffet mein plate par khaane ka pahad",
+  "vo": "pd_0025.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0026",
+  "text": "Mehendi wale haathon se mobile chalati dulhan",
+  "vo": "pd_0026.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0027",
+  "text": "Waterlogged sadak par tairti hui chappal",
+  "vo": "pd_0027.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0028",
+  "text": "Balcony mein chai peete uncle aur biscuit churata kauwa",
+  "vo": "pd_0028.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0029",
+  "text": "Gully cricket mein 'out hai ki nahi' ka jhagda",
+  "vo": "pd_0029.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0030",
+  "text": "Local train ke darwaze par latakta hua hero",
+  "vo": "pd_0030.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0031",
+  "text": "Panipuri ke thele par pachaas logon ki bheed",
+  "vo": "pd_0031.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0032",
+  "text": "Bijli ke taar mein uljhi hui patang",
+  "vo": "pd_0032.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0033",
+  "text": "Sabzi wale se bhaav karti hui aunty",
+  "vo": "pd_0033.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0034",
+  "text": "Samundar kinare bhelpuri ka thela",
+  "vo": "pd_0034.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0035",
+  "text": "Aam ke ped par charhta hua bachcha",
+  "vo": "pd_0035.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0036",
+  "text": "Haathi ko raasta dete hue chhoti cars",
+  "vo": "pd_0036.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0037",
+  "text": "Coaching class ki ek bench par paanch bachche",
+  "vo": "pd_0037.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0038",
+  "text": "Chhat par sukhte papad aur unhe taakta kauwa",
+  "vo": "pd_0038.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0039",
+  "text": "Barber shop mein naya haircut dekh ke chaunka hua aadmi",
+  "vo": "pd_0039.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0040",
+  "text": "Railway platform par daudta hua chai-garam wala",
+  "vo": "pd_0040.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0041",
+  "text": "Padosi ka WiFi pakadne balcony mein phone ghumata ladka",
+  "vo": "pd_0041.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0042",
+  "text": "Plastic cover wale sofe par baithe mehmaan",
+  "vo": "pd_0042.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0043",
+  "text": "Washing machine mein lassi banate hue log",
+  "vo": "pd_0043.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0044",
+  "text": "Honeymoon suite ka heart-shaped bed",
+  "vo": "pd_0044.ogg",
+  "adult": true
+ },
+ {
+  "id": "pd_0045",
+  "text": "Dry day se ek raat pehle theke par bheed",
+  "vo": "pd_0045.ogg",
+  "adult": true
+ },
+ {
+  "id": "pd_0046",
+  "text": "Sasural mein chhupke se cigarette peeta damaad",
+  "vo": "pd_0046.ogg",
+  "adult": true
+ },
+ {
+  "id": "pd_0047",
+  "text": "Item song wala pose dete hue uncle",
+  "vo": "pd_0047.ogg",
+  "adult": true
+ }
 ]

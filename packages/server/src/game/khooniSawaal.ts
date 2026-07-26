@@ -161,7 +161,7 @@ export class KhooniSawaalEngine implements GameEngine {
     // PLAN.md amendment 2026-07-26). Test overrides win.
     const slow = ctx.settings.timerMode === "extended" || ctx.settings.timerMode === "off";
     const kamraBase: Partial<Record<keyof typeof KAMRA_TIMERS, number>> = slow
-      ? { playMs: this.kt.playMs * 2, voteMs: this.kt.voteMs * 2 }
+      ? { playMs: this.kt.playMs * 2, voteMs: this.kt.voteMs * 2, memorizeMs: this.kt.memorizeMs * 2 }
       : {};
     this.kamraOpts = { timers: { ...kamraBase, ...(this.opts.kamraTimers ?? {}) } };
     const words = kc?.spellingWords?.filter((w) => !ff || !w.adult).map((w) => w.word) ?? [];
@@ -249,6 +249,13 @@ export class KhooniSawaalEngine implements GameEngine {
       this.kamra.onPlayerLeft(playerId);
       if (this.kamra.subPhase() !== before) {
         return { phase: "khooniKamra", deadline: this.kamra.deadline(this.now()) };
+      }
+      return null;
+    }
+    if ((this.phase === "finaleIntro" || this.phase === "finaleTurn") && this.finale !== null) {
+      if (this.finale.onPlayerLeft(playerId)) {
+        this.phase = "finaleTurn";
+        return { phase: "finaleTurn", deadline: this.finale.deadline(this.now()) };
       }
       return null;
     }
@@ -629,6 +636,21 @@ export class KhooniSawaalEngine implements GameEngine {
 
   isOver(): boolean {
     return this.phase === "gameOver";
+  }
+
+  /** Pause bookkeeping: on resume, shift kamra wall-clock anchors by the
+   *  paused span so memorize windows survive a pause intact (QA-M4-3). */
+  private pauseStartedAt: number | null = null;
+  onPauseChange(paused: boolean): void {
+    if (paused) {
+      this.pauseStartedAt = this.now();
+      return;
+    }
+    if (this.pauseStartedAt !== null) {
+      const delta = this.now() - this.pauseStartedAt;
+      this.pauseStartedAt = null;
+      if (delta > 0) this.kamra?.shiftClock(delta);
+    }
   }
 }
 

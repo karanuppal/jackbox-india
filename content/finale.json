@@ -1,48 +1,1252 @@
 [
-  {
-    "id": "f_0001",
-    "title": "In films mein Shah Rukh Khan ne double role kiya hai",
-    "vo": "f_0001.ogg",
-    "adult": false,
-    "options": [
-      { "text": "Duplicate", "fits": true },
-      { "text": "Don", "fits": true },
-      { "text": "Fan", "fits": true },
-      { "text": "Ra.One", "fits": true },
-      { "text": "Dilwale Dulhania Le Jayenge", "fits": false },
-      { "text": "Chennai Express", "fits": false },
-      { "text": "Swades", "fits": false }
-    ],
-    "source": "Duplicate (1998), Don (2006, Don/Vijay), Fan (2016, Aryan/Gaurav), Ra.One (2011, Shekhar/G.One)."
-  },
-  {
-    "id": "f_0002",
-    "title": "In shehron mein metro rail chalti hai (2024 tak)",
-    "vo": "f_0002.ogg",
-    "adult": false,
-    "options": [
-      { "text": "Kochi", "fits": true },
-      { "text": "Nagpur", "fits": true },
-      { "text": "Jaipur", "fits": true },
-      { "text": "Lucknow", "fits": true },
-      { "text": "Shimla", "fits": false },
-      { "text": "Panaji", "fits": false }
-    ],
-    "source": "Kochi (2017), Nagpur (2019), Jaipur (2015), Lucknow (2017) metros operational; Shimla and Panaji have none."
-  },
-  {
-    "id": "f_0003",
-    "title": "Yeh films Gulzar ne direct ki hain",
-    "vo": "f_0003.ogg",
-    "adult": false,
-    "options": [
-      { "text": "Aandhi", "fits": true },
-      { "text": "Maachis", "fits": true },
-      { "text": "Angoor", "fits": true },
-      { "text": "Sholay", "fits": false },
-      { "text": "Masoom", "fits": false },
-      { "text": "Ijaazat", "fits": true }
-    ],
-    "source": "Gulzar directed Aandhi (1975), Maachis (1996), Angoor (1982), Ijaazat (1987); Sholay=Ramesh Sippy, Masoom=Shekhar Kapur."
-  }
+ {
+  "id": "f_0001",
+  "title": "In films mein Shah Rukh Khan ne double role kiya hai",
+  "vo": "f_0001.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Duplicate",
+    "fits": true
+   },
+   {
+    "text": "Don",
+    "fits": true
+   },
+   {
+    "text": "Fan",
+    "fits": true
+   },
+   {
+    "text": "Ra.One",
+    "fits": true
+   },
+   {
+    "text": "Dilwale Dulhania Le Jayenge",
+    "fits": false
+   },
+   {
+    "text": "Chennai Express",
+    "fits": false
+   },
+   {
+    "text": "Swades",
+    "fits": false
+   }
+  ],
+  "source": "Duplicate (1998), Don (2006, Don/Vijay), Fan (2016, Aryan/Gaurav), Ra.One (2011, Shekhar/G.One)."
+ },
+ {
+  "id": "f_0002",
+  "title": "In shehron mein metro rail chalti hai (2024 tak)",
+  "vo": "f_0002.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Kochi",
+    "fits": true
+   },
+   {
+    "text": "Nagpur",
+    "fits": true
+   },
+   {
+    "text": "Jaipur",
+    "fits": true
+   },
+   {
+    "text": "Lucknow",
+    "fits": true
+   },
+   {
+    "text": "Shimla",
+    "fits": false
+   },
+   {
+    "text": "Panaji",
+    "fits": false
+   }
+  ],
+  "source": "Kochi (2017), Nagpur (2019), Jaipur (2015), Lucknow (2017) metros operational; Shimla and Panaji have none."
+ },
+ {
+  "id": "f_0003",
+  "title": "Yeh films Gulzar ne direct ki hain",
+  "vo": "f_0003.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Aandhi",
+    "fits": true
+   },
+   {
+    "text": "Maachis",
+    "fits": true
+   },
+   {
+    "text": "Angoor",
+    "fits": true
+   },
+   {
+    "text": "Sholay",
+    "fits": false
+   },
+   {
+    "text": "Masoom",
+    "fits": false
+   },
+   {
+    "text": "Ijaazat",
+    "fits": true
+   }
+  ],
+  "source": "Gulzar directed Aandhi (1975), Maachis (1996), Angoor (1982), Ijaazat (1987); Sholay=Ramesh Sippy, Masoom=Shekhar Kapur."
+ },
+ {
+  "id": "f_0004",
+  "title": "In cricketers ne Test century banayi hai",
+  "vo": "f_0004.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Sachin Tendulkar",
+    "fits": true
+   },
+   {
+    "text": "Virat Kohli",
+    "fits": true
+   },
+   {
+    "text": "Rahul Dravid",
+    "fits": true
+   },
+   {
+    "text": "MS Dhoni",
+    "fits": true
+   },
+   {
+    "text": "Kapil Dev",
+    "fits": true
+   },
+   {
+    "text": "Jasprit Bumrah",
+    "fits": false
+   },
+   {
+    "text": "Yuzvendra Chahal",
+    "fits": false
+   }
+  ],
+  "source": "ESPNcricinfo: Dhoni 6 Test tons, Kapil 8; Bumrah has no Test century; Chahal has never played a Test"
+ },
+ {
+  "id": "f_0005",
+  "title": "Yeh sheher samundar ke kinare base hain",
+  "vo": "f_0005.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Mumbai",
+    "fits": true
+   },
+   {
+    "text": "Chennai",
+    "fits": true
+   },
+   {
+    "text": "Visakhapatnam",
+    "fits": true
+   },
+   {
+    "text": "Panaji",
+    "fits": true
+   },
+   {
+    "text": "Delhi",
+    "fits": false
+   },
+   {
+    "text": "Bhopal",
+    "fits": false
+   },
+   {
+    "text": "Jaipur",
+    "fits": false
+   }
+  ],
+  "source": "Geography: first four are coastal cities; Delhi, Bhopal, Jaipur are landlocked"
+ },
+ {
+  "id": "f_0006",
+  "title": "Yeh cheezein doodh se banti hain",
+  "vo": "f_0006.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Paneer",
+    "fits": true
+   },
+   {
+    "text": "Dahi",
+    "fits": true
+   },
+   {
+    "text": "Ghee",
+    "fits": true
+   },
+   {
+    "text": "Rasgulla",
+    "fits": true
+   },
+   {
+    "text": "Kheer",
+    "fits": true
+   },
+   {
+    "text": "Aloo bhujia",
+    "fits": false
+   },
+   {
+    "text": "Nimbu paani",
+    "fits": false
+   }
+  ],
+  "source": "Rasgulla is made from chhena (milk curds); kheer is milk-based; bhujia is besan, nimbu paani is lemon-water"
+ },
+ {
+  "id": "f_0007",
+  "title": "In filmon mein Amitabh Bachchan ne acting ki hai",
+  "vo": "f_0007.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Sholay",
+    "fits": true
+   },
+   {
+    "text": "Deewaar",
+    "fits": true
+   },
+   {
+    "text": "Piku",
+    "fits": true
+   },
+   {
+    "text": "Paa",
+    "fits": true
+   },
+   {
+    "text": "3 Idiots",
+    "fits": false
+   },
+   {
+    "text": "Dangal",
+    "fits": false
+   },
+   {
+    "text": "Swades",
+    "fits": false
+   }
+  ],
+  "source": "Bachchan filmography; 3 Idiots/Dangal are Aamir films, Swades is SRK"
+ },
+ {
+  "id": "f_0008",
+  "title": "Yeh Indian Railways ki asli trains hain",
+  "vo": "f_0008.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Rajdhani Express",
+    "fits": true
+   },
+   {
+    "text": "Shatabdi Express",
+    "fits": true
+   },
+   {
+    "text": "Duronto Express",
+    "fits": true
+   },
+   {
+    "text": "Vande Bharat Express",
+    "fits": true
+   },
+   {
+    "text": "Deccan Queen",
+    "fits": true
+   },
+   {
+    "text": "Hogwarts Express",
+    "fits": false
+   },
+   {
+    "text": "Sasural Superfast",
+    "fits": false
+   }
+  ],
+  "source": "Indian Railways named services; Deccan Queen runs Mumbai-Pune since 1930; Hogwarts Express is fictional"
+ },
+ {
+  "id": "f_0009",
+  "title": "Yeh fruits India mein commercially ugaye jaate hain",
+  "vo": "f_0009.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Alphonso aam",
+    "fits": true
+   },
+   {
+    "text": "Kela",
+    "fits": true
+   },
+   {
+    "text": "Lychee",
+    "fits": true
+   },
+   {
+    "text": "Kiwi",
+    "fits": true
+   },
+   {
+    "text": "Dragon fruit",
+    "fits": true
+   },
+   {
+    "text": "Maggi ka phal",
+    "fits": false
+   },
+   {
+    "text": "Frooti ka jungli phal",
+    "fits": false
+   }
+  ],
+  "source": "Lychee (Bihar), kiwi (Arunachal/Himachal), dragon fruit (Gujarat/Maharashtra) are all cultivated in India"
+ },
+ {
+  "id": "f_0010",
+  "title": "Yeh dishes deep-fry karke banti hain",
+  "vo": "f_0010.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Samosa",
+    "fits": true
+   },
+   {
+    "text": "Jalebi",
+    "fits": true
+   },
+   {
+    "text": "Pakoda",
+    "fits": true
+   },
+   {
+    "text": "Puri",
+    "fits": true
+   },
+   {
+    "text": "Idli",
+    "fits": false
+   },
+   {
+    "text": "Dhokla",
+    "fits": false
+   },
+   {
+    "text": "Khandvi",
+    "fits": false
+   }
+  ],
+  "source": "Idli and dhokla are steamed; khandvi is cooked on a pan and rolled, not fried"
+ },
+ {
+  "id": "f_0011",
+  "title": "Yeh gaane A.R. Rahman ne compose kiye hain",
+  "vo": "f_0011.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Jai Ho",
+    "fits": true
+   },
+   {
+    "text": "Chaiyya Chaiyya",
+    "fits": true
+   },
+   {
+    "text": "Dil Se Re",
+    "fits": true
+   },
+   {
+    "text": "Masakali",
+    "fits": true
+   },
+   {
+    "text": "Kal Ho Naa Ho",
+    "fits": false
+   },
+   {
+    "text": "Tujhe Dekha To",
+    "fits": false
+   },
+   {
+    "text": "Tum Hi Ho",
+    "fits": false
+   }
+  ],
+  "source": "Rahman: Slumdog Millionaire, Dil Se, Delhi-6; Kal Ho Naa Ho is Shankar-Ehsaan-Loy, Tujhe Dekha To is Jatin-Lalit, Tum Hi Ho is Mithoon"
+ },
+ {
+  "id": "f_0012",
+  "title": "Yeh animals India ke jungles mein wild milte hain",
+  "vo": "f_0012.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Bengal tiger",
+    "fits": true
+   },
+   {
+    "text": "Asiatic lion",
+    "fits": true
+   },
+   {
+    "text": "One-horned rhino",
+    "fits": true
+   },
+   {
+    "text": "Snow leopard",
+    "fits": true
+   },
+   {
+    "text": "Kangaroo",
+    "fits": false
+   },
+   {
+    "text": "Polar bear",
+    "fits": false
+   },
+   {
+    "text": "Penguin",
+    "fits": false
+   }
+  ],
+  "source": "Tiger (many reserves), lion (Gir), rhino (Kaziranga), snow leopard (Himalaya); others are not wild in India"
+ },
+ {
+  "id": "f_0013",
+  "title": "Yeh teams IPL 2025 season mein kheli thi",
+  "vo": "f_0013.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Mumbai Indians",
+    "fits": true
+   },
+   {
+    "text": "Chennai Super Kings",
+    "fits": true
+   },
+   {
+    "text": "Gujarat Titans",
+    "fits": true
+   },
+   {
+    "text": "Lucknow Super Giants",
+    "fits": true
+   },
+   {
+    "text": "Deccan Chargers",
+    "fits": false
+   },
+   {
+    "text": "Pune Warriors India",
+    "fits": false
+   },
+   {
+    "text": "Kochi Tuskers Kerala",
+    "fits": false
+   }
+  ],
+  "source": "IPL 2025 had 10 teams incl. MI, CSK, GT, LSG; Deccan Chargers, Pune Warriors and Kochi Tuskers are defunct franchises"
+ },
+ {
+  "id": "f_0014",
+  "title": "In shehron mein metro train chalti hai",
+  "vo": "f_0014.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Delhi",
+    "fits": true
+   },
+   {
+    "text": "Mumbai",
+    "fits": true
+   },
+   {
+    "text": "Kochi",
+    "fits": true
+   },
+   {
+    "text": "Nagpur",
+    "fits": true
+   },
+   {
+    "text": "Jaipur",
+    "fits": true
+   },
+   {
+    "text": "Shimla",
+    "fits": false
+   },
+   {
+    "text": "Panaji",
+    "fits": false
+   }
+  ],
+  "source": "Operational metro systems: Delhi, Mumbai, Kochi, Nagpur, Jaipur; Shimla and Panaji have no metro"
+ },
+ {
+  "id": "f_0015",
+  "title": "Yeh English words Hindi/Hindustani se aaye hain",
+  "vo": "f_0015.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Jungle",
+    "fits": true
+   },
+   {
+    "text": "Bungalow",
+    "fits": true
+   },
+   {
+    "text": "Shampoo",
+    "fits": true
+   },
+   {
+    "text": "Pyjamas",
+    "fits": true
+   },
+   {
+    "text": "Bandana",
+    "fits": true
+   },
+   {
+    "text": "Ketchup",
+    "fits": false
+   },
+   {
+    "text": "Sofa",
+    "fits": false
+   },
+   {
+    "text": "Biscuit",
+    "fits": false
+   }
+  ],
+  "source": "OED etymologies: jangal, bangla, champo, pae-jama, bandhnu are Hindi/Hindustani; ketchup is Hokkien/Malay, sofa is Arabic, biscuit is French/Latin"
+ },
+ {
+  "id": "f_0016",
+  "title": "Yeh cricketers left-handed batting karte hain",
+  "vo": "f_0016.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Sourav Ganguly",
+    "fits": true
+   },
+   {
+    "text": "Yuvraj Singh",
+    "fits": true
+   },
+   {
+    "text": "Gautam Gambhir",
+    "fits": true
+   },
+   {
+    "text": "Shikhar Dhawan",
+    "fits": true
+   },
+   {
+    "text": "Virat Kohli",
+    "fits": false
+   },
+   {
+    "text": "Sachin Tendulkar",
+    "fits": false
+   },
+   {
+    "text": "Rohit Sharma",
+    "fits": false
+   }
+  ],
+  "source": "ESPNcricinfo player profiles: first four are left-hand batters; Kohli, Tendulkar, Rohit bat right-handed"
+ },
+ {
+  "id": "f_0017",
+  "title": "In filmon mein Aamir Khan ne kaam kiya hai",
+  "vo": "f_0017.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "3 Idiots",
+    "fits": true
+   },
+   {
+    "text": "Dangal",
+    "fits": true
+   },
+   {
+    "text": "Lagaan",
+    "fits": true
+   },
+   {
+    "text": "Ghajini",
+    "fits": true
+   },
+   {
+    "text": "Sholay",
+    "fits": false
+   },
+   {
+    "text": "Pathaan",
+    "fits": false
+   },
+   {
+    "text": "Baahubali",
+    "fits": false
+   }
+  ],
+  "source": "Aamir Khan filmography; Sholay (1975) predates his debut, Pathaan is SRK, Baahubali is Prabhas"
+ },
+ {
+  "id": "f_0018",
+  "title": "Yeh sabziyan zameen ke neeche ugti hain",
+  "vo": "f_0018.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Aloo",
+    "fits": true
+   },
+   {
+    "text": "Gajar",
+    "fits": true
+   },
+   {
+    "text": "Mooli",
+    "fits": true
+   },
+   {
+    "text": "Pyaaz",
+    "fits": true
+   },
+   {
+    "text": "Tamatar",
+    "fits": false
+   },
+   {
+    "text": "Bhindi",
+    "fits": false
+   },
+   {
+    "text": "Baingan",
+    "fits": false
+   }
+  ],
+  "source": "Botany: potato (tuber), carrot/radish (taproots), onion (bulb) grow underground; tomato, okra, brinjal grow above ground"
+ },
+ {
+  "id": "f_0019",
+  "title": "Yeh states South India mein aate hain",
+  "vo": "f_0019.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Kerala",
+    "fits": true
+   },
+   {
+    "text": "Tamil Nadu",
+    "fits": true
+   },
+   {
+    "text": "Karnataka",
+    "fits": true
+   },
+   {
+    "text": "Telangana",
+    "fits": true
+   },
+   {
+    "text": "Punjab",
+    "fits": false
+   },
+   {
+    "text": "Assam",
+    "fits": false
+   },
+   {
+    "text": "Goa",
+    "fits": false
+   }
+  ],
+  "source": "Southern Zonal Council states; Goa is in the Western Zonal Council, Punjab north, Assam northeast"
+ },
+ {
+  "id": "f_0020",
+  "title": "In athletes ne Olympic medal jeeta hai",
+  "vo": "f_0020.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Neeraj Chopra",
+    "fits": true
+   },
+   {
+    "text": "PV Sindhu",
+    "fits": true
+   },
+   {
+    "text": "Mary Kom",
+    "fits": true
+   },
+   {
+    "text": "Abhinav Bindra",
+    "fits": true
+   },
+   {
+    "text": "Sania Mirza",
+    "fits": false
+   },
+   {
+    "text": "Milkha Singh",
+    "fits": false
+   },
+   {
+    "text": "Virat Kohli",
+    "fits": false
+   }
+  ],
+  "source": "Olympics: Neeraj (2020 gold, 2024 silver), Sindhu (2016, 2020), Mary Kom (2012 bronze), Bindra (2008 gold); Sania and Milkha never medalled"
+ },
+ {
+  "id": "f_0021",
+  "title": "Yeh dishes South Indian cuisine se aayi hain",
+  "vo": "f_0021.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Dosa",
+    "fits": true
+   },
+   {
+    "text": "Idli",
+    "fits": true
+   },
+   {
+    "text": "Sambar",
+    "fits": true
+   },
+   {
+    "text": "Appam",
+    "fits": true
+   },
+   {
+    "text": "Chhole bhature",
+    "fits": false
+   },
+   {
+    "text": "Litti chokha",
+    "fits": false
+   },
+   {
+    "text": "Rasgulla",
+    "fits": false
+   }
+  ],
+  "source": "Culinary origin: dosa/idli/sambar/appam are South Indian; chhole bhature is Punjabi/Delhi, litti chokha Bihari, rasgulla Bengal/Odisha"
+ },
+ {
+  "id": "f_0022",
+  "title": "Yeh Bollywood films South Indian filmon ke remake hain",
+  "vo": "f_0022.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Kabir Singh",
+    "fits": true
+   },
+   {
+    "text": "Drishyam",
+    "fits": true
+   },
+   {
+    "text": "Wanted",
+    "fits": true
+   },
+   {
+    "text": "Rowdy Rathore",
+    "fits": true
+   },
+   {
+    "text": "Bhool Bhulaiyaa",
+    "fits": true
+   },
+   {
+    "text": "Gully Boy",
+    "fits": false
+   },
+   {
+    "text": "Sholay",
+    "fits": false
+   }
+  ],
+  "source": "Remakes of Arjun Reddy, Drishyam (Malayalam), Pokiri, Vikramarkudu, Manichitrathazhu; Gully Boy and Sholay are originals"
+ },
+ {
+  "id": "f_0023",
+  "title": "In khiladiyon ne India ke liye football khela hai",
+  "vo": "f_0023.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Sunil Chhetri",
+    "fits": true
+   },
+   {
+    "text": "Baichung Bhutia",
+    "fits": true
+   },
+   {
+    "text": "IM Vijayan",
+    "fits": true
+   },
+   {
+    "text": "Gurpreet Singh Sandhu",
+    "fits": true
+   },
+   {
+    "text": "Dhanraj Pillay",
+    "fits": false
+   },
+   {
+    "text": "Sardar Singh",
+    "fits": false
+   },
+   {
+    "text": "MS Dhoni",
+    "fits": false
+   }
+  ],
+  "source": "AIFF national team records; Dhanraj Pillay and Sardar Singh are hockey players, Dhoni is a cricketer"
+ },
+ {
+  "id": "f_0024",
+  "title": "Yeh humare solar system ke planets hain",
+  "vo": "f_0024.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Mangal (Mars)",
+    "fits": true
+   },
+   {
+    "text": "Shani (Saturn)",
+    "fits": true
+   },
+   {
+    "text": "Budh (Mercury)",
+    "fits": true
+   },
+   {
+    "text": "Shukra (Venus)",
+    "fits": true
+   },
+   {
+    "text": "Pluto",
+    "fits": false
+   },
+   {
+    "text": "Chanda Mama",
+    "fits": false
+   },
+   {
+    "text": "Krypton",
+    "fits": false
+   }
+  ],
+  "source": "IAU: 8 planets; Pluto reclassified as dwarf planet in 2006, Moon is a satellite, Krypton is fictional"
+ },
+ {
+  "id": "f_0025",
+  "title": "Yeh kisi desh ki asli official currency hai",
+  "vo": "f_0025.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Rupee",
+    "fits": true
+   },
+   {
+    "text": "Yen",
+    "fits": true
+   },
+   {
+    "text": "Taka",
+    "fits": true
+   },
+   {
+    "text": "Won",
+    "fits": true
+   },
+   {
+    "text": "Galleon",
+    "fits": false
+   },
+   {
+    "text": "Monopoly money",
+    "fits": false
+   },
+   {
+    "text": "Simoleon",
+    "fits": false
+   }
+  ],
+  "source": "Rupee (India), Yen (Japan), Taka (Bangladesh), Won (Korea); Galleon is Harry Potter, Simoleon is The Sims"
+ },
+ {
+  "id": "f_0026",
+  "title": "Yeh snacks Maharashtra ki cuisine se famous hue hain",
+  "vo": "f_0026.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Vada pav",
+    "fits": true
+   },
+   {
+    "text": "Misal pav",
+    "fits": true
+   },
+   {
+    "text": "Puran poli",
+    "fits": true
+   },
+   {
+    "text": "Dhokla",
+    "fits": false
+   },
+   {
+    "text": "Momos",
+    "fits": false
+   },
+   {
+    "text": "Litti chokha",
+    "fits": false
+   }
+  ],
+  "source": "Vada pav (Mumbai), misal (Pune/Kolhapur), puran poli are Maharashtrian staples; dhokla is Gujarati, momos Tibetan/Northeast, litti Bihari"
+ },
+ {
+  "id": "f_0027",
+  "title": "In actors ne Hollywood films mein bhi kaam kiya hai",
+  "vo": "f_0027.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Priyanka Chopra",
+    "fits": true
+   },
+   {
+    "text": "Irrfan Khan",
+    "fits": true
+   },
+   {
+    "text": "Deepika Padukone",
+    "fits": true
+   },
+   {
+    "text": "Anil Kapoor",
+    "fits": true
+   },
+   {
+    "text": "Amrish Puri",
+    "fits": true
+   },
+   {
+    "text": "Govinda",
+    "fits": false
+   },
+   {
+    "text": "Rajesh Khanna",
+    "fits": false
+   }
+  ],
+  "source": "Baywatch (PC), Life of Pi/Jurassic World (Irrfan), xXx (Deepika), MI: Ghost Protocol (Anil), Indiana Jones Temple of Doom (Amrish Puri)"
+ },
+ {
+  "id": "f_0028",
+  "title": "Yeh cheezein bina bijli ke chal jaati hain",
+  "vo": "f_0028.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Cycle",
+    "fits": true
+   },
+   {
+    "text": "Haath-pankha",
+    "fits": true
+   },
+   {
+    "text": "Lattu",
+    "fits": true
+   },
+   {
+    "text": "Pressure cooker",
+    "fits": true
+   },
+   {
+    "text": "Fridge",
+    "fits": false
+   },
+   {
+    "text": "Mixer grinder",
+    "fits": false
+   },
+   {
+    "text": "TV",
+    "fits": false
+   }
+  ],
+  "source": "Pressure cooker runs on a gas stove; fridge, mixer and TV need electricity"
+ },
+ {
+  "id": "f_0029",
+  "title": "In cricketers ne IPL mein team captain ki hai",
+  "vo": "f_0029.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "MS Dhoni",
+    "fits": true
+   },
+   {
+    "text": "Rohit Sharma",
+    "fits": true
+   },
+   {
+    "text": "Virat Kohli",
+    "fits": true
+   },
+   {
+    "text": "Rahul Dravid",
+    "fits": true
+   },
+   {
+    "text": "Yuzvendra Chahal",
+    "fits": false
+   },
+   {
+    "text": "Umesh Yadav",
+    "fits": false
+   }
+  ],
+  "source": "IPL records: Dhoni (CSK), Rohit (MI), Kohli (RCB), Dravid (RR 2012-13); Chahal and Umesh have never captained an IPL side"
+ },
+ {
+  "id": "f_0030",
+  "title": "Yeh words palindrome hain (ulta seedha same)",
+  "vo": "f_0030.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "level",
+    "fits": true
+   },
+   {
+    "text": "madam",
+    "fits": true
+   },
+   {
+    "text": "malayalam",
+    "fits": true
+   },
+   {
+    "text": "naman",
+    "fits": true
+   },
+   {
+    "text": "nayan",
+    "fits": true
+   },
+   {
+    "text": "jalebi",
+    "fits": false
+   },
+   {
+    "text": "samosa",
+    "fits": false
+   },
+   {
+    "text": "barfi",
+    "fits": false
+   }
+  ],
+  "source": "Spelling check: each fits word reads the same reversed; jalebi, samosa, barfi do not"
+ },
+ {
+  "id": "f_0031",
+  "title": "Yeh Mumbai local ke asli stations hain",
+  "vo": "f_0031.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Dadar",
+    "fits": true
+   },
+   {
+    "text": "Andheri",
+    "fits": true
+   },
+   {
+    "text": "Borivali",
+    "fits": true
+   },
+   {
+    "text": "Churchgate",
+    "fits": true
+   },
+   {
+    "text": "Virar",
+    "fits": true
+   },
+   {
+    "text": "Connaught Place",
+    "fits": false
+   },
+   {
+    "text": "Howrah",
+    "fits": false
+   }
+  ],
+  "source": "Mumbai suburban rail map (Western/Central lines); Connaught Place is in Delhi, Howrah is in Kolkata"
+ },
+ {
+  "id": "f_0032",
+  "title": "Yeh gaane Kishore Kumar ne gaaye hain",
+  "vo": "f_0032.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Roop Tera Mastana",
+    "fits": true
+   },
+   {
+    "text": "Mere Sapno Ki Rani",
+    "fits": true
+   },
+   {
+    "text": "Pal Pal Dil Ke Paas",
+    "fits": true
+   },
+   {
+    "text": "Zindagi Ek Safar Hai Suhana",
+    "fits": true
+   },
+   {
+    "text": "Chaiyya Chaiyya",
+    "fits": false
+   },
+   {
+    "text": "Kolaveri Di",
+    "fits": false
+   },
+   {
+    "text": "Ek Ladki Ko Dekha",
+    "fits": false
+   }
+  ],
+  "source": "Playback credits: first four are Kishore classics; Chaiyya Chaiyya is Sukhwinder Singh, Kolaveri Di is Dhanush, Ek Ladki Ko Dekha is Kumar Sanu"
+ },
+ {
+  "id": "f_0033",
+  "title": "Yeh jeev scientifically insects (keede) hain",
+  "vo": "f_0033.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Machhar",
+    "fits": true
+   },
+   {
+    "text": "Cockroach",
+    "fits": true
+   },
+   {
+    "text": "Titli",
+    "fits": true
+   },
+   {
+    "text": "Jugnu",
+    "fits": true
+   },
+   {
+    "text": "Makdi",
+    "fits": false
+   },
+   {
+    "text": "Chhipkali",
+    "fits": false
+   },
+   {
+    "text": "Kechua",
+    "fits": false
+   }
+  ],
+  "source": "Taxonomy: spider is an arachnid (8 legs), lizard is a reptile, earthworm is an annelid; the rest are 6-legged insects"
+ },
+ {
+  "id": "f_0034",
+  "title": "Yeh shows Indian television par sach mein aaye hain",
+  "vo": "f_0034.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "CID",
+    "fits": true
+   },
+   {
+    "text": "Taarak Mehta Ka Ooltah Chashmah",
+    "fits": true
+   },
+   {
+    "text": "Shaktimaan",
+    "fits": true
+   },
+   {
+    "text": "Kyunki Saas Bhi Kabhi Bahu Thi",
+    "fits": true
+   },
+   {
+    "text": "Breaking Bad Bhopal",
+    "fits": false
+   },
+   {
+    "text": "Saas of Thrones",
+    "fits": false
+   },
+   {
+    "text": "Kaun Banega Chappal-pati",
+    "fits": false
+   }
+  ],
+  "source": "Real shows: CID (Sony), TMKOC (SAB), Shaktimaan (DD), Kyunki (Star Plus); the last three are made-up parodies"
+ }
 ]

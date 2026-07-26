@@ -99,7 +99,14 @@ export class KamraCoordinator {
     this.t = { ...KAMRA_TIMERS, ...opts.timers };
     const kind = pickMinigame(floor.length, opts.livingVoterCount ?? voterIds.length, seen, deps.rand);
     seen.add(kind);
-    this.game = makeMinigame(kind, floor, deps, opts);
+    // Games see the (mode-scaled) memorize window through their deps (QA-M4-3).
+    this.game = makeMinigame(kind, floor, { ...deps, memorizeMs: this.t.memorizeMs }, opts);
+  }
+
+  /** The room resumed after `delta` ms paused — shift wall-clock anchors so
+   *  memorize windows don't burn during the pause (QA-M4-3). */
+  shiftClock(delta: number): void {
+    this.game.shiftClock(delta);
   }
 
   subPhase(): KamraSubPhase {

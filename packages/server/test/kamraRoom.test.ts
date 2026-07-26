@@ -168,3 +168,115 @@ describe("Room × Khooni Kamra integration", () => {
     ).toBe("NOT_ALLOWED");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Room-level finale coverage (QA-M4-5): timer chain, pause mid-finale, and
+// the reconnect snapshot carrying FinalePrivate.
+// ---------------------------------------------------------------------------
+import { FINALE_TIMERS, type FinaleCategory, type FinalePrivate } from "@tamasha/shared";
+
+function finaleCat(): FinaleCategory {
+  return {
+    id: "f_0001",
+    title: "SRK double roles",
+    vo: "f_0001.ogg",
+    adult: false,
+    options: [
+      { text: "Duplicate", fits: true },
+      { text: "Don", fits: true },
+      { text: "Fan", fits: true },
+      { text: "Ra.One", fits: true },
+      { text: "DDLJ", fits: false },
+      { text: "Swades", fits: false },
+    ],
+    source: "test fixture",
+  };
+}
+
+function setupFinaleRoom() {
+  let t = 2_000_000;
+  const clock = { now: () => t, advance: (d: number) => (t += d) };
+  const room = new Room(
+    "FIN",
+    () =>
+      new KhooniSawaalEngine(bank(), {
+        pickQuestions: (b, count) => b.slice(0, count),
+        rand: () => 0,
+        finaleCategories: [finaleCat()],
+      }),
+    clock.now,
+  );
+  const a = room.join({ name: "Amma" });
+  const b = room.join({ name: "Babu" });
+  if (!a.ok || !b.ok) throw new Error("joins failed");
+  return { room, clock, a: a.playerId!, b: b.playerId! };
+}
+
+function driveToFinale(env: ReturnType<typeof setupFinaleRoom>) {
+  const { room, clock, a, b } = env;
+  room.applyAction(a, { action: "startGame" });
+  clock.advance(TIMERS.tutorialMs);
+  room.handleTimeout(); // → q1
+  room.applyAction(a, answerAction("q_0001", 0));
+  room.applyAction(b, answerAction("q_0001", 3)); // b sentenced
+  clock.advance(TIMERS.revealMs);
+  room.handleTimeout(); // → kamra intro
+  clock.advance(KAMRA_TIMERS.introMs);
+  room.handleTimeout(); // → play
+  clock.advance(KAMRA_TIMERS.playMs * 2); // covers doubled timers just in case
+  room.handleTimeout(); // → result (b idle → dies)
+  clock.advance(KAMRA_TIMERS.resultMs);
+  room.handleTimeout(); // 1 alive → finaleIntro
+}
+
+describe("Room × Aakhri Darwaza integration (QA-M4-5)", () => {
+  it("drives intro → judge → resolve through room timeouts with live snapshots", () => {
+    const env = setupFinaleRoom();
+    const { room, clock, a } = env;
+    driveToFinale(env);
+    expect(room.getPhase()).toBe("finaleIntro");
+    clock.advance(FINALE_TIMERS.introMs);
+    expect(room.handleTimeout()).toBe(true); // intro → judge turn 1
+    expect(room.getPhase()).toBe("finaleTurn");
+    // reconnect-style snapshot: the living runner's private view has options
+    const priv = room.privateView(a, "player").phaseData as { finale: FinalePrivate | null };
+    expect(priv.finale?.racing).toBe(true);
+    expect(priv.finale?.options?.length).toBeGreaterThan(0);
+    clock.advance(FINALE_TIMERS.turnMs);
+    expect(room.handleTimeout()).toBe(true); // judge → resolve
+    clock.advance(FINALE_TIMERS.resolveMs);
+    expect(room.handleTimeout()).toBe(true); // resolve → next judge
+    expect(room.getPhase()).toBe("finaleTurn");
+  });
+
+  it("pause mid-finale freezes the public deadline and resumes cleanly", () => {
+    const env = setupFinaleRoom();
+    const { room, clock } = env;
+    driveToFinale(env);
+    clock.advance(FINALE_TIMERS.introMs);
+    room.handleTimeout(); // → judge
+    room.applyAction(null, { action: "pause" });
+    expect(room.publicState().deadline).toBeNull();
+    clock.advance(120_000);
+    expect(room.handleTimeout()).toBe(false); // frozen
+    room.applyAction(null, { action: "resume" });
+    expect(room.publicState().deadline).not.toBeNull();
+    clock.advance(FINALE_TIMERS.turnMs);
+    expect(room.handleTimeout()).toBe(true); // …still advances after resume
+  });
+
+  it("disconnected runners forfeit the judge turn (no 12s dead air, QA-M4-4)", () => {
+    const env = setupFinaleRoom();
+    const { room, clock, a, b } = env;
+    driveToFinale(env);
+    clock.advance(FINALE_TIMERS.introMs);
+    room.handleTimeout(); // → judge (a living, b racing as a ghost)
+    room.markDisconnected(b); // the ghost drops → empty judgment locked
+    let pd = room.publicState().phaseData as { kind: string; sub?: string };
+    expect(pd.sub).toBe("judge"); // a is still connected and judging
+    room.markDisconnected(a); // the living runner drops too → all locked
+    pd = room.publicState().phaseData as { kind: string; sub?: string };
+    expect(pd.kind).toBe("finaleTurn");
+    expect(pd.sub).toBe("resolve"); // resolved early, no 12s of dead air
+  });
+});

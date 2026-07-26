@@ -127,6 +127,33 @@ describe("K2 Yaaddasht (memory)", () => {
     ]);
   });
 
+  it("select-ALL pays nothing — payout uses net score, not raw hits (QA-M4-1)", () => {
+    const g = new Yaaddasht(floor("spray", "honest"), deps(seq([0.01, 0.05, 0.1, 0.15, 0.2])));
+    const pattern = (g.privateFor("spray") as { pattern: number[] }).pattern;
+    g.beginPlay(-10_000);
+    g.onInput("spray", answer({ type: "kmRecall", selection: Array.from({ length: 16 }, (_, i) => i) }));
+    g.onInput("honest", answer({ type: "kmRecall", selection: pattern.slice(0, 3) }));
+    const pay = Object.fromEntries(g.payouts().map((p) => [p.playerId, p.amount]));
+    expect(pay["spray"]).toBe(0); // 5 hits − 11 false picks → net 0 → ₹0
+    expect(pay["honest"]).toBe(600); // net 3/5 of ₹1000
+    expect(g.resolveDeaths()).toEqual(["spray"]);
+  });
+
+  it("a pause mid-memorize does not burn the window (QA-M4-3)", () => {
+    let t = 1000;
+    const d: MinigameDeps = { now: () => t, rand: seq([0.01, 0.05, 0.1, 0.15, 0.2]), memorizeMs: 6000 };
+    const g = new Yaaddasht(floor("a"), d);
+    g.beginPlay(1000); // window: 1000..7000
+    t = 4000; // 3s in — pause happens here for 60s
+    g.shiftClock(60_000); // resume compensation
+    t = 64_000; // wall clock after the pause (3s of window actually consumed)
+    expect((g.privateFor("a") as { pattern: number[] | null }).pattern).not.toBeNull(); // still memorizing
+    expect(g.onInput("a", answer({ type: "kmRecall", selection: [] }))).toBe(false);
+    t = 68_000; // window (shifted to 61000..67000) now closed
+    expect((g.privateFor("a") as { pattern: number[] | null }).pattern).toBeNull();
+    expect(g.onInput("a", answer({ type: "kmRecall", selection: [] }))).toBe(true);
+  });
+
   it("lazy empty submissions no longer out-earn genuine attempts (QA-M3-1)", () => {
     const g = new Yaaddasht(floor("lazy", "genuine"), deps(seq([0.01, 0.05, 0.1, 0.15, 0.2])));
     const pattern = (g.privateFor("lazy") as { pattern: number[] }).pattern;
@@ -211,6 +238,17 @@ describe("K6 Ganda Chitra (drawing + voting)", () => {
     expect(entryA.strokes).toHaveLength(1); // 2 added, 1 undone
     g.onVote("v1", "a");
     expect(g.resolveDeaths()).toEqual(["a"]);
+  });
+});
+
+describe("K6 forfeit keeps the draft (QA-M4-2)", () => {
+  it("a disconnected drawer's strokes still reach the ballot", () => {
+    const g = new GandaChitra(floor("a", "b"), deps(), "prompt");
+    g.onInput("a", answer({ type: "drawStroke", stroke: { color: 1, width: 2, points: [[0.1, 0.1]] } }));
+    g.forfeit("a"); // disconnect mid-draw
+    g.onInput("b", answer({ type: "drawSubmit" }));
+    const entryA = g.voteEntries().find((e) => e.playerId === "a")!;
+    expect(entryA.strokes).toHaveLength(1); // the draft was auto-submitted
   });
 });
 

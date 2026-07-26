@@ -1,50 +1,278 @@
 [
-  {
-    "id": "sw_0001",
-    "word": "khichdi",
-    "vo": "sw_0001.ogg",
-    "adult": false
-  },
-  {
-    "id": "sw_0002",
-    "word": "jugaad",
-    "vo": "sw_0002.ogg",
-    "adult": false
-  },
-  {
-    "id": "sw_0003",
-    "word": "chappal",
-    "vo": "sw_0003.ogg",
-    "adult": false
-  },
-  {
-    "id": "sw_0004",
-    "word": "jalebi",
-    "vo": "sw_0004.ogg",
-    "adult": false
-  },
-  {
-    "id": "sw_0005",
-    "word": "paneer",
-    "vo": "sw_0005.ogg",
-    "adult": false
-  },
-  {
-    "id": "sw_0006",
-    "word": "shaadi",
-    "vo": "sw_0006.ogg",
-    "adult": false
-  },
-  {
-    "id": "sw_0007",
-    "word": "bandar",
-    "vo": "sw_0007.ogg",
-    "adult": false
-  },
-  {
-    "id": "sw_0008",
-    "word": "samosa",
-    "vo": "sw_0008.ogg",
-    "adult": false
-  }
+ {
+  "id": "sw_0001",
+  "word": "khichdi",
+  "vo": "sw_0001.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0002",
+  "word": "jugaad",
+  "vo": "sw_0002.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0003",
+  "word": "chappal",
+  "vo": "sw_0003.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0004",
+  "word": "jalebi",
+  "vo": "sw_0004.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0005",
+  "word": "paneer",
+  "vo": "sw_0005.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0006",
+  "word": "shaadi",
+  "vo": "sw_0006.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0007",
+  "word": "bandar",
+  "vo": "sw_0007.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0008",
+  "word": "samosa",
+  "vo": "sw_0008.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0009",
+  "word": "waiter",
+  "vo": "sw_0009.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0010",
+  "word": "subtle",
+  "vo": "sw_0010.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0011",
+  "word": "rhythm",
+  "vo": "sw_0011.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0012",
+  "word": "queue",
+  "vo": "sw_0012.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0013",
+  "word": "colonel",
+  "vo": "sw_0013.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0014",
+  "word": "receipt",
+  "vo": "sw_0014.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0015",
+  "word": "yacht",
+  "vo": "sw_0015.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0016",
+  "word": "island",
+  "vo": "sw_0016.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0017",
+  "word": "answer",
+  "vo": "sw_0017.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0018",
+  "word": "doubt",
+  "vo": "sw_0018.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0019",
+  "word": "biscuit",
+  "vo": "sw_0019.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0020",
+  "word": "cousin",
+  "vo": "sw_0020.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0021",
+  "word": "stomach",
+  "vo": "sw_0021.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0022",
+  "word": "tongue",
+  "vo": "sw_0022.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0023",
+  "word": "sponge",
+  "vo": "sw_0023.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0024",
+  "word": "whistle",
+  "vo": "sw_0024.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0025",
+  "word": "muscle",
+  "vo": "sw_0025.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0026",
+  "word": "scissors",
+  "vo": "sw_0026.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0027",
+  "word": "business",
+  "vo": "sw_0027.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0028",
+  "word": "shampoo",
+  "vo": "sw_0028.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0029",
+  "word": "jungle",
+  "vo": "sw_0029.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0030",
+  "word": "bazaar",
+  "vo": "sw_0030.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0031",
+  "word": "monsoon",
+  "vo": "sw_0031.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0032",
+  "word": "chutney",
+  "vo": "sw_0032.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0033",
+  "word": "bungalow",
+  "vo": "sw_0033.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0034",
+  "word": "pyjamas",
+  "vo": "sw_0034.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0035",
+  "word": "verandah",
+  "vo": "sw_0035.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0036",
+  "word": "schedule",
+  "vo": "sw_0036.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0037",
+  "word": "engineer",
+  "vo": "sw_0037.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0038",
+  "word": "wrestle",
+  "vo": "sw_0038.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0039",
+  "word": "masala",
+  "vo": "sw_0039.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0040",
+  "word": "pakoda",
+  "vo": "sw_0040.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0041",
+  "word": "lehenga",
+  "vo": "sw_0041.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0042",
+  "word": "dupatta",
+  "vo": "sw_0042.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0043",
+  "word": "mehendi",
+  "vo": "sw_0043.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0044",
+  "word": "baraat",
+  "vo": "sw_0044.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0045",
+  "word": "tamasha",
+  "vo": "sw_0045.ogg",
+  "adult": false
+ },
+ {
+  "id": "sw_0046",
+  "word": "timepass",
+  "vo": "sw_0046.ogg",
+  "adult": false
+ }
 ]

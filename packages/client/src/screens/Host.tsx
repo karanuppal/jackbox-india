@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BRANDING, type KsPublicPhase, type PlayerPublic } from "@tamasha/shared";
+import { cueForTransition, isMuted, play, setMuted, unlockAudio } from "../ui/audio.js";
 import type { ClientState } from "../net/store.js";
 import { S } from "../ui/styles.css.js";
 import { COLORS, avatarLabel } from "../ui/theme.js";
@@ -24,6 +25,7 @@ export function Host({
 }) {
   const code = state.public?.code ?? "";
   const [qr, setQr] = useState<string>("");
+  const [muted, setMutedState] = useState(isMuted());
 
   useEffect(() => {
     let live = true;
@@ -36,6 +38,26 @@ export function Host({
       live = false;
     };
   }, [code, origin]);
+
+  // Audio (M6): unlock on the first host-screen interaction (autoplay policy)
+  // and cue stings on phase transitions.
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    document.addEventListener("pointerdown", unlock);
+    return () => document.removeEventListener("pointerdown", unlock);
+  }, []);
+  const prevKind = useRef<string | null>(null);
+  const pd = state.public?.phaseData as KsPublicPhase | null;
+  useEffect(() => {
+    const kind = pd?.kind ?? null;
+    if (kind !== null && kind !== prevKind.current) {
+      const deaths = pd !== null && "deaths" in pd ? pd.deaths.length : 0;
+      const escaped = pd !== null && pd.kind === "gameOver" ? pd.finale?.escaped === true : false;
+      const cue = cueForTransition(prevKind.current, kind, { deaths, escaped });
+      if (cue !== null) play(cue);
+    }
+    prevKind.current = kind;
+  }, [pd]);
 
   if (state.public === null) {
     return (
@@ -51,6 +73,30 @@ export function Host({
 
   return (
     <main style={{ ...S.page, justifyContent: "flex-start" }}>
+      <button
+        type="button"
+        aria-label="sound toggle"
+        onClick={() => {
+          const next = !muted;
+          setMuted(next);
+          setMutedState(next);
+        }}
+        style={{
+          position: "absolute",
+          top: "0.75rem",
+          left: "0.75rem",
+          fontSize: "1rem",
+          minHeight: "40px",
+          borderRadius: "1rem",
+          padding: "0.3rem 0.7rem",
+          border: `1px solid ${COLORS.marigold}`,
+          background: "transparent",
+          color: COLORS.cream,
+          cursor: "pointer",
+        }}
+      >
+        {muted ? "🔇" : "🔔"}
+      </button>
       <h1 style={S.h1}>{BRANDING.gameName}</h1>
       {pub.phase === "lobby" ? (
         <>

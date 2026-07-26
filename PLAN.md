@@ -682,13 +682,18 @@ presentation → audio.
 | 2026-07-26 | **§3.7 K8 stakes (QA-M3-5):** "forfeit round money" under universal loyalty = each floor player pays ₹500 (`DHOKHA_LOYALTY_FORFEIT`); a UNIQUE betrayer takes ₹1,000 (`DHOKHA_POT`); money floors at 0. |
 | 2026-07-26 | **§3.4/§4.4 kamra timers (QA-M3-7):** kamra play/vote DOUBLE under extended AND no-timer modes (accessibility); intro/result presentation beats stay fixed; kamra never runs untimed so a race always resolves. |
 | 2026-07-26 | **§3.4 voters (QA-M3-12):** ghosts vote in K5/K6 ("everyone else votes", §3.5); the ≥1-living-voter selection constraint still counts living voters only. Audience voting arrives with M7 audience mode. |
-| 2026-07-26 | **§4.3 censor policy (SEC-M3-4/5, QA-M3-3):** VIP censor is vote-phase-only, never self, hides content and blocks NEW votes — it is NOT death-immunity (pre-censor votes count; censored players stay in fallback pools; no-votes fallback is random, never seat 0). |
+| 2026-07-26 | **§4.3 censor policy (SEC-M3-4/5, QA-M3-3):** VIP censor is vote-phase-only, never self, hides CONTENT only — the censored entry stays on the ballot as a blank votable card, remains death-eligible, and the no-votes fallback is random, never seat 0. |
 | 2026-07-26 | **§3.4 memorize window (SEC-M3-3):** K2/K3 memorize is SERVER-enforced (`KAMRA_TIMERS.memorizeMs`): the pattern/cards leave private snapshots and recall input opens only after the window; K2/K3 score = hits − false picks (floor 0), K2 payout = ₹1,000 × pattern proportion (QA-M3-1). |
 | 2026-07-26 | **§3.4 K7 rig (QA-M3-2):** if nobody drew the poison (multi floor), it MOVES into a randomly chosen picked cup — deaths are always attributable to a pick; a solo dodger survives. |
 | 2026-07-26 | **§4.4 profanity filter (QA-M3-6):** wired for K5 typed answers — strict rejects, lenient masks (`@tamasha/shared` wordlist), plus name-grade codepoint hygiene (`sanitizeFreeText`) on kmAnswer/kmSpell (SEC-M3-1/6). |
 | 2026-07-26 | **§3.2 solo mercy (QA-M3-14):** a solo game keeps mercy on every wrong answer (unlosable solo) — deliberate deviation from TMP solo killing-floor, preserving "fully playable solo" as a demo mode. |
 | 2026-07-26 | **§3.3 wheel (QA-M3-15):** Maut Ka Chakra has no spin cap — terminates with probability 1 (5:6 death odds/spin); timer-driven, no busy-loop hazard. |
 | 2026-07-26 | **§4.3 pause display (QA-M3-10):** while paused the public snapshot reports `deadline: null` (frozen countdowns, no ticking lie) and controllers swap widgets for the pause banner; server-side freeze/restore unchanged. |
+| 2026-07-26 | **M4 delivered:** Aakhri Darwaza wired — attrition to one living player starts it immediately; the wheel hands over to it; solo games race the darkness after the budget; audience races as one IP-deduped collective runner (SEC-M4-1). |
+| 2026-07-26 | **§3.6 barrier interpretation (QA-M4-6, pinned):** the barrier gates only the CROSSING — an imperfect would-be crosser bounces to 1 space out; "perfect" means all assigned options judged correctly (2-for-2 for a multiplayer living runner, 3-for-3 for ghosts/solo, per §3.6's per-runner option counts). |
+| 2026-07-26 | **§3.3 wheel spin order (UT-M3-3):** poorest surviving player spins first (the leaders earned their safety); odds (5 maut : 1 zindagi) are shown on the shared screen. |
+| 2026-07-26 | **§5.1 K3 symbols (UT-M3-13):** taash symbols are kirpan/hockey/chappal/hathoda — chappal replaces belan (no rolling-pin emoji renders; 🥖 read as bread). |
+| 2026-07-26 | **M5 delivered:** content bank at 500 questions + 63 worst prompts + 47 drawing prompts + 46 spelling words + 34 finale categories, all §6.4-policy-filtered, schema-validated, correct-index balanced (10–40%%), with per-item source notes. VO ids regenerate at M6. |
 
 ---
 

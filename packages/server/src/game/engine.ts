@@ -73,4 +73,9 @@ export interface GameEngine {
   progress(): { number: number; total: number };
   /** True once the game has reached its terminal state. */
   isOver(): boolean;
+  /**
+   * The room paused/resumed. Engines with wall-clock anchors (memorize
+   * windows) shift them by the paused span on resume (QA-M4-3). Optional.
+   */
+  onPauseChange?(paused: boolean): void;
 }

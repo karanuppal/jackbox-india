@@ -137,6 +137,7 @@ export class Room {
         this.paused = true;
         this.pausedByHostGone = true;
         this.pausedRemaining = this.deadline !== null ? Math.max(0, this.deadline - this.now()) : null;
+        this.engine?.onPauseChange?.(true);
       }
     }
     this.recomputeEmpty();
@@ -147,6 +148,7 @@ export class Room {
     this.pausedByHostGone = false;
     if (this.pausedRemaining !== null) this.deadline = this.now() + this.pausedRemaining;
     this.pausedRemaining = null;
+    this.engine?.onPauseChange?.(false);
   }
   /** Epoch-ms the host screen last disconnected (null while connected). §4.2. */
   getHostGoneSince(): number | null {
@@ -319,6 +321,7 @@ export class Room {
           this.pausedByHostGone = false; // deliberate — survives host reconnects
           // Freeze the countdown: remember what was left (§4.3 pause).
           this.pausedRemaining = this.deadline !== null ? Math.max(0, this.deadline - this.now()) : null;
+          this.engine?.onPauseChange?.(true);
         }
         return null;
       case "resume":

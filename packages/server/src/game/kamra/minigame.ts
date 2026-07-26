@@ -9,6 +9,8 @@ export interface MinigameDeps {
   now: () => number;
   /** Deterministic randomness injection for tests (default Math.random). */
   rand: () => number;
+  /** Memorize-window length for K2/K3 (scaled by timer modes, QA-M4-3). */
+  memorizeMs?: number;
 }
 
 /**
@@ -54,6 +56,9 @@ export interface Minigame {
   beginPlay(now: number): void;
   /** A floor player disconnected — lock their seat (QA-M3-9). */
   forfeit(playerId: string): void;
+  /** The room was paused for `delta` ms — shift any wall-clock anchors so
+   *  windows don't silently burn during a pause (QA-M4-3). */
+  shiftClock(delta: number): void;
 }
 
 /** Shared helper: the lowest-scorer(s) die; ties break by killing all tied. */

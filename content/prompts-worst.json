@@ -1,6 +1,380 @@
 [
-  { "id": "pw_0001", "text": "Arranged marriage ki pehli meeting mein sabse pehla jhooth", "vo": "pw_0001.ogg", "adult": false },
-  { "id": "pw_0002", "text": "Mummy ke gusse se bachne ka sabse bekaar bahana", "vo": "pw_0002.ogg", "adult": false },
-  { "id": "pw_0003", "text": "Sharma ji ke bete ka LinkedIn headline", "vo": "pw_0003.ogg", "adult": false },
-  { "id": "pw_0004", "text": "Indian wedding buffet mein sabse pehle khatam hone wali cheez", "vo": "pw_0004.ogg", "adult": false }
+ {
+  "id": "pw_0001",
+  "text": "Arranged marriage ki pehli meeting mein sabse pehla jhooth",
+  "vo": "pw_0001.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0002",
+  "text": "Mummy ke gusse se bachne ka sabse bekaar bahana",
+  "vo": "pw_0002.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0003",
+  "text": "Sharma ji ke bete ka LinkedIn headline",
+  "vo": "pw_0003.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0004",
+  "text": "Indian wedding buffet mein sabse pehle khatam hone wali cheez",
+  "vo": "pw_0004.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0005",
+  "text": "Aunty ka good-morning message is baar kya kehta hai",
+  "vo": "pw_0005.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0006",
+  "text": "Boss ko istifa dete waqt email ki aakhri line",
+  "vo": "pw_0006.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0007",
+  "text": "Shaadi ke card par chhapne waali sabse ghatiya shayari",
+  "vo": "pw_0007.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0008",
+  "text": "Naye paise-wale rishtedaar ka WhatsApp status",
+  "vo": "pw_0008.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0009",
+  "text": "Interview mein 'aapki weakness kya hai' ka sabse bura jawaab",
+  "vo": "pw_0009.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0010",
+  "text": "Ghar ke WiFi ka password jo papa ne pyaar se rakha",
+  "vo": "pw_0010.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0011",
+  "text": "Metro mein seat maangne ka sabse kharab bahana",
+  "vo": "pw_0011.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0012",
+  "text": "Sasural mein pehli baar khana khaate hue ki gayi tareef",
+  "vo": "pw_0012.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0013",
+  "text": "School reunion mein sabse jhoothi bragging",
+  "vo": "pw_0013.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0014",
+  "text": "Doodhwale ne doodh mein paani ke ilzaam par kya safai di",
+  "vo": "pw_0014.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0015",
+  "text": "Naya startup idea jise sun kar investor ro pada",
+  "vo": "pw_0015.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0016",
+  "text": "Padosi ke bachche ko 'bade hokar kya banoge' ka jawaab",
+  "vo": "pw_0016.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0017",
+  "text": "Gym trainer ka motivational quote jo sun ke sab ghar chale gaye",
+  "vo": "pw_0017.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0018",
+  "text": "Autowale ne meter se zyada maangne ki kya wajah di",
+  "vo": "pw_0018.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0019",
+  "text": "Mummy ke 'beta shaadi kab karoge' ka sabse bura jawaab",
+  "vo": "pw_0019.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0020",
+  "text": "Matrimonial profile ke hobbies section mein kya likha tha",
+  "vo": "pw_0020.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0021",
+  "text": "Traffic challan se bachne ka sabse bekaar bahana",
+  "vo": "pw_0021.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0022",
+  "text": "Office party mein HR ke saamne kya bol diya",
+  "vo": "pw_0022.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0023",
+  "text": "Bachche ka naam jo naani ne zabardasti suggest kiya",
+  "vo": "pw_0023.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0024",
+  "text": "Dating app bio ki pehli line jo dekh ke sab left swipe karein",
+  "vo": "pw_0024.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0025",
+  "text": "Exam mein nakal karte pakde jaane par diya gaya explanation",
+  "vo": "pw_0025.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0026",
+  "text": "Naye restaurant ka naam jo sun ke bhookh mar jaaye",
+  "vo": "pw_0026.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0027",
+  "text": "Doctor ne operation se theek pehle kya keh diya",
+  "vo": "pw_0027.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0028",
+  "text": "Pilot ki announcement jo usse kabhi nahi karni chahiye thi",
+  "vo": "pw_0028.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0029",
+  "text": "Rishtedaar ki shaadi ke lifafe par likha gaya message",
+  "vo": "pw_0029.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0030",
+  "text": "Kurta bechte waqt dukaandar ne kya compliment de diya",
+  "vo": "pw_0030.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0031",
+  "text": "Landlord ne rent badhane ki kya wajah batayi",
+  "vo": "pw_0031.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0032",
+  "text": "Rishta karwane waali aunty ne ladke ki kaunsi khoobi batayi",
+  "vo": "pw_0032.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0033",
+  "text": "Cricket commentator ki sabse bekaar line",
+  "vo": "pw_0033.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0034",
+  "text": "Mummy ke tiffin ke andar chhupa hua note",
+  "vo": "pw_0034.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0035",
+  "text": "'Why should we hire you' ka jawaab jo HR aaj tak nahi bhooli",
+  "vo": "pw_0035.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0036",
+  "text": "Naye perfume ka naam jiski wajah se dukaan band ho gayi",
+  "vo": "pw_0036.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0037",
+  "text": "Birthday cake par likhwaya message jo halwai ne galat likh diya",
+  "vo": "pw_0037.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0038",
+  "text": "Society ke WhatsApp group ka aaj ka sabse zaroori mudda",
+  "vo": "pw_0038.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0039",
+  "text": "DJ ne baraat mein kaunsa gaana bajaya ki fufa naraz ho gaye",
+  "vo": "pw_0039.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0040",
+  "text": "Hotel ko ek star dene ki review mein likhi wajah",
+  "vo": "pw_0040.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0041",
+  "text": "Fancy dress competition ka sabse bura costume idea",
+  "vo": "pw_0041.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0042",
+  "text": "Naukri chhodne ke baad boss ko bheje email ka subject",
+  "vo": "pw_0042.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0043",
+  "text": "Haircut kharab hone par salon wale bhaiya ne kya kaha",
+  "vo": "pw_0043.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0044",
+  "text": "Insurance agent ne policy bechne ke liye kaunsa dar dikhaya",
+  "vo": "pw_0044.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0045",
+  "text": "Padosi cheeni maangne aaye the, asli mein kya maang liya",
+  "vo": "pw_0045.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0046",
+  "text": "Train mein neeche wali berth maangne ka emotional bahana",
+  "vo": "pw_0046.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0047",
+  "text": "Dadi ke nuskhe ka naam jo aaj tak kisi ne try nahi kiya",
+  "vo": "pw_0047.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0048",
+  "text": "Khaana order cancel karne ki sabse ghatiya wajah",
+  "vo": "pw_0048.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0049",
+  "text": "'Do minute mein aata hoon' bol ke dost asli mein kahan gaya",
+  "vo": "pw_0049.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0050",
+  "text": "Reality show ke audition mein khud ke baare mein kya bataya",
+  "vo": "pw_0050.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0051",
+  "text": "Nariyal paani wale ne daam badhane ki kya science batayi",
+  "vo": "pw_0051.ogg",
+  "adult": false
+ },
+ {
+  "id": "pw_0052",
+  "text": "Suhaag raat par kamre mein ghuste hi pehla dialogue",
+  "vo": "pw_0052.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0053",
+  "text": "Honeymoon package brochure ki sabse galat tagline",
+  "vo": "pw_0053.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0054",
+  "text": "Daaru party ke baad boss ko galti se bheja hua message",
+  "vo": "pw_0054.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0055",
+  "text": "Sharaab ki nayi brand ka naam jo koi na khareede",
+  "vo": "pw_0055.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0056",
+  "text": "Sasu maa ne suhaag raat se pehle kya advice de di",
+  "vo": "pw_0056.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0057",
+  "text": "Chemist se 'woh cheez' maangne ka sabse bura code word",
+  "vo": "pw_0057.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0058",
+  "text": "Hangover mein office na aane ka official bahana",
+  "vo": "pw_0058.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0059",
+  "text": "Couple ko dekh ke hotel receptionist ne kya sawaal pooch liya",
+  "vo": "pw_0059.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0060",
+  "text": "Item song ki sabse zyada 'sanskaari' line",
+  "vo": "pw_0060.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0061",
+  "text": "Bachelor party ka theme jo kisi ne approve nahi kiya",
+  "vo": "pw_0061.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0062",
+  "text": "'Netflix and chill' ka desi translation jo mummy ko samjhaya",
+  "vo": "pw_0062.ogg",
+  "adult": true
+ },
+ {
+  "id": "pw_0063",
+  "text": "Bhabhi ki saheli ko impress karne ke liye devar ji ne kya kaha",
+  "vo": "pw_0063.ogg",
+  "adult": true
+ }
 ]

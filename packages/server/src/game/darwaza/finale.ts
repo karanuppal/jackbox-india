@@ -1,6 +1,7 @@
 import {
   AUDIENCE_RUNNER_ID,
   FINALE_BARRIER,
+  FINALE_DARKNESS_ADVANCE_MAX,
   FINALE_DARKNESS_ADVANCE_MIN,
   FINALE_DARKNESS_DELAY,
   FINALE_DARKNESS_DELAY_SOLO,
@@ -242,6 +243,21 @@ export class AakhriDarwazaFinale {
     if (playerRunners.every((r) => this.selections.has(r.id))) this.resolveTurn();
   }
 
+  /** A racing player disconnected — lock an empty judgment so the turn can
+   *  resolve early instead of idling all 12s every turn (QA-M4-4). Returns
+   *  true if the sub-phase advanced. */
+  onPlayerLeft(playerId: string): boolean {
+    if (this.sub !== "judge") return false;
+    const runner = this.runners.find(
+      (r) => r.id === playerId && r.kind !== "audience" && !r.eliminated && r.distance > 0,
+    );
+    if (runner === undefined || this.selections.has(playerId)) return false;
+    this.selections.set(playerId, []); // §3.6/§4.2: absent = empty judgment
+    const before = this.sub;
+    this.maybeEarlyResolve();
+    return (this.sub as FinaleSubPhase) !== before;
+  }
+
   private resolveTurn(): void {
     const cat = this.category();
     this.events = [];
@@ -293,7 +309,9 @@ export class AakhriDarwazaFinale {
     // Darkness sweeps after the grace turns (§3.6).
     const delay = this.solo ? FINALE_DARKNESS_DELAY_SOLO : FINALE_DARKNESS_DELAY;
     if (this.turn > delay) {
-      const advance = FINALE_DARKNESS_ADVANCE_MIN + Math.floor(this.rand() * 2); // 2–3
+      const advance =
+        FINALE_DARKNESS_ADVANCE_MIN +
+        Math.floor(this.rand() * (FINALE_DARKNESS_ADVANCE_MAX - FINALE_DARKNESS_ADVANCE_MIN + 1)); // 2–3
       this.darkness = Math.max(1, this.darkness - advance);
       for (const r of this.runners) {
         if (!r.eliminated && r.distance > 0 && r.distance >= this.darkness) {
@@ -400,7 +418,9 @@ export class AakhriDarwazaFinale {
       distance: r.distance,
       eliminated: r.eliminated,
       lastMove: r.lastMove,
-      locked: this.selections.has(r.id),
+      // The audience runner shows "locked" once any ballots are in (its
+      // selection only materializes at resolve, QA-M4-8).
+      locked: r.kind === "audience" ? this.audienceVotes.size > 0 : this.selections.has(r.id),
     }));
   }
 
