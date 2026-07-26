@@ -1,0 +1,127 @@
+# Credential-free staging deploy + live multiplayer test (PLAN §8.6 live gate).
+#
+# The runner boots the real production server (tsx, static client build),
+# exposes it publicly through a Cloudflare quick tunnel (no account/token
+# needed), then a Playwright fleet — one host screen + three phone-viewport
+# browsers — plays a full game over the PUBLIC URL exactly like humans would.
+# Screenshots + report.json are force-pushed to the `staging-test-results`
+# branch, and the tunnel stays up (keep-alive step) so a real phone can play.
+#
+# This is the interim path while the permanent Cloud Run deploy waits on the
+# GCP_SA_KEY / GCP_PROJECT_ID repository secrets (deploy-cloudrun.yml).
+name: staging-live-test
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep_alive_minutes:
+        description: "How long to keep the public tunnel up after the fleet test"
+        required: false
+        default: "300"
+
+permissions:
+  contents: write
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install and build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Start server (production entrypoint)
+        run: |
+          cd packages/server
+          PORT=8787 STATIC_DIR="$GITHUB_WORKSPACE/packages/client/dist" nohup pnpm start > "$GITHUB_WORKSPACE/server.log" 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:8787/healthz && break
+            sleep 1
+          done
+          curl -fsS http://localhost:8787/healthz
+
+      - name: Open Cloudflare quick tunnel
+        id: tunnel
+        run: |
+          curl -fsSL -o cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          chmod +x cloudflared
+          nohup ./cloudflared tunnel --no-autoupdate --url http://localhost:8787 > cloudflared.log 2>&1 &
+          URL=""
+          for i in $(seq 1 60); do
+            URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' cloudflared.log | head -1 || true)
+            [ -n "$URL" ] && break
+            sleep 1
+          done
+          if [ -z "$URL" ]; then
+            echo "tunnel never came up"; cat cloudflared.log; exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          {
+            echo "## 🎪 Tamasha staging is LIVE"
+            echo ""
+            echo "**Play now:** $URL"
+            echo ""
+            echo "- Host screen (TV/laptop): $URL/host"
+            echo "- Players (phones): $URL — enter the room code from the host screen"
+            echo "- Moderator portal: $URL/mod"
+          } >> "$GITHUB_STEP_SUMMARY"
+          # wait until the PUBLIC edge actually serves the app
+          for i in $(seq 1 60); do
+            curl -fsS "$URL/healthz" && break
+            sleep 2
+          done
+          curl -fsS "$URL/healthz"
+          echo "PUBLIC URL: $URL"
+
+      - name: Install Playwright (scripts-local, keeps pnpm tree untouched)
+        run: |
+          cd scripts
+          npm init -y > /dev/null
+          npm install playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: Run live multiplayer fleet
+        id: fleet
+        continue-on-error: true
+        run: |
+          BASE_URL="${{ steps.tunnel.outputs.url }}" OUT_DIR="$GITHUB_WORKSPACE/fleet-results" node scripts/live-fleet.mjs
+
+      - name: Publish results to staging-test-results branch
+        if: always()
+        run: |
+          echo "${{ steps.tunnel.outputs.url }}" > fleet-results/tunnel-url.txt || true
+          cp server.log fleet-results/server.log 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b staging-test-results
+          git add -f fleet-results
+          git commit -m "staging live-test results (run ${GITHUB_RUN_ID})"
+          git push -u origin staging-test-results --force
+
+      - name: Fail job if fleet failed
+        if: steps.fleet.outcome == 'failure'
+        run: |
+          echo "fleet test failed — see fleet-results on the staging-test-results branch"
+          # keep going anyway so the tunnel stays up for manual debugging,
+          # but record the failure in the summary
+          echo "⚠️ **Fleet test FAILED** — see \`staging-test-results\` branch" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep tunnel alive for real-phone play
+        run: |
+          MINS="${{ github.event.inputs.keep_alive_minutes }}"
+          MINS="${MINS:-300}"
+          echo "Keeping $(cat fleet-results/tunnel-url.txt 2>/dev/null || echo 'the tunnel') alive for ${MINS} minutes…"
+          for i in $(seq 1 "$MINS"); do
+            pgrep -f "cloudflared tunnel" > /dev/null || { echo "tunnel process died"; exit 0; }
+            sleep 60
+          done
