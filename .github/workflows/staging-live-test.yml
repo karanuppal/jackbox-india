@@ -18,6 +18,11 @@ on:
         description: "How long to keep the public tunnel up after the fleet test"
         required: false
         default: "300"
+  # workflow_dispatch only sees workflows on the default branch; this sentinel
+  # lets the feature branch start a run by touching one file.
+  push:
+    branches: ["claude/indian-jackbox-localization-2nzef1"]
+    paths: [".github/staging-live-test.trigger"]
 
 permissions:
   contents: write
