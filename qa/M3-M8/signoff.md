@@ -59,6 +59,7 @@ Results land on the `staging-test-results` branch per run.
 | #1 (86604e3) | carbon-televisions-…trycloudflare.com | PASS, 0 console errors | 2 sawaal, group Spelling Shelling, last-one-standing early finale, ghost-crown Natija, prefilled rejoin |
 | #2 (dc1b478) | interstate-literary-… | PASS, 0 console errors | solo Hisaab-Kitaab (19 sahi), group Yaaddasht, 13-chakkar finale with darkness eliminations |
 | #3 (afa6e78) | screen-bag-commercial-… | PASS, 0 console errors | Sabse Ghatiya Jawaab + vote, Zeher Wali Chai, solo math, solo spelling, 8 sawaal, post-fix UI verified live |
+| #4 (ed95543) | untitled-bibliographic-… | PASS, 0 console errors, ZERO stalls | final clean gate: full game 129s, all harness fixes verified, tunnel left up ~5h for human play |
 
 Reviewer agents audited run #1's 37 screenshots (art-director + game-feel
 lenses): AESTHETICS PASS + GAME-FEEL PASS with 14 findings, ALL fixed and
