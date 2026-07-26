@@ -549,6 +549,11 @@ export class KhooniSawaalEngine implements GameEngine {
   private applyFinaleOutcome(): EnginePhase {
     const f = this.finale!;
     this.finaleWinner = f.winnerId();
+    // A runner kicked mid-finale can still be the finale's crown id (their
+    // snapshot kept racing) — never crown a removed seat (QA M8 note b).
+    if (this.finaleWinner !== null && !this.players.some((p) => p.id === this.finaleWinner)) {
+      this.finaleWinner = null;
+    }
     this.finaleResult = { escaped: f.didEscape(), audienceEscaped: f.didAudienceEscape() };
     const someoneOut = f.didEscape() || f.didAudienceEscape();
     for (const p of this.players) {
