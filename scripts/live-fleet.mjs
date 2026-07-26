@@ -104,12 +104,14 @@ async function playScene(page, who, opts) {
     return "taash";
   }
   if (body.includes("use spell karo")) {
-    // tap every letter key once, then lock
-    const keys = page.locator("button:not(:disabled)");
-    const c = await keys.count();
-    for (let i = 0; i < c; i++) {
-      const t = await keys.nth(i).textContent().catch(() => "");
-      if (t && t.trim().length === 1 && /[a-z]/i.test(t.trim())) await keys.nth(i).click(CLICK).catch(() => {});
+    // Tap every letter key once, then lock. Snapshot element HANDLES up
+    // front: tapped letters become :disabled, so a live-filtered locator's
+    // nth() indexes stop resolving and each read hangs 30s — the ~124s
+    // loop freezes in runs #1/#3 were exactly this.
+    const keys = await page.locator("button").all().catch(() => []);
+    for (const k of keys) {
+      const t = await k.textContent({ timeout: 400 }).catch(() => "");
+      if (t && t.trim().length === 1 && /[a-z]/i.test(t.trim())) await k.click(CLICK).catch(() => {});
     }
     await clickText(page, "Lock karo").catch(() => {});
     return "spelling";
