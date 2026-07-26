@@ -159,11 +159,21 @@ export class Room {
     return this.hostConnected;
   }
 
+  /** Dedicated moderation password (§4.4: "generates password shown only on
+   *  host screen") — minted when the toggle flips on, ALWAYS required
+   *  (QA-M7-1: room members must not be able to self-promote via /mod). */
+  private modPassword: string | null = null;
+  getModPassword(): string | null {
+    return this.settings.moderation ? this.modPassword : null;
+  }
+
   /** Moderation portal connect (M7, §4.2): requires the moderation setting ON
-   *  and the room password (when one is set). No seat is taken. */
+   *  and the generated moderation password. No seat is taken. */
   connectModerator(password: string): JoinResult | JoinError {
-    if (!this.settings.moderation) return { ok: false, code: "NOT_ALLOWED" };
-    if (this.passwordRequired() && !safeEqual(password, this.settings.password ?? "")) {
+    if (!this.settings.moderation || this.modPassword === null) {
+      return { ok: false, code: "NOT_ALLOWED" };
+    }
+    if (!safeEqual(password, this.modPassword)) {
       return { ok: false, code: "BAD_PASSWORD" };
     }
     return { ok: true, playerId: null, sessionToken: randomUUID(), role: "moderator" };
@@ -339,6 +349,10 @@ export class Room {
           if (value !== undefined) (merged as Record<string, unknown>)[key] = value;
         }
         this.settings = merged;
+        // §4.4: turning Moderation on mints the portal password (QA-M7-1).
+        if (this.settings.moderation && this.modPassword === null) {
+          this.modPassword = randomUUID().slice(0, 8);
+        }
         return null;
       }
       case "pause":
@@ -366,7 +380,13 @@ export class Room {
         }
         this.players.delete(action.playerId);
         if (this.engine !== null) {
-          const next = this.engine.onPlayerLeft(action.playerId);
+          // A kick is a REMOVAL, not a disconnect: the engine drops the seat
+          // entirely so untimed rounds can't wait on it and the kamra never
+          // sentences an absent zombie (QA-M7-2).
+          const next =
+            this.engine.removePlayer !== undefined
+              ? this.engine.removePlayer(action.playerId)
+              : this.engine.onPlayerLeft(action.playerId);
           if (next !== null) {
             this.phase = next.phase as Phase;
             this.deadline = next.deadline;
@@ -523,6 +543,10 @@ export class Room {
       role,
       phaseData:
         this.engine !== null && playerId !== null ? this.engine.privatePhaseData(playerId) : null,
+      // §4.4: the moderation password is shown ONLY on the host screen.
+      ...(role === "host" && this.getModPassword() !== null
+        ? { modPassword: this.getModPassword() as string }
+        : {}),
     };
   }
 

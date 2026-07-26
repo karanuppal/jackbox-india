@@ -111,7 +111,11 @@ export function Host({
           )}
           <PodiumRow players={pub.players} audienceCount={pub.audienceCount} />
           {pub.players.length === 0 && <p style={{ opacity: 0.7 }}>Pehle mehmaan ka intezaar…</p>}
-          <SettingsPanel settings={pub.settings} onAction={onAction} />
+          <SettingsPanel
+            settings={pub.settings}
+            onAction={onAction}
+            modPassword={state.private?.modPassword ?? null}
+          />
         </>
       ) : (
         <>
@@ -408,7 +412,16 @@ type PublicSettings = NonNullable<ClientState["public"]>["settings"];
  * lobby-only). When `onAction` is absent (SSR/read-only preview) it renders as
  * a static summary. Timer mode and content filter are the M1 essentials.
  */
-function SettingsPanel({ settings, onAction }: { settings: PublicSettings; onAction: ((p: unknown) => void) | undefined }) {
+function SettingsPanel({
+  settings,
+  onAction,
+  modPassword = null,
+}: {
+  settings: PublicSettings;
+  onAction: ((p: unknown) => void) | undefined;
+  /** §4.4: shown ONLY here — the /mod portal password (QA-M7-1). */
+  modPassword?: string | null;
+}) {
   const set = (patch: Record<string, unknown>) =>
     onAction?.({ action: "updateSettings", settings: patch });
 
@@ -438,6 +451,12 @@ function SettingsPanel({ settings, onAction }: { settings: PublicSettings; onAct
       <Toggle label="Audience" on={settings.audienceEnabled} patch={{ audienceEnabled: !settings.audienceEnabled }} />
       <Toggle label="Extended timers" on={settings.timerMode === "extended"} patch={{ timerMode: settings.timerMode === "extended" ? "normal" : "extended" }} />
       <Toggle label="Streamer mode" on={settings.hideRoomCode} patch={{ hideRoomCode: !settings.hideRoomCode }} />
+      <Toggle label="Moderation" on={settings.moderation} patch={{ moderation: !settings.moderation }} />
+      {settings.moderation && modPassword !== null && (
+        <span style={{ fontSize: "0.8rem", alignSelf: "center", color: COLORS.marigold }}>
+          {`🛡 /mod password: ${modPassword}`}
+        </span>
+      )}
       {settings.passwordRequired && (
         <span style={{ fontSize: "0.8rem", alignSelf: "center", color: COLORS.ghost }}>🔒 Password lagega</span>
       )}

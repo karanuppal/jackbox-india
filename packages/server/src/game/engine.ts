@@ -78,4 +78,10 @@ export interface GameEngine {
    * windows) shift them by the paused span on resume (QA-M4-3). Optional.
    */
   onPauseChange?(paused: boolean): void;
+  /**
+   * A player was REMOVED (kicked, §4.2/QA-M7-2) — unlike a disconnect, the
+   * seat is gone: drop them from rounds, sentencing, and standings so no
+   * phase can ever wait on or feature the absentee. Optional.
+   */
+  removePlayer?(playerId: string): EnginePhase | null;
 }

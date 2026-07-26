@@ -161,7 +161,8 @@ function ModApp({ env }: { env: Env }) {
       <main style={S.page}>
         <h1 style={S.h1}>{BRANDING.platformName} — Moderator</h1>
         <p style={{ maxWidth: "22rem", textAlign: "center" }}>
-          Room ka code aur (agar hai) password daalo. Moderation setting ON honi chahiye.
+          Room ka code aur MODERATION password daalo — password host screen par dikhta hai
+          (Moderation setting ON karo).
         </p>
         <input
           aria-label="Room code"

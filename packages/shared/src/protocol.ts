@@ -349,6 +349,8 @@ export interface PrivateView {
   you: PlayerPublic | null; // null for host screen / audience
   role: Role;
   phaseData: unknown; // per-phase private payload (your prompt, your lock state)
+  /** §4.4: the generated moderation-portal password — HOST VIEW ONLY. */
+  modPassword?: string;
 }
 
 export type ServerMessage =

@@ -285,14 +285,47 @@ describe("Room × Aakhri Darwaza integration (QA-M4-5)", () => {
 // Moderation portal (M7, §4.2): gated connect, kick, and moderator censor.
 // ---------------------------------------------------------------------------
 describe("Room × moderation portal (M7)", () => {
-  it("moderator connect requires the moderation setting (and password when set)", () => {
+  it("moderator connect requires the GENERATED moderation password — always (QA-M7-1)", () => {
     const { room } = setup();
     expect(room.connectModerator("").ok).toBe(false); // moderation OFF
     room.applyAction(null, { action: "updateSettings", settings: { moderation: true } });
-    expect(room.connectModerator("").ok).toBe(true); // ON, no password set
-    room.applyAction(null, { action: "updateSettings", settings: { password: "chai123" } });
+    const modPw = room.getModPassword();
+    expect(modPw).not.toBeNull(); // §4.4: minted when the toggle flips on
+    expect(room.connectModerator("").ok).toBe(false); // room members can't self-promote
     expect(room.connectModerator("wrong").ok).toBe(false);
-    expect(room.connectModerator("chai123").ok).toBe(true);
+    expect(room.connectModerator(modPw!).ok).toBe(true);
+    // shown ONLY on the host view, never to players
+    expect(room.privateView(null, "host").modPassword).toBe(modPw);
+    const { room: r2, a } = setup();
+    r2.applyAction(null, { action: "updateSettings", settings: { moderation: true } });
+    expect(r2.privateView(a, "player").modPassword).toBeUndefined();
+  });
+
+  it("kick fully removes the seat: untimed rounds resolve and the kamra never sentences the absentee (QA-M7-2)", () => {
+    let t = 3_000_000;
+    const clock = { now: () => t, advance: (d: number) => (t += d) };
+    const room = new Room(
+      "KICK",
+      () => new KhooniSawaalEngine(bank(), { pickQuestions: (b, count) => b.slice(0, count), rand: () => 0 }),
+      clock.now,
+    );
+    const a = room.join({ name: "Amma" });
+    const b = room.join({ name: "Babu" });
+    const c = room.join({ name: "Chhotu" });
+    if (!a.ok || !b.ok || !c.ok) throw new Error("joins failed");
+    room.applyAction(null, { action: "updateSettings", settings: { timerMode: "off" } });
+    room.applyAction(a.playerId!, { action: "startGame" });
+    clock.advance(TIMERS.tutorialMs);
+    room.handleTimeout(); // → q1, UNTIMED (deadline null)
+    room.applyAction(a.playerId!, answerAction("q_0001", 0));
+    room.applyAction(b.playerId!, answerAction("q_0001", 0));
+    // c never answers; without removal this room would hang forever
+    expect(room.applyAction(null, { action: "kick", playerId: c.playerId! }, "moderator")).toBeNull();
+    expect(room.getPhase()).toBe("reveal"); // round resolved by the remaining players
+    const pd = room.publicState().phaseData as { kind: string; floor?: string[] };
+    expect(pd.kind).toBe("reveal");
+    expect(pd.floor).toEqual([]); // the kicked player is NOT sentenced (all remaining correct)
+    expect(room.publicState().players.map((p) => p.name)).toEqual(["Amma", "Babu"]);
   });
 
   it("kick removes a player, forfeits their pending input, and queues the socket close", () => {

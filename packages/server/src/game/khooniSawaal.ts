@@ -274,6 +274,40 @@ export class KhooniSawaalEngine implements GameEngine {
     return null;
   }
 
+  /** A player was KICKED (QA-M7-2): drop the seat entirely — no phase may
+   *  wait on them, the kamra never sentences them, standings forget them. */
+  removePlayer(playerId: string): EnginePhase | null {
+    // Forfeit any live minigame/finale involvement first (coordinators keep
+    // their own seat lists and resolve early where possible).
+    let subNext: EnginePhase | null = null;
+    if (this.phase === "khooniKamra" || this.phase === "finaleIntro" || this.phase === "finaleTurn") {
+      subNext = this.onPlayerLeft(playerId);
+    }
+    const wasSpinner = this.wheelSpinnerId === playerId;
+    this.players = this.players.filter((p) => p.id !== playerId);
+    this.pendingFloor = this.pendingFloor.filter((id) => id !== playerId);
+    this.wheelOrder = this.wheelOrder.filter((id) => id !== playerId);
+    if (this.players.length === 0) {
+      this.phase = "gameOver";
+      return { phase: "gameOver", deadline: null };
+    }
+    if (this.phase === "question") {
+      // The round may now be fully answered by the remaining players — and in
+      // no-timer mode this is the ONLY way it can still resolve (QA-M7-2).
+      return this.maybeResolve();
+    }
+    if (this.phase === "wheel") {
+      const alive = this.players.filter((p) => p.alive);
+      if (alive.length <= 1) return this.advanceOrEnd();
+      if (wasSpinner) {
+        this.wheelSpinnerId = this.wheelOrder.find((id) => this.players.some((p) => p.id === id && p.alive)) ?? alive[0]!.id;
+        this.wheelOutcome = null;
+        return { phase: "wheel", deadline: this.now() + this.kt.wheelSpinMs };
+      }
+    }
+    return subNext;
+  }
+
   /** Score the question, sentence wrong-answering living players to the
    *  Khooni Kamra (§3.4), and enter the reveal phase. Nobody dies AT the
    *  reveal anymore — deaths come from the kamra minigame (M3). */

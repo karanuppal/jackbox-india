@@ -696,6 +696,8 @@ presentation → audio.
 | 2026-07-26 | **M5 delivered (§6.1 targets met):** 540 questions (105 adult-flagged), 63 worst prompts, 62 drawing prompts, 126 spelling words, 80 finale categories — all §6.4-policy-filtered, schema-validated, correct-index balanced (10–40%), per-item source notes. VO ids regenerate at M6. |
 | 2026-07-26 | **§3.6 idle runners (UT-M4-2, pinned):** NO LOCK = NO MOVEMENT — an unlocked judgment scores zero (TMP behavior), deviating from a literal reading of "leaving a non-fit unselected" for un-submitted turns; idle phones can't creep, steal bodies, or break the barrier. |
 | 2026-07-26 | **K1 operands (UT-M4-5):** Hisaab-Kitaab operands floor at 2 — no zero-sum free money. |
+| 2026-07-26 | **M7 delivered:** moderation portal (/mod) with a §4.4 generated password shown only on the host screen; kick (in-game minimum guarded, kicked seats fully removed from the engine — QA-M7-2) and post-hoc censor; §3.8 stats screen; share card; synthesized-SFX audio layer; audience finale runner. |
+| 2026-07-26 | **§4.2 moderator scope (QA-M7-3, pinned):** v1 moderation is POST-HOC censorship during vote/result (content is visible from vote-start until censored), not pre-approval hold-until-approved; pre-approval queues are future work. Moderator-only rooms are sweep-eligible and moderator sockets are bounded only by the per-IP cap (QA-M7-4, accepted). |
 
 ---
 
