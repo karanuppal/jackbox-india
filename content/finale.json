@@ -1248,5 +1248,1707 @@
    }
   ],
   "source": "Real shows: CID (Sony), TMKOC (SAB), Shaktimaan (DD), Kyunki (Star Plus); the last three are made-up parodies"
+ },
+ {
+  "id": "f_0035",
+  "title": "In films mein hero aakhri mein mar jaata hai (spoiler maaf)",
+  "vo": "f_0035.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Anand",
+    "fits": true
+   },
+   {
+    "text": "Kal Ho Naa Ho",
+    "fits": true
+   },
+   {
+    "text": "Devdas",
+    "fits": true
+   },
+   {
+    "text": "Dilwale Dulhania Le Jayenge",
+    "fits": false
+   },
+   {
+    "text": "3 Idiots",
+    "fits": false
+   },
+   {
+    "text": "Munna Bhai MBBS",
+    "fits": false
+   },
+   {
+    "text": "Chak De! India",
+    "fits": false
+   }
+  ],
+  "source": "Anand (1971), Kal Ho Naa Ho (2003) and Devdas (2002) end with the protagonist's on-screen death; the other four heroes survive."
+ },
+ {
+  "id": "f_0036",
+  "title": "Yeh sheher kisi nadi ke kinare base hain",
+  "vo": "f_0036.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Kolkata",
+    "fits": true
+   },
+   {
+    "text": "Ahmedabad",
+    "fits": true
+   },
+   {
+    "text": "Surat",
+    "fits": true
+   },
+   {
+    "text": "Guwahati",
+    "fits": true
+   },
+   {
+    "text": "Jaisalmer",
+    "fits": false
+   },
+   {
+    "text": "Bengaluru",
+    "fits": false
+   },
+   {
+    "text": "Shillong",
+    "fits": false
+   }
+  ],
+  "source": "Kolkata (Hooghly), Ahmedabad (Sabarmati), Surat (Tapi), Guwahati (Brahmaputra); Jaisalmer is in the Thar desert, Bengaluru and Shillong sit on no major river."
+ },
+ {
+  "id": "f_0037",
+  "title": "In celebrities ne Bigg Boss (TV) host kiya hai",
+  "vo": "f_0037.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Salman Khan",
+    "fits": true
+   },
+   {
+    "text": "Amitabh Bachchan",
+    "fits": true
+   },
+   {
+    "text": "Arshad Warsi",
+    "fits": true
+   },
+   {
+    "text": "Shilpa Shetty",
+    "fits": true
+   },
+   {
+    "text": "Akshay Kumar",
+    "fits": false
+   },
+   {
+    "text": "Kapil Sharma",
+    "fits": false
+   },
+   {
+    "text": "Aamir Khan",
+    "fits": false
+   }
+  ],
+  "source": "Bigg Boss hosts: Arshad Warsi (S1, 2006), Shilpa Shetty (S2, 2008), Amitabh Bachchan (S3, 2009), Salman Khan (S4 onwards); the other three never hosted it."
+ },
+ {
+  "id": "f_0038",
+  "title": "Yeh IPL captains apni team ko trophy jita chuke hain",
+  "vo": "f_0038.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "MS Dhoni",
+    "fits": true
+   },
+   {
+    "text": "Rohit Sharma",
+    "fits": true
+   },
+   {
+    "text": "Gautam Gambhir",
+    "fits": true
+   },
+   {
+    "text": "Shreyas Iyer",
+    "fits": true
+   },
+   {
+    "text": "Virat Kohli",
+    "fits": false
+   },
+   {
+    "text": "KL Rahul",
+    "fits": false
+   },
+   {
+    "text": "Rishabh Pant",
+    "fits": false
+   }
+  ],
+  "source": "IPL titles as captain: Dhoni (CSK x5), Rohit (MI x5), Gambhir (KKR 2012, 2014), Iyer (KKR 2024); Kohli, Rahul and Pant have never lifted the trophy as captain (RCB's 2025 win came under Rajat Patidar)."
+ },
+ {
+  "id": "f_0039",
+  "title": "Botany ke hisaab se yeh 'sabziyan' asal mein fruit hain",
+  "vo": "f_0039.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Tamatar",
+    "fits": true
+   },
+   {
+    "text": "Baingan",
+    "fits": true
+   },
+   {
+    "text": "Bhindi",
+    "fits": true
+   },
+   {
+    "text": "Kaddu",
+    "fits": true
+   },
+   {
+    "text": "Aloo",
+    "fits": false
+   },
+   {
+    "text": "Gajar",
+    "fits": false
+   },
+   {
+    "text": "Palak",
+    "fits": false
+   }
+  ],
+  "source": "Botanically a fruit develops from the flower and holds seeds: tomato, brinjal, okra and pumpkin qualify; potato is a tuber, carrot a root, spinach a leaf."
+ },
+ {
+  "id": "f_0040",
+  "title": "Yeh Indian Railways ki asli chalti hui trains hain",
+  "vo": "f_0040.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Grand Trunk Express",
+    "fits": true
+   },
+   {
+    "text": "Pushpak Express",
+    "fits": true
+   },
+   {
+    "text": "Gatimaan Express",
+    "fits": true
+   },
+   {
+    "text": "Flying Ranee",
+    "fits": true
+   },
+   {
+    "text": "Bhasad Express",
+    "fits": false
+   },
+   {
+    "text": "Rishtedaar Superfast",
+    "fits": false
+   },
+   {
+    "text": "Timepass Mail",
+    "fits": false
+   }
+  ],
+  "source": "IR timetable: Grand Trunk Express (Delhi-Chennai), Pushpak Express (Lucknow-Mumbai), Gatimaan Express (semi-high-speed), Flying Ranee (Mumbai-Surat); the last three are invented."
+ },
+ {
+  "id": "f_0041",
+  "title": "In gaanon mein Lata Mangeshkar ne playback kiya hai",
+  "vo": "f_0041.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Ajeeb Dastan Hai Yeh",
+    "fits": true
+   },
+   {
+    "text": "Lag Jaa Gale",
+    "fits": true
+   },
+   {
+    "text": "Pyar Kiya To Darna Kya",
+    "fits": true
+   },
+   {
+    "text": "Tujhe Dekha To",
+    "fits": true
+   },
+   {
+    "text": "Chaiyya Chaiyya",
+    "fits": false
+   },
+   {
+    "text": "Munni Badnaam Hui",
+    "fits": false
+   },
+   {
+    "text": "Oo Antava",
+    "fits": false
+   }
+  ],
+  "source": "Lata sang the first four (Dil Apna Aur Preet Parai, Woh Kaun Thi, Mughal-e-Azam, DDLJ); Chaiyya Chaiyya is Sapna Awasthi/Sukhwinder, Munni is Mamta Sharma, Oo Antava is Indravathi Chauhan."
+ },
+ {
+  "id": "f_0042",
+  "title": "Yeh emoji sach mein official Unicode mein exist karte hain",
+  "vo": "f_0042.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Auto-rickshaw",
+    "fits": true
+   },
+   {
+    "text": "Diya lamp",
+    "fits": true
+   },
+   {
+    "text": "Cricket bat aur ball",
+    "fits": true
+   },
+   {
+    "text": "Folded hands (namaste)",
+    "fits": true
+   },
+   {
+    "text": "Jalebi",
+    "fits": false
+   },
+   {
+    "text": "Pani puri",
+    "fits": false
+   },
+   {
+    "text": "Pressure cooker",
+    "fits": false
+   }
+  ],
+  "source": "Unicode emoji list: auto rickshaw and diya lamp added in Emoji 12.0 (2019), cricket game in 8.0, folded hands in 6.0; jalebi, pani puri and pressure cooker emoji do not exist."
+ },
+ {
+  "id": "f_0043",
+  "title": "In films mein Shah Rukh Khan ke character ka naam 'Rahul' tha",
+  "vo": "f_0043.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Kuch Kuch Hota Hai",
+    "fits": true
+   },
+   {
+    "text": "Dil To Pagal Hai",
+    "fits": true
+   },
+   {
+    "text": "Kabhi Khushi Kabhie Gham",
+    "fits": true
+   },
+   {
+    "text": "Chennai Express",
+    "fits": true
+   },
+   {
+    "text": "Dilwale Dulhania Le Jayenge",
+    "fits": false
+   },
+   {
+    "text": "Baazigar",
+    "fits": false
+   },
+   {
+    "text": "Swades",
+    "fits": false
+   }
+  ],
+  "source": "SRK played Rahul in KKHH, DTPH, K3G and Chennai Express; in DDLJ he is Raj Malhotra, in Baazigar Ajay/Vicky, in Swades Mohan Bhargava."
+ },
+ {
+  "id": "f_0044",
+  "title": "Yeh cricket ki asli fielding positions hain",
+  "vo": "f_0044.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Silly point",
+    "fits": true
+   },
+   {
+    "text": "Fine leg",
+    "fits": true
+   },
+   {
+    "text": "Short leg",
+    "fits": true
+   },
+   {
+    "text": "Deep square leg",
+    "fits": true
+   },
+   {
+    "text": "Angry point",
+    "fits": false
+   },
+   {
+    "text": "Left-out",
+    "fits": false
+   },
+   {
+    "text": "Backward chappal",
+    "fits": false
+   }
+  ],
+  "source": "Standard cricket fielding chart includes silly point, fine leg, short leg and deep square leg; the other three are made up."
+ },
+ {
+  "id": "f_0045",
+  "title": "Yeh dishes asal mein bahar se aayi (videshi origin) hain",
+  "vo": "f_0045.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Samosa",
+    "fits": true
+   },
+   {
+    "text": "Jalebi",
+    "fits": true
+   },
+   {
+    "text": "Vindaloo",
+    "fits": true
+   },
+   {
+    "text": "Dosa",
+    "fits": false
+   },
+   {
+    "text": "Khichdi",
+    "fits": false
+   },
+   {
+    "text": "Chaat",
+    "fits": false
+   }
+  ],
+  "source": "Food historians: samosa descends from the Central Asian/Persian sanbosag, jalebi from Persian zolabiya, vindaloo from Portuguese carne de vinha d'alhos; dosa, khichdi and chaat are Indian-origin."
+ },
+ {
+  "id": "f_0046",
+  "title": "Yeh characters Taarak Mehta Ka Ooltah Chashmah ke hain",
+  "vo": "f_0046.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Jethalal",
+    "fits": true
+   },
+   {
+    "text": "Daya",
+    "fits": true
+   },
+   {
+    "text": "Champaklal",
+    "fits": true
+   },
+   {
+    "text": "Popatlal",
+    "fits": true
+   },
+   {
+    "text": "Babita ji",
+    "fits": true
+   },
+   {
+    "text": "Monisha",
+    "fits": false
+   },
+   {
+    "text": "Rosesh",
+    "fits": false
+   },
+   {
+    "text": "Gutthi",
+    "fits": false
+   }
+  ],
+  "source": "TMKOC (SAB TV) cast list; Monisha and Rosesh are from Sarabhai vs Sarabhai, Gutthi from Comedy Nights with Kapil."
+ },
+ {
+  "id": "f_0047",
+  "title": "Yeh brands asal mein Indian hain",
+  "vo": "f_0047.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Amul",
+    "fits": true
+   },
+   {
+    "text": "Haldiram's",
+    "fits": true
+   },
+   {
+    "text": "MDH",
+    "fits": true
+   },
+   {
+    "text": "Fevicol",
+    "fits": true
+   },
+   {
+    "text": "Bata",
+    "fits": false
+   },
+   {
+    "text": "Colgate",
+    "fits": false
+   },
+   {
+    "text": "Lifebuoy",
+    "fits": false
+   }
+  ],
+  "source": "Amul (GCMMF), Haldiram's (Bikaner), MDH (Delhi), Fevicol (Pidilite) are Indian; Bata is Czech-origin, Colgate American, Lifebuoy a British/Unilever brand."
+ },
+ {
+  "id": "f_0048",
+  "title": "Yeh cheezein originally India ki dein hain",
+  "vo": "f_0048.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Chess (chaturanga)",
+    "fits": true
+   },
+   {
+    "text": "Shampoo ka concept",
+    "fits": true
+   },
+   {
+    "text": "Snakes and Ladders",
+    "fits": true
+   },
+   {
+    "text": "Zero ka likha hua symbol",
+    "fits": true
+   },
+   {
+    "text": "Bluetooth",
+    "fits": false
+   },
+   {
+    "text": "Post-it note",
+    "fits": false
+   },
+   {
+    "text": "Escalator",
+    "fits": false
+   }
+  ],
+  "source": "Chaturanga became chess, English 'shampoo' comes from champo, Snakes and Ladders from Gyan Chaupar, and the written zero digit appears in the Bakhshali manuscript; Bluetooth is Ericsson, Post-it 3M, escalator American."
+ },
+ {
+  "id": "f_0049",
+  "title": "In cricketers ne ODI mein double century thoki hai",
+  "vo": "f_0049.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Sachin Tendulkar",
+    "fits": true
+   },
+   {
+    "text": "Virender Sehwag",
+    "fits": true
+   },
+   {
+    "text": "Rohit Sharma",
+    "fits": true
+   },
+   {
+    "text": "Ishan Kishan",
+    "fits": true
+   },
+   {
+    "text": "Shubman Gill",
+    "fits": true
+   },
+   {
+    "text": "Virat Kohli",
+    "fits": false
+   },
+   {
+    "text": "MS Dhoni",
+    "fits": false
+   },
+   {
+    "text": "Yuvraj Singh",
+    "fits": false
+   }
+  ],
+  "source": "ODI 200s: Sachin 200*, Sehwag 219, Rohit 264/209/208, Ishan 210, Gill 208; Kohli's ODI best is 183, Dhoni's 183*, Yuvraj's 150."
+ },
+ {
+  "id": "f_0050",
+  "title": "Yeh Bollywood jodiyan real life mein shaadi-shuda hain",
+  "vo": "f_0050.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Ranveer Singh - Deepika Padukone",
+    "fits": true
+   },
+   {
+    "text": "Saif Ali Khan - Kareena Kapoor",
+    "fits": true
+   },
+   {
+    "text": "Ranbir Kapoor - Alia Bhatt",
+    "fits": true
+   },
+   {
+    "text": "Akshay Kumar - Twinkle Khanna",
+    "fits": true
+   },
+   {
+    "text": "Shah Rukh Khan - Kajol",
+    "fits": false
+   },
+   {
+    "text": "Salman Khan - Katrina Kaif",
+    "fits": false
+   },
+   {
+    "text": "Jethalal - Babita ji",
+    "fits": false
+   }
+  ],
+  "source": "Weddings: Ranveer-Deepika (2018), Saif-Kareena (2012), Ranbir-Alia (2022), Akshay-Twinkle (2001); SRK is married to Gauri, Kajol to Ajay Devgn; Salman-Katrina never married; Jethalal-Babita is a sitcom daydream."
+ },
+ {
+  "id": "f_0051",
+  "title": "Yeh cities kisi Indian state ki capital hain",
+  "vo": "f_0051.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Bhopal",
+    "fits": true
+   },
+   {
+    "text": "Dispur",
+    "fits": true
+   },
+   {
+    "text": "Panaji",
+    "fits": true
+   },
+   {
+    "text": "Raipur",
+    "fits": true
+   },
+   {
+    "text": "Ahmedabad",
+    "fits": false
+   },
+   {
+    "text": "Kochi",
+    "fits": false
+   },
+   {
+    "text": "Surat",
+    "fits": false
+   }
+  ],
+  "source": "Bhopal (MP), Dispur (Assam), Panaji (Goa), Raipur (Chhattisgarh); Gujarat's capital is Gandhinagar, Kerala's is Thiruvananthapuram, Surat is not a capital."
+ },
+ {
+  "id": "f_0052",
+  "title": "In sports films ka khel cricket hai",
+  "vo": "f_0052.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Lagaan",
+    "fits": true
+   },
+   {
+    "text": "Iqbal",
+    "fits": true
+   },
+   {
+    "text": "83",
+    "fits": true
+   },
+   {
+    "text": "MS Dhoni: The Untold Story",
+    "fits": true
+   },
+   {
+    "text": "Chak De! India",
+    "fits": false
+   },
+   {
+    "text": "Dangal",
+    "fits": false
+   },
+   {
+    "text": "Mary Kom",
+    "fits": false
+   }
+  ],
+  "source": "Lagaan, Iqbal, 83 and the Dhoni biopic centre on cricket; Chak De is hockey, Dangal wrestling, Mary Kom boxing."
+ },
+ {
+  "id": "f_0053",
+  "title": "Yeh apps/companies India mein born hui hain",
+  "vo": "f_0053.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Flipkart",
+    "fits": true
+   },
+   {
+    "text": "Zomato",
+    "fits": true
+   },
+   {
+    "text": "Ola",
+    "fits": true
+   },
+   {
+    "text": "Paytm",
+    "fits": true
+   },
+   {
+    "text": "WhatsApp",
+    "fits": false
+   },
+   {
+    "text": "Instagram",
+    "fits": false
+   },
+   {
+    "text": "Telegram",
+    "fits": false
+   }
+  ],
+  "source": "Flipkart (Bengaluru, 2007), Zomato (Gurugram, 2008), Ola (2010), Paytm (Noida, 2010) were founded in India; WhatsApp and Instagram are American, Telegram was founded by the Durov brothers."
+ },
+ {
+  "id": "f_0054",
+  "title": "In films ko Filmfare Best Film award mila hai",
+  "vo": "f_0054.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Lagaan",
+    "fits": true
+   },
+   {
+    "text": "3 Idiots",
+    "fits": true
+   },
+   {
+    "text": "Dangal",
+    "fits": true
+   },
+   {
+    "text": "Gully Boy",
+    "fits": true
+   },
+   {
+    "text": "Sholay",
+    "fits": false
+   },
+   {
+    "text": "Andaz Apna Apna",
+    "fits": false
+   },
+   {
+    "text": "Om Shanti Om",
+    "fits": false
+   }
+  ],
+  "source": "Filmfare Best Film: Lagaan (2002), 3 Idiots (2010), Dangal (2017), Gully Boy (2020); Sholay famously won only Best Editing, Andaz Apna Apna and Om Shanti Om never won Best Film."
+ },
+ {
+  "id": "f_0055",
+  "title": "Yeh teams IPL trophy jeet chuki hain (2025 tak)",
+  "vo": "f_0055.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Chennai Super Kings",
+    "fits": true
+   },
+   {
+    "text": "Mumbai Indians",
+    "fits": true
+   },
+   {
+    "text": "Sunrisers Hyderabad",
+    "fits": true
+   },
+   {
+    "text": "Royal Challengers Bengaluru",
+    "fits": true
+   },
+   {
+    "text": "Delhi Capitals",
+    "fits": false
+   },
+   {
+    "text": "Punjab Kings",
+    "fits": false
+   },
+   {
+    "text": "Lucknow Super Giants",
+    "fits": false
+   }
+  ],
+  "source": "IPL winners list: CSK (5), MI (5), SRH (2016), RCB (2025); Delhi, Punjab and Lucknow are title-less, Punjab Kings lost the 2025 final."
+ },
+ {
+  "id": "f_0056",
+  "title": "In actors ne National Film Award (Best Actor) jeeta hai",
+  "vo": "f_0056.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Amitabh Bachchan",
+    "fits": true
+   },
+   {
+    "text": "Akshay Kumar",
+    "fits": true
+   },
+   {
+    "text": "Shah Rukh Khan",
+    "fits": true
+   },
+   {
+    "text": "Ayushmann Khurrana",
+    "fits": true
+   },
+   {
+    "text": "Salman Khan",
+    "fits": false
+   },
+   {
+    "text": "Govinda",
+    "fits": false
+   },
+   {
+    "text": "Katrina Kaif",
+    "fits": false
+   }
+  ],
+  "source": "National Best Actor: Amitabh (Agneepath, Black, Paa, Piku), Akshay (Rustom/Airlift, 2017), SRK (Jawan, announced 2025), Ayushmann (Andhadhun, 2019, shared); Salman, Govinda and Katrina have never won it."
+ },
+ {
+  "id": "f_0057",
+  "title": "Yeh desi drinks non-alcoholic hain",
+  "vo": "f_0057.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Lassi",
+    "fits": true
+   },
+   {
+    "text": "Jaljeera",
+    "fits": true
+   },
+   {
+    "text": "Nimbu paani",
+    "fits": true
+   },
+   {
+    "text": "Thandai",
+    "fits": true
+   },
+   {
+    "text": "Feni",
+    "fits": false
+   },
+   {
+    "text": "Toddy",
+    "fits": false
+   },
+   {
+    "text": "Mahua",
+    "fits": false
+   }
+  ],
+  "source": "Lassi, jaljeera, nimbu paani and plain thandai are non-alcoholic; feni, toddy and mahua are traditional alcoholic drinks."
+ },
+ {
+  "id": "f_0058",
+  "title": "Yeh characters CID (Sony TV) mein the",
+  "vo": "f_0058.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "ACP Pradyuman",
+    "fits": true
+   },
+   {
+    "text": "Daya",
+    "fits": true
+   },
+   {
+    "text": "Abhijeet",
+    "fits": true
+   },
+   {
+    "text": "Freddy",
+    "fits": true
+   },
+   {
+    "text": "Jethalal",
+    "fits": false
+   },
+   {
+    "text": "Mihir Virani",
+    "fits": false
+   },
+   {
+    "text": "Munna Bhai",
+    "fits": false
+   }
+  ],
+  "source": "CID main cast: ACP Pradyuman, Daya, Abhijeet, Freddy; Jethalal is TMKOC, Mihir Virani is Kyunki Saas Bhi Kabhi Bahu Thi, Munna Bhai is a film character."
+ },
+ {
+  "id": "f_0059",
+  "title": "Yeh airlines 2025 mein India mein sach mein udd rahi hain",
+  "vo": "f_0059.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "IndiGo",
+    "fits": true
+   },
+   {
+    "text": "Air India",
+    "fits": true
+   },
+   {
+    "text": "Akasa Air",
+    "fits": true
+   },
+   {
+    "text": "SpiceJet",
+    "fits": true
+   },
+   {
+    "text": "Kingfisher Airlines",
+    "fits": false
+   },
+   {
+    "text": "Jet Airways",
+    "fits": false
+   },
+   {
+    "text": "Shatabdi Airways",
+    "fits": false
+   }
+  ],
+  "source": "IndiGo, Air India, Akasa and SpiceJet operate in 2025; Kingfisher Airlines shut in 2012, Jet Airways grounded in 2019 (liquidation ordered 2024), Shatabdi is a train, not an airline."
+ },
+ {
+  "id": "f_0060",
+  "title": "Yeh mobile brands Indian companies hain",
+  "vo": "f_0060.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Micromax",
+    "fits": true
+   },
+   {
+    "text": "Lava",
+    "fits": true
+   },
+   {
+    "text": "Karbonn",
+    "fits": true
+   },
+   {
+    "text": "Intex",
+    "fits": true
+   },
+   {
+    "text": "Oppo",
+    "fits": false
+   },
+   {
+    "text": "Vivo",
+    "fits": false
+   },
+   {
+    "text": "Xiaomi",
+    "fits": false
+   }
+  ],
+  "source": "Micromax, Lava, Karbonn and Intex are Indian-founded handset brands; Oppo, Vivo and Xiaomi are Chinese companies."
+ },
+ {
+  "id": "f_0061",
+  "title": "Yeh shows Kapil Sharma ne host kiye hain",
+  "vo": "f_0061.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "The Kapil Sharma Show",
+    "fits": true
+   },
+   {
+    "text": "Comedy Nights with Kapil",
+    "fits": true
+   },
+   {
+    "text": "The Great Indian Kapil Show",
+    "fits": true
+   },
+   {
+    "text": "Family Time With Kapil Sharma",
+    "fits": true
+   },
+   {
+    "text": "Comedy Circus",
+    "fits": false
+   },
+   {
+    "text": "Koffee With Karan",
+    "fits": false
+   },
+   {
+    "text": "Bigg Boss",
+    "fits": false
+   }
+  ],
+  "source": "Kapil hosted TKSS (Sony), Comedy Nights (Colors), The Great Indian Kapil Show (Netflix, 2024) and Family Time (Sony, 2018); on Comedy Circus he was a contestant, not host."
+ },
+ {
+  "id": "f_0062",
+  "title": "Yeh cricket stadiums India mein hain",
+  "vo": "f_0062.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Eden Gardens",
+    "fits": true
+   },
+   {
+    "text": "Wankhede Stadium",
+    "fits": true
+   },
+   {
+    "text": "M. Chinnaswamy Stadium",
+    "fits": true
+   },
+   {
+    "text": "MA Chidambaram (Chepauk)",
+    "fits": true
+   },
+   {
+    "text": "Lord's",
+    "fits": false
+   },
+   {
+    "text": "Melbourne Cricket Ground",
+    "fits": false
+   },
+   {
+    "text": "Old Trafford",
+    "fits": false
+   }
+  ],
+  "source": "Eden Gardens (Kolkata), Wankhede (Mumbai), Chinnaswamy (Bengaluru), Chepauk (Chennai); Lord's and Old Trafford are in England, MCG in Australia."
+ },
+ {
+  "id": "f_0063",
+  "title": "In janwaron ko India ka official national symbol status mila hai",
+  "vo": "f_0063.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Baagh (tiger)",
+    "fits": true
+   },
+   {
+    "text": "Mor (peacock)",
+    "fits": true
+   },
+   {
+    "text": "Haathi (elephant)",
+    "fits": true
+   },
+   {
+    "text": "River dolphin",
+    "fits": true
+   },
+   {
+    "text": "Sher (lion)",
+    "fits": false
+   },
+   {
+    "text": "Oont (camel)",
+    "fits": false
+   },
+   {
+    "text": "Bandar",
+    "fits": false
+   }
+  ],
+  "source": "Tiger = national animal (since 1972), peacock = national bird, elephant = national heritage animal (2010), Gangetic dolphin = national aquatic animal (2009); the lion lost national-animal status to the tiger in 1972."
+ },
+ {
+  "id": "f_0064",
+  "title": "Yeh chess ke asli official terms hain",
+  "vo": "f_0064.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Castling",
+    "fits": true
+   },
+   {
+    "text": "En passant",
+    "fits": true
+   },
+   {
+    "text": "Stalemate",
+    "fits": true
+   },
+   {
+    "text": "Zugzwang",
+    "fits": true
+   },
+   {
+    "text": "Ludo move",
+    "fits": false
+   },
+   {
+    "text": "Double dhokha",
+    "fits": false
+   },
+   {
+    "text": "Chappal gambit",
+    "fits": false
+   }
+  ],
+  "source": "FIDE rules and standard chess vocabulary include castling, en passant, stalemate and zugzwang; the other three are invented."
+ },
+ {
+  "id": "f_0065",
+  "title": "Yeh officially recognized Indian classical dance forms hain",
+  "vo": "f_0065.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Bharatanatyam",
+    "fits": true
+   },
+   {
+    "text": "Kathak",
+    "fits": true
+   },
+   {
+    "text": "Odissi",
+    "fits": true
+   },
+   {
+    "text": "Kuchipudi",
+    "fits": true
+   },
+   {
+    "text": "Bhangra",
+    "fits": false
+   },
+   {
+    "text": "Lavani",
+    "fits": false
+   },
+   {
+    "text": "Naagin dance",
+    "fits": false
+   }
+  ],
+  "source": "Sangeet Natak Akademi's classical dance list includes Bharatanatyam, Kathak, Odissi and Kuchipudi; Bhangra and Lavani are folk forms, Naagin dance is a shaadi special."
+ },
+ {
+  "id": "f_0066",
+  "title": "Yeh sports Paris Olympics 2024 mein khele gaye",
+  "vo": "f_0066.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Breaking (breakdance)",
+    "fits": true
+   },
+   {
+    "text": "Surfing",
+    "fits": true
+   },
+   {
+    "text": "Skateboarding",
+    "fits": true
+   },
+   {
+    "text": "Sport climbing",
+    "fits": true
+   },
+   {
+    "text": "Cricket",
+    "fits": false
+   },
+   {
+    "text": "Kabaddi",
+    "fits": false
+   },
+   {
+    "text": "Kho-kho",
+    "fits": false
+   }
+  ],
+  "source": "Paris 2024 programme included breaking (debut), surfing, skateboarding and sport climbing; cricket returns only at LA 2028, kabaddi and kho-kho are not Olympic sports."
+ },
+ {
+  "id": "f_0067",
+  "title": "Yeh desi words officially Oxford English Dictionary mein hain",
+  "vo": "f_0067.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Jugaad",
+    "fits": true
+   },
+   {
+    "text": "Timepass",
+    "fits": true
+   },
+   {
+    "text": "Aiyo",
+    "fits": true
+   },
+   {
+    "text": "Chuddies",
+    "fits": true
+   },
+   {
+    "text": "Moye moye",
+    "fits": false
+   },
+   {
+    "text": "Jhakaas",
+    "fits": false
+   },
+   {
+    "text": "Rasode mein kaun tha",
+    "fits": false
+   }
+  ],
+  "source": "OED additions: aiyo (2016), jugaad and chuddies (2017), timepass (2018); the last three are memes/slang not in the OED."
+ },
+ {
+  "id": "f_0068",
+  "title": "In logon ne Nobel Prize jeeta hai",
+  "vo": "f_0068.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "C.V. Raman",
+    "fits": true
+   },
+   {
+    "text": "Rabindranath Tagore",
+    "fits": true
+   },
+   {
+    "text": "Amartya Sen",
+    "fits": true
+   },
+   {
+    "text": "Har Gobind Khorana",
+    "fits": true
+   },
+   {
+    "text": "Ratan Tata",
+    "fits": false
+   },
+   {
+    "text": "Sachin Tendulkar",
+    "fits": false
+   },
+   {
+    "text": "Vikram Sarabhai",
+    "fits": false
+   }
+  ],
+  "source": "Nobel records: Raman (Physics 1930), Tagore (Literature 1913), Sen (Economics 1998), Khorana (Medicine 1968); Tata, Tendulkar and Sarabhai never won a Nobel."
+ },
+ {
+  "id": "f_0069",
+  "title": "Yeh ISRO ke asli missions ya rockets hain",
+  "vo": "f_0069.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Chandrayaan-3",
+    "fits": true
+   },
+   {
+    "text": "Mangalyaan",
+    "fits": true
+   },
+   {
+    "text": "Aryabhata satellite",
+    "fits": true
+   },
+   {
+    "text": "PSLV",
+    "fits": true
+   },
+   {
+    "text": "Apollo 11",
+    "fits": false
+   },
+   {
+    "text": "Sputnik",
+    "fits": false
+   },
+   {
+    "text": "Millennium Falcon",
+    "fits": false
+   }
+  ],
+  "source": "ISRO: Chandrayaan-3 (2023 Moon landing), Mangalyaan (2013 Mars orbiter), Aryabhata (first Indian satellite, 1975), PSLV rocket; Apollo 11 is NASA, Sputnik Soviet, Millennium Falcon fictional."
+ },
+ {
+  "id": "f_0070",
+  "title": "Yeh biscuits Parle company banati hai",
+  "vo": "f_0070.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Parle-G",
+    "fits": true
+   },
+   {
+    "text": "Monaco",
+    "fits": true
+   },
+   {
+    "text": "Hide & Seek",
+    "fits": true
+   },
+   {
+    "text": "Krackjack",
+    "fits": true
+   },
+   {
+    "text": "Good Day",
+    "fits": false
+   },
+   {
+    "text": "Bourbon",
+    "fits": false
+   },
+   {
+    "text": "Oreo",
+    "fits": false
+   }
+  ],
+  "source": "Parle Products portfolio: Parle-G, Monaco, Hide & Seek, Krackjack; Good Day and Bourbon are Britannia, Oreo is Mondelez."
+ },
+ {
+  "id": "f_0071",
+  "title": "Yeh asli Hindi muhavare hain, humne abhi nahi banaye",
+  "vo": "f_0071.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Naach na jaane aangan tedha",
+    "fits": true
+   },
+   {
+    "text": "Bandar kya jaane adrak ka swaad",
+    "fits": true
+   },
+   {
+    "text": "Doodh ka doodh paani ka paani",
+    "fits": true
+   },
+   {
+    "text": "Ab pachhtaye hot kya jab chidiya chug gayi khet",
+    "fits": true
+   },
+   {
+    "text": "WiFi slow toh padosi ka password",
+    "fits": false
+   },
+   {
+    "text": "Jitna bada samosa utna bada dhokha",
+    "fits": false
+   },
+   {
+    "text": "Monday ko mat chhedo",
+    "fits": false
+   }
+  ],
+  "source": "The first four are standard Hindi proverbs found in idiom dictionaries; the last three are freshly invented."
+ },
+ {
+  "id": "f_0072",
+  "title": "In states mein chai (tea) commercially ugai jaati hai",
+  "vo": "f_0072.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Assam",
+    "fits": true
+   },
+   {
+    "text": "West Bengal",
+    "fits": true
+   },
+   {
+    "text": "Kerala",
+    "fits": true
+   },
+   {
+    "text": "Tamil Nadu",
+    "fits": true
+   },
+   {
+    "text": "Rajasthan",
+    "fits": false
+   },
+   {
+    "text": "Haryana",
+    "fits": false
+   },
+   {
+    "text": "Goa",
+    "fits": false
+   }
+  ],
+  "source": "Tea Board of India: Assam, West Bengal (Darjeeling), Kerala and Tamil Nadu (Nilgiris) are major producers; Rajasthan, Haryana and Goa grow no commercial tea."
+ },
+ {
+  "id": "f_0073",
+  "title": "Yeh gaane Yo Yo Honey Singh ke hain",
+  "vo": "f_0073.ogg",
+  "adult": false,
+  "options": [
+   {
+    "text": "Blue Eyes",
+    "fits": true
+   },
+   {
+    "text": "Lungi Dance",
+    "fits": true
+   },
+   {
+    "text": "Brown Rang",
+    "fits": true
+   },
+   {
+    "text": "Angreji Beat",
+    "fits": true
+   },
+   {
+    "text": "Why This Kolaveri Di",
+    "fits": false
+   },
+   {
+    "text": "Genda Phool",
+    "fits": false
+   },
+   {
+    "text": "Kala Chashma",
+    "fits": false
+   }
+  ],
+  "source": "Honey Singh performed/produced Blue Eyes, Lungi Dance (Chennai Express), Brown Rang and Angreji Beat; Kolaveri Di is Dhanush, Genda Phool is Badshah, Kala Chashma (Baar Baar Dekho) credits Badshah/Amar Arshi."
+ },
+ {
+  "id": "f_0074",
+  "title": "Yeh condom brands India mein sach mein bikte hain",
+  "vo": "f_0074.ogg",
+  "adult": true,
+  "options": [
+   {
+    "text": "Manforce",
+    "fits": true
+   },
+   {
+    "text": "KamaSutra",
+    "fits": true
+   },
+   {
+    "text": "Durex",
+    "fits": true
+   },
+   {
+    "text": "Skore",
+    "fits": true
+   },
+   {
+    "text": "Sharma Ji Ultra",
+    "fits": false
+   },
+   {
+    "text": "Sanskaari Shield",
+    "fits": false
+   },
+   {
+    "text": "Chup Chaap Gold",
+    "fits": false
+   }
+  ],
+  "source": "Manforce (Mankind Pharma), KamaSutra (Raymond Consumer Care), Durex (Reckitt) and Skore (TTK) are real Indian-market brands; the rest are invented."
+ },
+ {
+  "id": "f_0075",
+  "title": "Yeh sharaab brands India mein born hue hain",
+  "vo": "f_0075.ogg",
+  "adult": true,
+  "options": [
+   {
+    "text": "Old Monk",
+    "fits": true
+   },
+   {
+    "text": "Kingfisher",
+    "fits": true
+   },
+   {
+    "text": "Amrut",
+    "fits": true
+   },
+   {
+    "text": "Officer's Choice",
+    "fits": true
+   },
+   {
+    "text": "Jack Daniel's",
+    "fits": false
+   },
+   {
+    "text": "Bacardi",
+    "fits": false
+   },
+   {
+    "text": "Heineken",
+    "fits": false
+   }
+  ],
+  "source": "Old Monk (Mohan Meakin), Kingfisher (United Breweries, Bengaluru), Amrut (Amrut Distilleries) and Officer's Choice (Allied Blenders) began in India; Jack Daniel's is American, Bacardi Cuban-origin, Heineken Dutch."
+ },
+ {
+  "id": "f_0076",
+  "title": "In films ko 'A' (adults only) certificate mila tha",
+  "vo": "f_0076.ogg",
+  "adult": true,
+  "options": [
+   {
+    "text": "Gangs of Wasseypur",
+    "fits": true
+   },
+   {
+    "text": "Delhi Belly",
+    "fits": true
+   },
+   {
+    "text": "Kabir Singh",
+    "fits": true
+   },
+   {
+    "text": "Grand Masti",
+    "fits": true
+   },
+   {
+    "text": "Hum Aapke Hain Koun..!",
+    "fits": false
+   },
+   {
+    "text": "Taare Zameen Par",
+    "fits": false
+   },
+   {
+    "text": "Dilwale Dulhania Le Jayenge",
+    "fits": false
+   }
+  ],
+  "source": "CBFC gave A certificates to Gangs of Wasseypur (2012), Delhi Belly (2011), Kabir Singh (2019) and Grand Masti (2013); HAHK, TZP and DDLJ were rated U."
+ },
+ {
+  "id": "f_0077",
+  "title": "Yeh gaane 'item number' ke roop mein release hue the",
+  "vo": "f_0077.ogg",
+  "adult": true,
+  "options": [
+   {
+    "text": "Munni Badnaam Hui",
+    "fits": true
+   },
+   {
+    "text": "Sheila Ki Jawani",
+    "fits": true
+   },
+   {
+    "text": "Chikni Chameli",
+    "fits": true
+   },
+   {
+    "text": "Fevicol Se",
+    "fits": true
+   },
+   {
+    "text": "Lag Jaa Gale",
+    "fits": false
+   },
+   {
+    "text": "Kal Ho Naa Ho",
+    "fits": false
+   },
+   {
+    "text": "Tum Hi Ho",
+    "fits": false
+   }
+  ],
+  "source": "Munni (Dabangg), Sheila (Tees Maar Khan), Chikni Chameli (Agneepath 2012) and Fevicol Se (Dabangg 2) were promoted as item numbers; the other three are romantic ballads."
+ },
+ {
+  "id": "f_0078",
+  "title": "In dates par poore India mein sharaab ki dukaanein band rehti hain (national dry day)",
+  "vo": "f_0078.ogg",
+  "adult": true,
+  "options": [
+   {
+    "text": "26 January",
+    "fits": true
+   },
+   {
+    "text": "15 August",
+    "fits": true
+   },
+   {
+    "text": "2 October",
+    "fits": true
+   },
+   {
+    "text": "14 February",
+    "fits": false
+   },
+   {
+    "text": "31 December",
+    "fits": false
+   },
+   {
+    "text": "1 April",
+    "fits": false
+   }
+  ],
+  "source": "Republic Day, Independence Day and 2 October are the three nationwide dry days in India; Valentine's Day, New Year's Eve and April Fools' Day are not."
+ },
+ {
+  "id": "f_0079",
+  "title": "In films mein Sunny Leone ne kaam kiya hai",
+  "vo": "f_0079.ogg",
+  "adult": true,
+  "options": [
+   {
+    "text": "Mastizaade",
+    "fits": true
+   },
+   {
+    "text": "Ragini MMS 2",
+    "fits": true
+   },
+   {
+    "text": "Jism 2",
+    "fits": true
+   },
+   {
+    "text": "Ek Paheli Leela",
+    "fits": true
+   },
+   {
+    "text": "Queen",
+    "fits": false
+   },
+   {
+    "text": "Cocktail",
+    "fits": false
+   },
+   {
+    "text": "Pink",
+    "fits": false
+   }
+  ],
+  "source": "Sunny Leone filmography: Jism 2 (2012), Ragini MMS 2 (2014), Ek Paheli Leela (2015), Mastizaade (2016); Queen is Kangana Ranaut, Cocktail is Deepika, Pink is Taapsee."
+ },
+ {
+  "id": "f_0080",
+  "title": "Yeh words daaru ki bottle ya quantity ke liye use hote hain",
+  "vo": "f_0080.ogg",
+  "adult": true,
+  "options": [
+   {
+    "text": "Patiala peg",
+    "fits": true
+   },
+   {
+    "text": "Khamba",
+    "fits": true
+   },
+   {
+    "text": "Quarter",
+    "fits": true
+   },
+   {
+    "text": "Nip",
+    "fits": true
+   },
+   {
+    "text": "Chakna",
+    "fits": false
+   },
+   {
+    "text": "Cutting",
+    "fits": false
+   },
+   {
+    "text": "Jugaad",
+    "fits": false
+   }
+  ],
+  "source": "Patiala peg (extra-large peg), khamba (750 ml bottle), quarter (180 ml) and nip are drink measures; chakna is the snack, cutting is half-glass chai, jugaad is a hack."
  }
 ]

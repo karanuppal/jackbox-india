@@ -280,5 +280,95 @@
   "text": "Item song wala pose dete hue uncle",
   "vo": "pd_0047.ogg",
   "adult": true
+ },
+ {
+  "id": "pd_0048",
+  "text": "Istri wale ki dukaan par kapdon ke pahad ke neeche soya kutta",
+  "vo": "pd_0048.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0049",
+  "text": "ATM ke bahar lambi line aur screen par 'No Cash' ka board",
+  "vo": "pd_0049.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0050",
+  "text": "Shaadi mein DJ ke speaker par chadh kar naachta ladka",
+  "vo": "pd_0050.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0051",
+  "text": "Auto ke peeche likha 'Buri nazar wale tera muh kala'",
+  "vo": "pd_0051.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0052",
+  "text": "Garmi mein cooler ke saamne jagah ke liye ladta hua parivaar",
+  "vo": "pd_0052.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0053",
+  "text": "Train ki upper berth par chadhne ki koshish karti aunty",
+  "vo": "pd_0053.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0054",
+  "text": "Gas par ubal kar girta doodh aur bhaagti hui mummy",
+  "vo": "pd_0054.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0055",
+  "text": "Sofa ke neeche TV ka remote dhoondta poora parivaar",
+  "vo": "pd_0055.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0056",
+  "text": "Baarish mein sar par newspaper rakh kar bhaagte office wale",
+  "vo": "pd_0056.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0057",
+  "text": "Mehmaan ke liye biscuit aur namkeen ki tray sajati mummy",
+  "vo": "pd_0057.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0058",
+  "text": "Exam hall ke bahar aakhri minute mein kitaab ghokta student",
+  "vo": "pd_0058.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0059",
+  "text": "Sabzi mandi mein tarazu ke ek palde par baitha billa",
+  "vo": "pd_0059.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0060",
+  "text": "Halwai ki badi kadhai mein jalebi ka design banata ustad",
+  "vo": "pd_0060.ogg",
+  "adult": false
+ },
+ {
+  "id": "pd_0061",
+  "text": "Suhaagraat wale kamre mein phoolon se bhara bed aur sharmata dulha",
+  "vo": "pd_0061.ogg",
+  "adult": true
+ },
+ {
+  "id": "pd_0062",
+  "text": "Theke ke bahar 'bas ek last drink' bolta aadmi jise dost ghaseet rahe hain",
+  "vo": "pd_0062.ogg",
+  "adult": true
  }
 ]

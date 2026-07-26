@@ -10033,5 +10033,817 @@
   "vo": "q_0500.ogg",
   "source": "Shakuntala Devi's 28-second 13-digit multiplication entered Guinness records",
   "era": "evergreen"
+ },
+ {
+  "id": "q_0501",
+  "text": "Murder (2004) mein Emraan Hashmi ke saath thermometer todne wali garmi kis actress ne machayi thi?",
+  "textRoman": true,
+  "options": [
+   "Mallika Sherawat",
+   "Bipasha Basu",
+   "Kareena Kapoor",
+   "Rakhi Sawant"
+  ],
+  "correct": 0,
+  "categories": [
+   "bollywood"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0501.ogg",
+  "source": "Murder (2004, dir. Anurag Basu) starred Emraan Hashmi and Mallika Sherawat.",
+  "era": "2000s"
+ },
+ {
+  "id": "q_0502",
+  "text": "Masti franchise ki teesri film ka naam kya tha? Sharam franchise ko teesri baar bhi nahi aayi.",
+  "textRoman": true,
+  "options": [
+   "Masti Returns",
+   "Great Grand Masti",
+   "Masti 3.0",
+   "Sabse Badi Masti"
+  ],
+  "correct": 1,
+  "categories": [
+   "bollywood"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0502.ogg",
+  "source": "Great Grand Masti (2016) is the third film in Indra Kumar's Masti series after Masti (2004) and Grand Masti (2013).",
+  "era": "recent"
+ },
+ {
+  "id": "q_0503",
+  "text": "No Entry (2005) mein 'Bobby' bankar teen shaadi-shuda mardon ki zindagi hilane wali kaun thi?",
+  "textRoman": true,
+  "options": [
+   "Katrina Kaif",
+   "Lara Dutta",
+   "Bipasha Basu",
+   "Esha Deol"
+  ],
+  "correct": 2,
+  "categories": [
+   "bollywood"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0503.ogg",
+  "source": "Bipasha Basu played Bobby in No Entry (2005); Lara and Esha played the wives.",
+  "era": "2000s"
+ },
+ {
+  "id": "q_0504",
+  "text": "Kya Kool Hai Hum (2005) — double meaning ka PhD course — mein kaunsi jodi lead thi?",
+  "textRoman": true,
+  "options": [
+   "Tusshar Kapoor aur Riteish Deshmukh",
+   "Akshay Kumar aur Suniel Shetty",
+   "Govinda aur Chunky Panday",
+   "Salman aur Sohail Khan"
+  ],
+  "correct": 0,
+  "categories": [
+   "bollywood"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0504.ogg",
+  "source": "Kya Kool Hai Hum (2005) starred Tusshar Kapoor and Riteish Deshmukh.",
+  "era": "2000s"
+ },
+ {
+  "id": "q_0505",
+  "text": "Delhi Belly (2011) ka poora kaand kis cheez ke aapas mein badal jaane se shuru hota hai?",
+  "textRoman": true,
+  "options": [
+   "Do mobile phone",
+   "Do tiffin dabbe",
+   "Do passport",
+   "Stool sample aur smuggling ka packet"
+  ],
+  "correct": 3,
+  "categories": [
+   "bollywood"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0505.ogg",
+  "source": "Delhi Belly's plot kicks off when a stool sample packet gets swapped with smuggled diamonds.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0506",
+  "text": "Lust Stories (2018) kis format ki thi? Ghar walon ke saath dekhne ki galti mat kariyega.",
+  "textRoman": true,
+  "options": [
+   "Chaar short films ki anthology",
+   "3D musical",
+   "Reality show",
+   "Ek silent film"
+  ],
+  "correct": 0,
+  "categories": [
+   "tv-ott"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0506.ogg",
+  "source": "Lust Stories (Netflix, 2018) is an anthology of four short films by four directors.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0507",
+  "text": "'Gandii Baat' — naam hi kaafi hai — kis app ki web series thi?",
+  "textRoman": true,
+  "options": [
+   "Netflix",
+   "Amazon Prime Video",
+   "Hotstar",
+   "ALTBalaji"
+  ],
+  "correct": 3,
+  "categories": [
+   "tv-ott"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0507.ogg",
+  "source": "Gandii Baat is an ALTBalaji original web series (2018 onwards).",
+  "era": "recent"
+ },
+ {
+  "id": "q_0508",
+  "text": "Bira 91 — woh hipster beer jiska mascot ek bandar hai — kis desh ka brand hai?",
+  "textRoman": true,
+  "options": [
+   "Belgium",
+   "Mexico",
+   "Germany",
+   "India"
+  ],
+  "correct": 3,
+  "categories": [
+   "food"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0508.ogg",
+  "source": "Bira 91 is made by B9 Beverages, founded in Delhi in 2015; the logo is a monkey.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0509",
+  "text": "Bacardi Breezer asal mein kis base se banta hai? Aunty ji ise 'fruit juice' samajh ke gatak chuki hain.",
+  "textRoman": true,
+  "options": [
+   "Vodka",
+   "Whisky",
+   "Rum",
+   "Gin"
+  ],
+  "correct": 2,
+  "categories": [
+   "food"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0509.ogg",
+  "source": "Breezer is Bacardi's rum-based flavoured ready-to-drink beverage.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0510",
+  "text": "Bar mein 'chhota peg' bologe toh kitna milega?",
+  "textRoman": true,
+  "options": [
+   "30 ml",
+   "60 ml",
+   "90 ml",
+   "180 ml"
+  ],
+  "correct": 0,
+  "categories": [
+   "food",
+   "daily-life"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0510.ogg",
+  "source": "In India a small peg is 30 ml and a large peg 60 ml by convention.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0511",
+  "text": "Bloody Mary cocktail mein vodka ke saath kaunsa juice jaata hai?",
+  "textRoman": true,
+  "options": [
+   "Santre ka",
+   "Tamatar ka",
+   "Anaar ka",
+   "Ganne ka"
+  ],
+  "correct": 1,
+  "categories": [
+   "food"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0511.ogg",
+  "source": "The classic Bloody Mary is vodka with tomato juice and spices.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0512",
+  "text": "Haywards 5000 aur Knock Out — yeh dono naam kis category mein 'legend' hain?",
+  "textRoman": true,
+  "options": [
+   "Strong beer",
+   "Single malt whisky",
+   "Wine",
+   "Energy drink"
+  ],
+  "correct": 0,
+  "categories": [
+   "food"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0512.ogg",
+  "source": "Haywards 5000 and Knock Out are Indian strong beer brands (roughly 7-8 percent ABV).",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0513",
+  "text": "Purani Hindi filmon mein kissing scene ki jagah censor-friendly kya dikhaya jaata tha?",
+  "textRoman": true,
+  "options": [
+   "Do phool takraate hue",
+   "Bijli girti hui",
+   "Chai ubalti hui",
+   "Train guzarti hui"
+  ],
+  "correct": 0,
+  "categories": [
+   "classic-films",
+   "bollywood"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0513.ogg",
+  "source": "Two flowers touching was the classic on-screen substitute for a kiss in old Hindi cinema.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0514",
+  "text": "2015 mein James Bond film 'Spectre' ke kissing scenes ke saath Indian censor board ne kya kiya?",
+  "textRoman": true,
+  "options": [
+   "Gaane daal diye",
+   "Poora scene hata ke cartoon lagaya",
+   "Kuch nahi kiya",
+   "Scenes chhote karwa diye"
+  ],
+  "correct": 3,
+  "categories": [
+   "bollywood",
+   "tv-ott"
+  ],
+  "difficulty": 3,
+  "adult": true,
+  "vo": "q_0514.ogg",
+  "source": "The CBFC ordered the kiss scenes in Spectre (2015) to be shortened before Indian release, a widely reported decision.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0515",
+  "text": "Sarkari condom brand 'Nirodh' kis decade mein launch hua tha? Sharmaiye mat, general knowledge hai.",
+  "textRoman": true,
+  "options": [
+   "1940s",
+   "1950s",
+   "1960s",
+   "1990s"
+  ],
+  "correct": 2,
+  "categories": [
+   "history-geo",
+   "daily-life"
+  ],
+  "difficulty": 3,
+  "adult": true,
+  "vo": "q_0515.ogg",
+  "source": "Nirodh was launched in 1968 under India's family planning programme.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0516",
+  "text": "India mein rent agreement zyada tar kitne mahine ka banta hai? Adult life ka pehla surprise.",
+  "textRoman": true,
+  "options": [
+   "6 mahine",
+   "12 mahine",
+   "24 mahine",
+   "11 mahine"
+  ],
+  "correct": 3,
+  "categories": [
+   "daily-life"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0516.ogg",
+  "source": "Eleven-month rent agreements are standard in India, avoiding mandatory registration for year-plus leases.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0517",
+  "text": "Salary slip ka 'PF' — jo paisa haath mein aane se pehle hi gayab ho jaata hai — kiska short form hai?",
+  "textRoman": true,
+  "options": [
+   "Personal Fund",
+   "Provident Fund",
+   "Pension Fixed",
+   "Private Finance"
+  ],
+  "correct": 1,
+  "categories": [
+   "daily-life"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0517.ogg",
+  "source": "PF stands for Provident Fund, deducted under the Employees' Provident Fund scheme (EPFO).",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0518",
+  "text": "Kamasutra ke lekhak kaun maane jaate hain? Library mein yeh kitaab sabse upar wale shelf par kyun hoti hai, wahi jaanein.",
+  "textRoman": true,
+  "options": [
+   "Kalidasa",
+   "Panini",
+   "Vatsyayana",
+   "Amir Khusrau"
+  ],
+  "correct": 2,
+  "categories": [
+   "history-geo"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0518.ogg",
+  "source": "The Kamasutra is attributed to Vatsyayana (circa 3rd century CE).",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0519",
+  "text": "2008 ki internet-famous 'Savita Bhabhi' asal mein kya thi?",
+  "textRoman": true,
+  "options": [
+   "Ek cooking channel",
+   "Ek adult comic strip",
+   "Ek radio show",
+   "Ek saas-bahu serial"
+  ],
+  "correct": 1,
+  "categories": [
+   "internet"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0519.ogg",
+  "source": "Savita Bhabhi, launched in 2008, was an adult webcomic that became an Indian internet phenomenon.",
+  "era": "2000s"
+ },
+ {
+  "id": "q_0520",
+  "text": "'Khada Hai' — 90s ka sabse besharam double-meaning anthem — kis film ka tha?",
+  "textRoman": true,
+  "options": [
+   "Andaz",
+   "Raja Babu",
+   "Coolie No. 1",
+   "Hero No. 1"
+  ],
+  "correct": 0,
+  "categories": [
+   "music",
+   "bollywood"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0520.ogg",
+  "source": "'Khada Hai' is from Andaz (1994), picturised on Govinda.",
+  "era": "90s"
+ },
+ {
+  "id": "q_0521",
+  "text": "1994 mein 'Sexy Sexy Sexy Mujhe Log Bole' par bawaal ke baad bol badal kar kya kar diye gaye?",
+  "textRoman": true,
+  "options": [
+   "Baby baby baby",
+   "Pyaari pyaari pyaari",
+   "Sundar sundar sundar",
+   "Hello hello hello"
+  ],
+  "correct": 0,
+  "categories": [
+   "music",
+   "bollywood"
+  ],
+  "difficulty": 3,
+  "adult": true,
+  "vo": "q_0521.ogg",
+  "source": "After objections, the Khud-Daar (1994) song's lyric 'Sexy' was officially re-recorded as 'Baby'.",
+  "era": "90s"
+ },
+ {
+  "id": "q_0522",
+  "text": "'Beedi Jalaile' — jisme padosi se chingaari maangi gayi thi — kis film ka gaana hai?",
+  "textRoman": true,
+  "options": [
+   "Bunty Aur Babli",
+   "Omkara",
+   "Ishqiya",
+   "Dabangg"
+  ],
+  "correct": 1,
+  "categories": [
+   "music",
+   "bollywood"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0522.ogg",
+  "source": "'Beedi' is from Omkara (2006), lyrics by Gulzar, sung by Sukhwinder Singh and Sunidhi Chauhan.",
+  "era": "2000s"
+ },
+ {
+  "id": "q_0523",
+  "text": "Splitsvilla — jahan pyaar kam aur drama zyada milta hai — kis channel ka dating show hai?",
+  "textRoman": true,
+  "options": [
+   "MTV",
+   "Star Plus",
+   "Sony",
+   "Colors"
+  ],
+  "correct": 0,
+  "categories": [
+   "tv-ott"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0523.ogg",
+  "source": "MTV Splitsvilla has aired on MTV India since 2008.",
+  "era": "2000s"
+ },
+ {
+  "id": "q_0524",
+  "text": "'Emotional Atyachar' show mein aakhir kis cheez ka test hota tha?",
+  "textRoman": true,
+  "options": [
+   "IQ ka",
+   "Partner ki wafadari ka",
+   "Cooking skills ka",
+   "Driving ka"
+  ],
+  "correct": 1,
+  "categories": [
+   "tv-ott"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0524.ogg",
+  "source": "UTV Bindass' Emotional Atyachar ran hidden-camera loyalty tests on partners.",
+  "era": "2000s"
+ },
+ {
+  "id": "q_0525",
+  "text": "Temptation Island India (2023) kis platform par stream hua tha?",
+  "textRoman": true,
+  "options": [
+   "Netflix",
+   "SonyLIV",
+   "JioCinema",
+   "MX Player"
+  ],
+  "correct": 2,
+  "categories": [
+   "tv-ott"
+  ],
+  "difficulty": 3,
+  "adult": true,
+  "vo": "q_0525.ogg",
+  "source": "Temptation Island India premiered on JioCinema in 2023.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0526",
+  "text": "Ragini MMS franchise ka USP kaunsa combo tha?",
+  "textRoman": true,
+  "options": [
+   "Comedy aur cricket",
+   "Action aur gaane",
+   "Cooking aur crime",
+   "Horror aur steamy scenes"
+  ],
+  "correct": 3,
+  "categories": [
+   "tv-ott",
+   "bollywood"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0526.ogg",
+  "source": "Ragini MMS (2011) and its sequel mix found-footage horror with erotic thriller elements.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0527",
+  "text": "OYO Rooms Indian couples ke beech kis policy ki wajah se legend ban gaya?",
+  "textRoman": true,
+  "options": [
+   "Free breakfast",
+   "Pet friendly hone se",
+   "Late checkout",
+   "Unmarried couples welcome policy"
+  ],
+  "correct": 3,
+  "categories": [
+   "internet",
+   "daily-life"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0527.ogg",
+  "source": "OYO openly markets 'couple-friendly' hotels that accept local IDs from unmarried couples.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0528",
+  "text": "Tinder par kisi ki profile pasand aa jaaye toh kis taraf swipe karte hain?",
+  "textRoman": true,
+  "options": [
+   "Left",
+   "Right",
+   "Neeche",
+   "Phone band kar dete hain"
+  ],
+  "correct": 1,
+  "categories": [
+   "internet"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0528.ogg",
+  "source": "On Tinder a right swipe means 'like'; left means pass.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0529",
+  "text": "'Sharabi' (1984) mein Amitabh ka character kis cheez mein dooba rehta tha? Title mein hi hint hai.",
+  "textRoman": true,
+  "options": [
+   "Chaas mein",
+   "Sharab mein",
+   "Green tea mein",
+   "Protein shake mein"
+  ],
+  "correct": 1,
+  "categories": [
+   "classic-films"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0529.ogg",
+  "source": "Sharabi (1984) stars Amitabh Bachchan as a wealthy alcoholic.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0530",
+  "text": "Insaani jism ka sabse bada organ kaunsa hai? Dimaag ganda hai toh jawaab galat hi hoga.",
+  "textRoman": true,
+  "options": [
+   "Liver",
+   "Dil",
+   "Skin",
+   "Phephde"
+  ],
+  "correct": 2,
+  "categories": [
+   "science-absurd"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0530.ogg",
+  "source": "The skin is the largest organ of the human body.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0531",
+  "text": "Research ke mutabik 10 second ke intense French kiss mein lagbhag kitne bacteria transfer hote hain?",
+  "textRoman": true,
+  "options": [
+   "80 hazaar",
+   "8 lakh",
+   "80 lakh",
+   "8 crore"
+  ],
+  "correct": 3,
+  "categories": [
+   "science-absurd"
+  ],
+  "difficulty": 3,
+  "adult": true,
+  "vo": "q_0531.ogg",
+  "source": "A 2014 study in the journal Microbiome estimated about 80 million bacteria transfer in a 10-second intimate kiss.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0532",
+  "text": "Oysters ko traditionally kis type ka khana maana jaata hai? Isliye candle-light dinner mein mehenge bikte hain.",
+  "textRoman": true,
+  "options": [
+   "Aphrodisiac",
+   "Antibiotic",
+   "Antiseptic",
+   "Antacid"
+  ],
+  "correct": 0,
+  "categories": [
+   "food",
+   "science-absurd"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0532.ogg",
+  "source": "Oysters have a centuries-old folk reputation as an aphrodisiac, often linked to their zinc content.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0533",
+  "text": "Viagra asal mein kis problem ki dawa ke roop mein test ho rahi thi, jab side effect ne history badal di?",
+  "textRoman": true,
+  "options": [
+   "Sar dard",
+   "Seene ka dard (angina)",
+   "Neend na aana",
+   "Khaansi"
+  ],
+  "correct": 1,
+  "categories": [
+   "science-absurd"
+  ],
+  "difficulty": 3,
+  "adult": true,
+  "vo": "q_0533.ogg",
+  "source": "Sildenafil was originally trialled by Pfizer for angina and hypertension before its famous side effect was noticed.",
+  "era": "90s"
+ },
+ {
+  "id": "q_0534",
+  "text": "Casanova — jinke naam ka 'compliment' aaj bhi diya jaata hai — kis desh ke the?",
+  "textRoman": true,
+  "options": [
+   "France",
+   "Spain",
+   "Italy",
+   "Greece"
+  ],
+  "correct": 2,
+  "categories": [
+   "history-geo"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0534.ogg",
+  "source": "Giacomo Casanova (1725-1798) was born in Venice, Italy.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0535",
+  "text": "Bollywood mein 'item number' kis cheez ko kehte hain?",
+  "textRoman": true,
+  "options": [
+   "Interval ke pehle ka scene",
+   "Ek special dance gaana",
+   "Fight scene",
+   "End credits"
+  ],
+  "correct": 1,
+  "categories": [
+   "bollywood"
+  ],
+  "difficulty": 1,
+  "adult": true,
+  "vo": "q_0535.ogg",
+  "source": "'Item number' is the industry term for a standalone glamorous dance song, usually featuring a guest star.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0536",
+  "text": "Maharashtra mein hard liquor ke liye legal drinking age kitni hai? Haan, sach mein itni hai.",
+  "textRoman": true,
+  "options": [
+   "18 saal",
+   "21 saal",
+   "25 saal",
+   "30 saal"
+  ],
+  "correct": 2,
+  "categories": [
+   "daily-life"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0536.ogg",
+  "source": "Under Maharashtra's prohibition rules the permit age for hard liquor is 25; beer is 21.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0537",
+  "text": "In mein se kis state mein sharab par poori tarah ban (prohibition) hai?",
+  "textRoman": true,
+  "options": [
+   "Goa",
+   "Rajasthan",
+   "Gujarat",
+   "Karnataka"
+  ],
+  "correct": 2,
+  "categories": [
+   "daily-life",
+   "history-geo"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0537.ogg",
+  "source": "Gujarat has had statewide prohibition since its formation in 1960.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0538",
+  "text": "'Strong' wali Indian beer mein alcohol lagbhag kitna hota hai?",
+  "textRoman": true,
+  "options": [
+   "1-2%",
+   "3-4%",
+   "6-8%",
+   "15-20%"
+  ],
+  "correct": 2,
+  "categories": [
+   "food"
+  ],
+  "difficulty": 2,
+  "adult": true,
+  "vo": "q_0538.ogg",
+  "source": "Indian strong beers are typically 6-8 percent ABV; mild beers are around 4-5 percent.",
+  "era": "evergreen"
+ },
+ {
+  "id": "q_0539",
+  "text": "'Fifty Shades of Grey' ke saath Indian censor board ne kya kiya tha?",
+  "textRoman": true,
+  "options": [
+   "U certificate de diya",
+   "Theatre release hi nahi hone di",
+   "Sirf gaane add karwaye",
+   "Naam badalwa diya"
+  ],
+  "correct": 1,
+  "categories": [
+   "bollywood",
+   "tv-ott"
+  ],
+  "difficulty": 3,
+  "adult": true,
+  "vo": "q_0539.ogg",
+  "source": "The CBFC refused to clear Fifty Shades of Grey for Indian theatrical release in 2015.",
+  "era": "recent"
+ },
+ {
+  "id": "q_0540",
+  "text": "1995 ka woh scandal wala magazine ad — jis par Milind Soman aur Madhu Sapre par case chala — kis product ka tha?",
+  "textRoman": true,
+  "options": [
+   "Denim jeans",
+   "Perfume",
+   "Sunglasses",
+   "Tuff Shoes"
+  ],
+  "correct": 3,
+  "categories": [
+   "ads-jingles"
+  ],
+  "difficulty": 3,
+  "adult": true,
+  "vo": "q_0540.ogg",
+  "source": "The 1995 Tuff Shoes ad featuring Milind Soman and Madhu Sapre led to an obscenity case that ended in acquittal in 2009.",
+  "era": "90s"
  }
 ]
