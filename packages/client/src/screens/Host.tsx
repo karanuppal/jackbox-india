@@ -301,6 +301,7 @@ function GameOverStats({ standings }: { standings: { playerId: string; name: str
 
 /** Share card (M7): copies a text summary of the night to the clipboard. */
 function ShareButton({ standings, winnerId }: { standings: { playerId: string; name: string; money: number; alive: boolean }[]; winnerId: string | null }) {
+  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
   const winner = standings.find((s) => s.playerId === winnerId);
   const text = [
     `🩸 ${BRANDING.gameName} — aaj ki raat ${BRANDING.venueName} mein:`,
@@ -314,10 +315,16 @@ function ShareButton({ standings, winnerId }: { standings: { playerId: string; n
       type="button"
       style={{ fontSize: "0.9rem", minHeight: "40px", borderRadius: "1rem", padding: "0.3rem 0.9rem", border: `1px solid ${COLORS.marigold}`, background: "transparent", color: COLORS.cream, cursor: "pointer", margin: "0.4rem" }}
       onClick={() => {
-        void navigator.clipboard?.writeText(text).catch(() => undefined);
+        // visible confirmation either way (UT-M5/M7-2)
+        const p = navigator.clipboard?.writeText(text);
+        if (p === undefined) {
+          setCopied("failed");
+          return;
+        }
+        p.then(() => setCopied("done")).catch(() => setCopied("failed"));
       }}
     >
-      📋 Natija copy karo
+      {copied === "done" ? "✓ copy ho gaya!" : copied === "failed" ? "✗ copy nahi hua" : "📋 Natija copy karo"}
     </button>
   );
 }
@@ -453,8 +460,19 @@ function SettingsPanel({
       <Toggle label="Streamer mode" on={settings.hideRoomCode} patch={{ hideRoomCode: !settings.hideRoomCode }} />
       <Toggle label="Moderation" on={settings.moderation} patch={{ moderation: !settings.moderation }} />
       {settings.moderation && modPassword !== null && (
-        <span style={{ fontSize: "0.8rem", alignSelf: "center", color: COLORS.marigold }}>
-          {`🛡 /mod password: ${modPassword}`}
+        <span
+          style={{
+            flexBasis: "100%",
+            textAlign: "center",
+            fontSize: "1.05rem",
+            color: COLORS.marigold,
+            background: "rgba(255,255,255,0.07)",
+            borderRadius: "0.5rem",
+            padding: "0.35rem",
+          }}
+        >
+          {`🛡 /mod password: `}
+          <strong style={{ letterSpacing: "0.12em" }}>{modPassword}</strong>
         </span>
       )}
       {settings.passwordRequired && (

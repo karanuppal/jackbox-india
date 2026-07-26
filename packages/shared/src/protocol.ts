@@ -367,4 +367,5 @@ export type ServerErrorCode =
   | "BAD_NAME"
   | "BAD_MESSAGE"
   | "NOT_ALLOWED"
+  | "KICKED"
   | "RATE_LIMITED";

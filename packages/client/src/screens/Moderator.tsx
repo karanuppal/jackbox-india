@@ -1,9 +1,41 @@
+import { useEffect, useState } from "react";
 import { BRANDING, type KsPublicPhase } from "@tamasha/shared";
 import type { ClientState } from "../net/store.js";
 import { S } from "../ui/styles.css.js";
 import { COLORS } from "../ui/theme.js";
 import { errorText } from "../net/errors.js";
 import { VoteEntryView } from "./kamra.js";
+
+/** Two-tap kick: first tap arms ("pakka?"), second confirms; disarms after
+ *  3s — one misclick can't remove a live seat (UT-M5/M7-4). */
+function KickButton({ name, onKick }: { name: string; onKick: () => void }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 3000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return (
+    <button
+      type="button"
+      aria-label={`kick ${name}`}
+      onClick={() => {
+        if (armed) onKick();
+        else setArmed(true);
+      }}
+      style={{
+        border: `1px solid ${COLORS.blood}`,
+        background: armed ? COLORS.blood : "transparent",
+        color: armed ? COLORS.cream : COLORS.blood,
+        borderRadius: "0.4rem",
+        cursor: "pointer",
+        minHeight: "32px",
+      }}
+    >
+      {armed ? "pakka?" : "nikaalo"}
+    </button>
+  );
+}
 
 /**
  * Moderation portal (M7, §4.2): live player roster with kick buttons, and —
@@ -48,14 +80,7 @@ export function Moderator({ state, onAction }: { state: ClientState; onAction: (
         {pub.players.map((p) => (
           <div key={p.id} style={{ padding: "0.4rem 0.6rem", borderRadius: "0.5rem", background: "rgba(255,255,255,0.07)", display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <span>{`${p.vip ? "★ " : ""}${p.alive ? "" : "👻 "}${p.name}`}</span>
-            <button
-              type="button"
-              aria-label={`kick ${p.name}`}
-              onClick={() => onAction({ action: "kick", playerId: p.id })}
-              style={{ border: `1px solid ${COLORS.blood}`, background: "transparent", color: COLORS.blood, borderRadius: "0.4rem", cursor: "pointer", minHeight: "32px" }}
-            >
-              nikaalo
-            </button>
+            <KickButton name={p.name} onKick={() => onAction({ action: "kick", playerId: p.id })} />
           </div>
         ))}
         {pub.players.length === 0 && <p style={{ opacity: 0.6 }}>Koi khiladi nahi.</p>}

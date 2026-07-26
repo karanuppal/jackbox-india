@@ -36,6 +36,7 @@ export class RoomConnection {
   private closedByUs = false;
   private attempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private kicked = false;
   private readonly delays: number[];
   private sessionToken: string | undefined;
 
@@ -76,10 +77,13 @@ export class RoomConnection {
         return;
       }
       if (msg.type === "joined") this.sessionToken = msg.sessionToken;
+      // A kick is terminal: no silent auto-rejoin-as-audience — the player
+      // must see what happened and rejoin deliberately (UT-M5/M7-1).
+      if (msg.type === "error" && msg.code === "KICKED") this.kicked = true;
       this.dispatch({ kind: "server", message: msg });
     };
     ws.onclose = () => {
-      if (this.closedByUs) {
+      if (this.closedByUs || this.kicked) {
         this.dispatch({ kind: "socketClosed" });
         return;
       }

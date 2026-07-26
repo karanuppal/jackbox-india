@@ -10,6 +10,7 @@ const TEXT: Record<ServerErrorCode, string> = {
   BAD_NAME: "Yeh naam nahi chalega. Koi aur naam likho.",
   BAD_MESSAGE: "Kuch gadbad ho gayi. Dobara try karo.",
   NOT_ALLOWED: "Yeh aap nahi kar sakte.",
+  KICKED: "Moderator ne aapko room se nikaal diya. 🙏 Shanti se wapas aana.",
   RATE_LIMITED: "Arre, itni jaldi kya hai! Zara ruko.",
 };
 

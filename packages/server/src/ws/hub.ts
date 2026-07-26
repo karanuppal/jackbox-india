@@ -306,7 +306,7 @@ export class Hub {
       for (const conn of set) {
         if (conn.role === null) continue;
         if (conn.playerId !== null && kicked.has(conn.playerId)) {
-          this.sendError(conn, "NOT_ALLOWED", "kicked by moderator");
+          this.sendError(conn, "KICKED", "kicked by moderator");
           conn.ws.close();
           continue;
         }
