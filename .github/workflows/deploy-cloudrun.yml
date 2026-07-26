@@ -1,0 +1,73 @@
+# Deploy Tamasha to Cloud Run from GitHub Actions (PLAN §8.5).
+#
+# Secure credential path: add two repository secrets (Settings → Secrets and
+# variables → Actions):
+#   GCP_SA_KEY     — the full service-account JSON key (Editor on a dedicated
+#                    project)
+#   GCP_PROJECT_ID — the project id
+# Then run this workflow (Actions tab → Deploy to Cloud Run → Run workflow).
+# The key never appears in chat, sandbox, or logs.
+name: Deploy to Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: "Cloud Run region"
+        required: false
+        default: "us-central1"
+
+concurrency: deploy-cloudrun
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Enable required APIs
+        run: |
+          gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
+            artifactregistry.googleapis.com --project "${{ secrets.GCP_PROJECT_ID }}"
+
+      - name: Ensure Artifact Registry repo
+        run: |
+          gcloud artifacts repositories describe tamasha \
+            --location "${{ github.event.inputs.region }}" \
+            --project "${{ secrets.GCP_PROJECT_ID }}" >/dev/null 2>&1 || \
+          gcloud artifacts repositories create tamasha --repository-format=docker \
+            --location "${{ github.event.inputs.region }}" \
+            --project "${{ secrets.GCP_PROJECT_ID }}"
+
+      - name: Build image with Cloud Build
+        run: |
+          gcloud builds submit --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --tag "${{ github.event.inputs.region }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tamasha/app:${{ github.sha }}" .
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy tamasha --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --image "${{ github.event.inputs.region }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tamasha/app:${{ github.sha }}" \
+            --region "${{ github.event.inputs.region }}" \
+            --port 8787 \
+            --set-env-vars STATIC_DIR=/app/packages/client/dist \
+            --min-instances 0 --max-instances 1 \
+            --memory 512Mi --cpu 1 --timeout 3600 \
+            --session-affinity \
+            --allow-unauthenticated
+
+      - name: Health check + report URL
+        run: |
+          URL=$(gcloud run services describe tamasha \
+            --region "${{ github.event.inputs.region }}" \
+            --project "${{ secrets.GCP_PROJECT_ID }}" --format 'value(status.url)')
+          echo "Deployed: $URL"
+          sleep 5
+          curl -fsS "$URL/healthz"
+          echo "::notice title=Tamasha deployed::$URL"
