@@ -46,8 +46,16 @@ export function Controller({ state, onAction }: { state: ClientState; onAction: 
           <p style={{ textAlign: "center" }}>
             {isAudience
               ? "Aap audience mein ho. Screen dekhte raho!"
-              : "Baaki khiladiyon ka intezaar hai…"}
+              : isVip
+                ? "Aap VIP ho — sab aa jayein toh shuru karo!"
+                : "Lobby mein ho. ★ VIP game shuru karega — ruko zara."}
           </p>
+          {/* context so the lobby never reads as a dead-end (FLEET: Chintu) */}
+          {!isAudience && (
+            <p style={{ opacity: 0.7, fontSize: "0.9rem" }}>
+              {`Room ${state.public.settings.hideRoomCode ? "••••" : state.public.code} · ${state.public.players.length} khiladi`}
+            </p>
+          )}
           {isVip && <VipCode code={state.public.code} hidden={state.public.settings.hideRoomCode} />}
           {isVip && (
             <button style={S.button} onClick={() => onAction({ action: "startGame" })}>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AUDIENCE_RUNNER_ID,
   FINALE_DARKNESS_START,
@@ -221,13 +221,25 @@ function JudgePanel({
 }) {
   const [sel, setSel] = useState<Set<number>>(new Set());
   const [locked, setLocked] = useState(false);
-  const toggle = (i: number) =>
+  // Regain-focus grace (FLEET: Chintu): a tap within 500ms of the tab
+  // becoming visible again is swallowed — notification-return safety.
+  const visibleAt = useRef(0);
+  useEffect(() => {
+    const onVis = () => {
+      if (!document.hidden) visibleAt.current = Date.now();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+  const toggle = (i: number) => {
+    if (Date.now() - visibleAt.current < 500) return;
     setSel((s) => {
       const n = new Set(s);
       if (n.has(i)) n.delete(i);
       else n.add(i);
       return n;
     });
+  };
   if (locked) return <p style={{ textAlign: "center" }}>Lock ho gaya. Screen dekho…</p>;
   return (
     <div style={{ width: "100%", maxWidth: "22rem", textAlign: "center" }}>
