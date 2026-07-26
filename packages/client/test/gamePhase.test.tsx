@@ -146,6 +146,10 @@ describe("Controller — M2 UX", () => {
     const state = joined({ public: base("gameOver", gameOver), private: { you: player({ vip: true }), role: "player", phaseData: { myAnswer: null, answered: false, alive: true } } });
     await act(async () => { root.render(<Controller state={state} onAction={(p) => actions.push(p)} />); });
     const btn = [...container.querySelectorAll("button")].find((b) => b.textContent?.includes("Phir se khelein"))!;
+    // two-tap confirm (UT-FLEET-3): first tap arms, second restarts
+    await act(async () => { btn.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+    expect(actions).not.toContainEqual({ action: "restart" });
+    expect(btn.textContent).toContain("Pakka");
     await act(async () => { btn.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
     expect(actions).toContainEqual({ action: "restart" });
   });

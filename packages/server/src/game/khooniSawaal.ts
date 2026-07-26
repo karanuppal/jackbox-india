@@ -112,6 +112,8 @@ export class KhooniSawaalEngine implements GameEngine {
   private kamra: KamraCoordinator | null = null;
   private pendingFloor: string[] = [];
   private readonly seenMinigames = new Set<MinigameKind>();
+  /** Players who have faced the kamra before (first-visit luck softening). */
+  private readonly kamraVeterans = new Set<string>();
   private kamraOpts: KamraOptions = {};
   private profanityMode: ProfanityMode = "strict";
 
@@ -377,13 +379,21 @@ export class KhooniSawaalEngine implements GameEngine {
     const offFloor = this.players.filter((p) => !this.pendingFloor.includes(p.id));
     const voters = offFloor.map((p) => p.id);
     const livingVoterCount = offFloor.filter((p) => p.alive).length;
+    // A first-time floor never faces the pure-luck chai (UT-FLEET-1): a
+    // 90-second luck permadeath is whiplash; their first visit is skill/social.
+    const firstTimers = floor.some((f) => !this.kamraVeterans.has(f.playerId));
     this.kamra = new KamraCoordinator(
       floor,
       voters,
       this.seenMinigames,
       { now: this.now, rand: this.rand },
-      { ...this.kamraOpts, livingVoterCount },
+      {
+        ...this.kamraOpts,
+        livingVoterCount,
+        ...(firstTimers ? { avoidKinds: ["zeharWaliChai" as MinigameKind] } : {}),
+      },
     );
+    for (const f of floor) this.kamraVeterans.add(f.playerId);
     this.pendingFloor = [];
     this.phase = "khooniKamra";
     return { phase: "khooniKamra", deadline: this.kamra.deadline(this.now()) };

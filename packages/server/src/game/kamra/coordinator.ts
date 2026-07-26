@@ -33,6 +33,9 @@ export interface KamraOptions {
   /** §3.4's K5/K6 constraint counts LIVING voters only, even though ghosts
    *  also get to vote (QA-M3-12). Defaults to voterIds.length. */
   livingVoterCount?: number;
+  /** Kinds to avoid when possible (e.g. pure-luck chai for a first-time
+   *  floor, UT-FLEET-1). Soft: ignored if it would empty the legal pool. */
+  avoidKinds?: MinigameKind[];
 }
 
 function pickFrom(pool: string[] | undefined, rand: () => number): string | undefined {
@@ -97,7 +100,13 @@ export class KamraCoordinator {
     this.deps = deps;
     this.voterIds = new Set(voterIds);
     this.t = { ...KAMRA_TIMERS, ...opts.timers };
-    const kind = pickMinigame(floor.length, opts.livingVoterCount ?? voterIds.length, seen, deps.rand);
+    const kind = pickMinigame(
+      floor.length,
+      opts.livingVoterCount ?? voterIds.length,
+      seen,
+      deps.rand,
+      opts.avoidKinds ?? [],
+    );
     seen.add(kind);
     // Games see the (mode-scaled) memorize window through their deps (QA-M4-3).
     this.game = makeMinigame(kind, floor, { ...deps, memorizeMs: this.t.memorizeMs }, opts);
@@ -279,12 +288,16 @@ export function pickMinigame(
   voterCount: number,
   seen: Set<MinigameKind>,
   rand: () => number,
+  avoid: MinigameKind[] = [],
 ): MinigameKind {
   const votingOk = floorSize >= 2 && voterCount >= 1;
-  const base =
+  let base =
     floorSize === 1
       ? MINIGAME_KINDS.filter((k) => SOLO_MINIGAMES.includes(k))
       : MINIGAME_KINDS.filter((k) => votingOk || !VOTING_MINIGAMES.includes(k));
+  // Soft avoidance (UT-FLEET-1): drop avoided kinds unless that empties the pool.
+  const withoutAvoided = base.filter((k) => !avoid.includes(k));
+  if (withoutAvoided.length > 0) base = withoutAvoided;
   let pool = base;
   const fresh = pool.filter((k) => !seen.has(k));
   if (fresh.length > 0) pool = fresh; // prefer unseen until all used

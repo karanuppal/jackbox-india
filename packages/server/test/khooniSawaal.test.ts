@@ -758,6 +758,20 @@ describe("KhooniSawaalEngine — M4 Aakhri Darwaza integration", () => {
   });
 });
 
+describe("KhooniSawaalEngine — first-visit luck softening (fleet)", () => {
+  it("a first-time solo floor avoids the pure-luck chai; veterans can draw it", () => {
+    // rand ≈ 0.9: solo pool [hisaab, spelling, chai] → index 2 = chai.
+    // With the first-visit avoidance the pool is [hisaab, spelling] → spelling.
+    const { engine } = makeEngine(["a", "b"], { rand: () => 0.9 });
+    engine.onTimeout(); // q1 (correct = 0)
+    engine.onAction("a", answer("q_0001", 0), meta);
+    engine.onAction("b", answer("q_0001", 3), meta); // b's FIRST sentencing
+    engine.onTimeout(); // → kamra intro
+    const p1 = pub(engine);
+    if (p1.kind === "kamraIntro") expect(p1.minigame).not.toBe("zeharWaliChai");
+  });
+});
+
 describe("KhooniSawaalEngine — M2 fixes (schema)", () => {
   it("rejects malformed payload variants (QA-M2-7 recheck)", () => {
     const { engine } = makeEngine(["a", "b"]);

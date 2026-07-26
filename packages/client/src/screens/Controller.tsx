@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BRANDING, type KsPrivatePhase, type KsPublicPhase } from "@tamasha/shared";
 import type { ClientState } from "../net/store.js";
 import { S } from "../ui/styles.css.js";
@@ -187,7 +187,16 @@ function GamePhase({
     const sentenced = youId !== null && pub.floor.includes(youId);
     return (
       <div style={{ textAlign: "center" }}>
-        {gotIt && <p style={{ color: COLORS.marigold, fontSize: "1.2rem" }}>✅ Sahi jawab! +₹1000</p>}
+        {gotIt && (
+          <p style={{ color: COLORS.marigold, fontSize: "1.2rem" }}>
+            ✅ Sahi jawab! +₹1000
+            {ghost && (
+              <span style={{ display: "block", fontSize: "0.8rem", opacity: 0.8 }}>
+                (aatma ka paisa bhi ginta hai — finale mein head start dilata hai)
+              </span>
+            )}
+          </p>
+        )}
         {!gotIt && mine !== null && !pub.mercy && (
           <p style={{ color: COLORS.blood, fontSize: "1.1rem" }}>❌ Galat…</p>
         )}
@@ -210,12 +219,30 @@ function GamePhase({
   return (
     <>
       <p style={{ textAlign: "center" }}>Khel khatam. Screen par natija dekho!</p>
-      {isVip && (
-        <button style={S.button} onClick={() => onAction({ action: "restart" })}>
-          Phir se khelein?
-        </button>
-      )}
+      {isVip && <PlayAgainButton onRestart={() => onAction({ action: "restart" })} />}
     </>
+  );
+}
+
+/** Two-tap play-again: one stray thumb must not yank the room out of the
+ *  results moment (UT-FLEET-3). Arms on first tap, disarms after 4s. */
+function PlayAgainButton({ onRestart }: { onRestart: () => void }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return (
+    <button
+      style={{ ...S.button, background: armed ? COLORS.marigold : undefined, color: armed ? COLORS.ink : undefined }}
+      onClick={() => {
+        if (armed) onRestart();
+        else setArmed(true);
+      }}
+    >
+      {armed ? "Pakka? Phir se!" : "Phir se khelein?"}
+    </button>
   );
 }
 
