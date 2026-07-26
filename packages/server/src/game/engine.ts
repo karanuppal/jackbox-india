@@ -27,6 +27,9 @@ export interface ActionMeta {
   active: boolean;
   /** True if the caller is the room VIP (may censor kamra submissions, §4.3). */
   vip?: boolean;
+  /** Opaque per-IP key — collective (audience) votes dedupe on this so one
+   *  device's many sockets count once (SEC-M4-1). */
+  ipKey?: string;
 }
 
 export interface GameContext {

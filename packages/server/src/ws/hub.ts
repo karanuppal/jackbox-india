@@ -223,6 +223,9 @@ export class Hub {
             ...(msg.name !== undefined ? { name: msg.name } : {}),
             ...(msg.sessionToken !== undefined ? { sessionToken: msg.sessionToken } : {}),
             ...(msg.password !== undefined ? { password: msg.password } : {}),
+            // Collapse sybil influence (SEC-M4-1): collective votes (the
+            // finale's audience runner) are keyed per IP, not per socket.
+            ipKey: conn.ip,
           });
     if (!result.ok) {
       this.sendError(conn, result.code, "join rejected");

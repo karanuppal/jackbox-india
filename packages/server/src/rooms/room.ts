@@ -31,6 +31,8 @@ export interface Player {
   connected: boolean;
   answered: boolean;
   joinOrder: number;
+  /** Joining IP (opaque key) — collapses sybil audience votes (SEC-M4-1). */
+  ipKey?: string;
 }
 
 export interface JoinResult {
@@ -162,7 +164,7 @@ export class Room {
   }
 
   // --- players / audience ----------------------------------------------------
-  join(opts: { name?: string; sessionToken?: string; password?: string }): JoinResult | JoinError {
+  join(opts: { name?: string; sessionToken?: string; password?: string; ipKey?: string }): JoinResult | JoinError {
     // Reconnect path: known token restores the exact seat.
     if (opts.sessionToken !== undefined) {
       const existing = [...this.players.values()].find((p) => safeEqual(p.sessionToken, opts.sessionToken!));
@@ -219,6 +221,7 @@ export class Room {
       connected: true,
       answered: false,
       joinOrder: this.joinCounter++,
+      ...(opts.ipKey !== undefined ? { ipKey: opts.ipKey } : {}),
     };
     this.players.set(id, player);
     this.reassignVipIfNeeded();
@@ -374,6 +377,7 @@ export class Room {
       role: p.role,
       active: p.role === "player" && (gs !== null ? gs.alive : p.alive),
       vip: p.vip,
+      ...(p.ipKey !== undefined ? { ipKey: p.ipKey } : {}),
     };
     const next = this.engine.onAction(playerId, payload, meta);
     if (next !== null) {

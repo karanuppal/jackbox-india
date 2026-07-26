@@ -75,7 +75,9 @@ export class AakhriDarwazaFinale {
   private darkness = FINALE_DARKNESS_START;
   private assignments = new Map<string, number[]>(); // runnerId → option indices
   private selections = new Map<string, number[]>(); // runnerId → locked selection
-  private audienceVotes = new Map<string, number[]>(); // memberId → selection
+  /** memberId → their ballot. `key` is the dedupe identity (per-IP, SEC-M4-1):
+   *  many sockets from one device collapse to one voice in the majority. */
+  private audienceVotes = new Map<string, { selection: number[]; key: string }>();
   private events: FinaleEvent[] = [];
   private finished = false;
   private crownId: string | null = null; // trophy holder once finished
@@ -204,7 +206,7 @@ export class AakhriDarwazaFinale {
    * A judgment from a racing player, or an audience member's vote for the
    * collective audience runner. Returns true if state changed.
    */
-  onInput(playerId: string, payload: unknown, isAudienceMember = false): boolean {
+  onInput(playerId: string, payload: unknown, isAudienceMember = false, dedupeKey?: string): boolean {
     if (this.sub !== "judge") return false;
     const parsed = fjActionSchema.safeParse(payload);
     if (!parsed.success) return false;
@@ -214,7 +216,10 @@ export class AakhriDarwazaFinale {
     if (isAudienceMember) {
       const assigned = this.assignments.get(AUDIENCE_RUNNER_ID);
       if (assigned === undefined) return false;
-      this.audienceVotes.set(playerId, action.selection.filter((i) => assigned.includes(i)));
+      this.audienceVotes.set(playerId, {
+        selection: action.selection.filter((i) => assigned.includes(i)),
+        key: dedupeKey ?? playerId,
+      });
       return true; // audience never early-resolves the turn; majority at timeout
     }
 
@@ -241,13 +246,16 @@ export class AakhriDarwazaFinale {
     const cat = this.category();
     this.events = [];
 
-    // Collapse audience votes to a majority selection (§3.6).
+    // Collapse audience votes to a majority selection (§3.6), one voice per
+    // dedupe key — the LAST ballot from each key wins (SEC-M4-1).
     const audienceAssigned = this.assignments.get(AUDIENCE_RUNNER_ID);
     if (audienceAssigned !== undefined && this.audienceVotes.size > 0) {
-      const voters = this.audienceVotes.size;
+      const byKey = new Map<string, number[]>();
+      for (const v of this.audienceVotes.values()) byKey.set(v.key, v.selection);
+      const voters = byKey.size;
       const sel: number[] = [];
       for (const idx of audienceAssigned) {
-        const votes = [...this.audienceVotes.values()].filter((v) => v.includes(idx)).length;
+        const votes = [...byKey.values()].filter((v) => v.includes(idx)).length;
         if (votes * 2 > voters) sel.push(idx);
       }
       this.selections.set(AUDIENCE_RUNNER_ID, sel);
@@ -434,7 +442,7 @@ export class AakhriDarwazaFinale {
     const assigned = this.assignments.get(runnerId) ?? [];
     const cat = this.category();
     const sel = isAudienceMember
-      ? this.audienceVotes.get(playerId) ?? null
+      ? this.audienceVotes.get(playerId)?.selection ?? null
       : this.selections.get(runnerId) ?? null;
     return {
       racing: true,

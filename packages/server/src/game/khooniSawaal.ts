@@ -482,9 +482,11 @@ export class KhooniSawaalEngine implements GameEngine {
     if (f === null) return null;
     // Audience members vote for the collective audience runner (§3.6); the
     // role comes from the room's authoritative meta, with an id fallback.
+    // Audience ballots key on the joining IP so 30 sockets from one device
+    // count as ONE voice in the majority (SEC-M4-1).
     const isAudience = meta.role === "audience" || !this.players.some((p) => p.id === playerId);
     const before = f.subPhase();
-    const changed = f.onInput(playerId, payload, isAudience);
+    const changed = f.onInput(playerId, payload, isAudience, meta.ipKey ?? playerId);
     if (!changed) return null;
     if (f.subPhase() !== before) {
       // All player runners locked early → the turn resolved.

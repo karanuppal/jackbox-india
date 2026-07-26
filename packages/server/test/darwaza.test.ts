@@ -226,6 +226,26 @@ describe("AakhriDarwazaFinale — audience runner (§3.6)", () => {
     expect(f.winnerId()).toBe("L"); // crown falls to the living body holder
   });
 
+  it("sybil audience sockets sharing one dedupe key count as ONE voice (SEC-M4-1)", () => {
+    const f = makeFinale({ ghosts: [], audience: true });
+    f.onTimeout(); // judge t1
+    const assigned = (f.privateFor("m", true).options ?? []).map((o) => o.index);
+    const all = { type: "fjJudge", turn: f.currentTurn(), selection: assigned };
+    const none = { type: "fjJudge", turn: f.currentTurn(), selection: [] };
+    // 5 sockets from ONE device (same key) vote "select everything"…
+    for (let i = 0; i < 5; i++) f.onInput(`sock${i}`, all, true, "ip-A");
+    // …two genuine devices vote "select nothing"
+    f.onInput("real1", none, true, "ip-B");
+    f.onInput("real2", none, true, "ip-C");
+    f.onTimeout(); // resolve: 1 voice for `all` vs 2 for `none` → majority = none
+    const runner = (pub(f) as Extract<FinalePublic, { kind: "finaleTurn" }>).runners.find(
+      (r) => r.id === AUDIENCE_RUNNER_ID,
+    )!;
+    // "none selected" scores only the non-fitting options; under rand()=0 all
+    // 3 assigned options FIT, so the sybil-diluted majority moved 0 spaces.
+    expect(runner.lastMove).toBe(0);
+  });
+
   it("audience votes on the turn never early-resolve it", () => {
     const f = makeFinale({ audience: true });
     f.onTimeout(); // judge
