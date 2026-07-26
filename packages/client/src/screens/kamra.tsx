@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DRAW_PALETTE,
+  KAMRA_TIMERS,
   MAX_POINTS_PER_STROKE,
   MAX_STROKES,
   type KamraPrivate,
@@ -17,8 +18,9 @@ import { Countdown } from "../ui/Countdown.js";
 // Taash Ke Patte symbols (§3.4 K3): kirpan, hockey stick, belan, hathoda.
 const TAASH_SYMBOLS = ["🗡️", "🏑", "🥖", "🔨"] as const;
 
-/** How long the memorize window lasts on the phone (K2/K3). */
-const MEMORIZE_MS = 6000;
+/** The memorize window (K2/K3) — server-enforced (SEC-M3-3); the client
+ *  mirrors it for display only. */
+const MEMORIZE_MS = KAMRA_TIMERS.memorizeMs;
 
 // ---------------------------------------------------------------------------
 // Shared-screen (host) scenes for the killing floor + wheel (§5.2).
@@ -175,6 +177,26 @@ export function VoteEntryView({ entry }: { entry: KamraVoteEntry }) {
   );
 }
 
+/** One stroke as SVG — single-point taps render as dots, not invisible
+ *  zero-length polylines (QA-M3-4c). */
+function StrokeShape({ s }: { s: Stroke }) {
+  const colorHex = DRAW_PALETTE[s.color] ?? DRAW_PALETTE[0];
+  if (s.points.length === 1) {
+    const [x, y] = s.points[0]!;
+    return <circle cx={x * 100} cy={y * 100} r={s.width / 2} fill={colorHex} />;
+  }
+  return (
+    <polyline
+      points={s.points.map(([x, y]) => `${x * 100},${y * 100}`).join(" ")}
+      fill="none"
+      stroke={colorHex}
+      strokeWidth={s.width}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  );
+}
+
 /** Renders normalized strokes (0..1 virtual canvas) at any size. */
 export function StrokesView({ strokes, size }: { strokes: Stroke[]; size: string }) {
   return (
@@ -185,15 +207,7 @@ export function StrokesView({ strokes, size }: { strokes: Stroke[]; size: string
       style={{ width: size, height: size, background: COLORS.plaster, borderRadius: "0.5rem" }}
     >
       {strokes.map((s, i) => (
-        <polyline
-          key={i}
-          points={s.points.map(([x, y]) => `${x * 100},${y * 100}`).join(" ")}
-          fill="none"
-          stroke={DRAW_PALETTE[s.color] ?? DRAW_PALETTE[0]}
-          strokeWidth={s.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <StrokeShape key={i} s={s} />
       ))}
     </svg>
   );
@@ -331,7 +345,8 @@ function VotePanel({
             >
               {e.strokes !== null ? `🎨 ${e.name}` : `${e.name}: ${e.text ?? "…"}`}
             </button>
-            {isVip && (
+            {isVip && !mine && (
+              // No self-censor — the server rejects it too (QA-M3-3).
               <button
                 type="button"
                 aria-label={`censor ${e.name}`}
@@ -371,8 +386,12 @@ function MinigameInput({
       return <SpellPad word={pub.prompt ?? ""} game={game} />;
     case "sabseGhatiyaJawaab":
       return <WorstAnswer prompt={pub.prompt ?? ""} game={game} />;
-    case "gandaChitra":
-      return <DrawingCanvas prompt={pub.prompt ?? ""} game={game} />;
+    case "gandaChitra": {
+      // Hydrate from the server-held draft so a reload doesn't desync the
+      // visible canvas from the server strokes (QA-M3-4).
+      const d = data as { strokes?: Stroke[] } | null;
+      return <DrawingCanvas prompt={pub.prompt ?? ""} initialStrokes={d?.strokes ?? []} game={game} />;
+    }
     case "zeharWaliChai":
       return <ChaiTray data={data as { cups: number; myPick: number | null } | null} game={game} />;
     case "dhokha":
@@ -384,7 +403,14 @@ function MinigameInput({
 function MathPad({ data, game }: { data: { a: number; b: number; op: "+" | "-" } | null; game: (p: unknown) => void }) {
   const [entry, setEntry] = useState("");
   if (data === null) return <p>…</p>;
-  const push = (d: string) => setEntry((e) => (e.length < 4 ? e + d : e));
+  // Real answers are −19..38; the schema caps at ±999 — limit typing to 3
+  // digits (plus a sign) so the widget can't build a silently-rejected value
+  // (QA-M3-13).
+  const push = (d: string) =>
+    setEntry((e) => {
+      const digits = e.replace("-", "").length;
+      return digits < 3 ? e + d : e;
+    });
   const submit = () => {
     const v = Number(entry);
     if (!Number.isNaN(v) && entry !== "" && entry !== "-") {
@@ -424,15 +450,18 @@ function MathPad({ data, game }: { data: { a: number; b: number; op: "+" | "-" }
   );
 }
 
-/** K2 — memorize the burning tiles, then reproduce them. */
-function MemoryGrid({ data, game }: { data: { size: number; pattern: number[] } | null; game: (p: unknown) => void }) {
-  const [showing, setShowing] = useState(true);
+/** K2 — memorize the burning tiles, then reproduce them. The pattern comes
+ *  from the server ONLY during the memorize window (SEC-M3-3) — once it's
+ *  null (e.g. after a reload) the grid goes straight to recall. */
+function MemoryGrid({ data, game }: { data: { size: number; pattern: number[] | null } | null; game: (p: unknown) => void }) {
+  const [timerDone, setTimerDone] = useState(false);
   const [sel, setSel] = useState<Set<number>>(new Set());
   useEffect(() => {
-    const t = setTimeout(() => setShowing(false), MEMORIZE_MS);
+    const t = setTimeout(() => setTimerDone(true), MEMORIZE_MS);
     return () => clearTimeout(t);
   }, []);
   if (data === null) return <p>…</p>;
+  const showing = !timerDone && data.pattern !== null;
   const cols = Math.round(Math.sqrt(data.size));
   const toggle = (i: number) =>
     setSel((s) => {
@@ -446,7 +475,7 @@ function MemoryGrid({ data, game }: { data: { size: number; pattern: number[] } 
       <p style={{ margin: "0.25rem" }}>{showing ? "YAAD KARO! 🔥" : "Ab wahi tiles dabao:"}</p>
       <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "0.35rem" }}>
         {Array.from({ length: data.size }, (_, i) => {
-          const lit = showing && data.pattern.includes(i);
+          const lit = showing && (data.pattern?.includes(i) ?? false);
           const picked = !showing && sel.has(i);
           return (
             <button
@@ -482,15 +511,18 @@ function MemoryGrid({ data, game }: { data: { size: number; pattern: number[] } 
   );
 }
 
-/** K3 — memorize the cards, then pick which positions held the target symbol. */
-function TaashRecall({ data, game }: { data: { cards: number[]; target: number } | null; game: (p: unknown) => void }) {
-  const [showing, setShowing] = useState(true);
+/** K3 — memorize the cards, then pick which positions held the target symbol.
+ *  Cards come from the server ONLY during the memorize window (SEC-M3-3). */
+function TaashRecall({ data, game }: { data: { cards: number[] | null; cardCount?: number; target: number } | null; game: (p: unknown) => void }) {
+  const [timerDone, setTimerDone] = useState(false);
   const [sel, setSel] = useState<Set<number>>(new Set());
   useEffect(() => {
-    const t = setTimeout(() => setShowing(false), MEMORIZE_MS);
+    const t = setTimeout(() => setTimerDone(true), MEMORIZE_MS);
     return () => clearTimeout(t);
   }, []);
   if (data === null) return <p>…</p>;
+  const showing = !timerDone && data.cards !== null;
+  const count = data.cards?.length ?? data.cardCount ?? 5;
   const toggle = (i: number) =>
     setSel((s) => {
       const n = new Set(s);
@@ -504,7 +536,7 @@ function TaashRecall({ data, game }: { data: { cards: number[]; target: number }
         {showing ? "Patte yaad karo!" : `Kahan tha ${TAASH_SYMBOLS[data.target] ?? "?"} ?`}
       </p>
       <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
-        {data.cards.map((c, i) => (
+        {Array.from({ length: count }, (_, i) => (
           <button
             key={i}
             type="button"
@@ -521,7 +553,7 @@ function TaashRecall({ data, game }: { data: { cards: number[]; target: number }
               color: COLORS.ink,
             }}
           >
-            {showing ? TAASH_SYMBOLS[c] : sel.has(i) ? "✓" : "🂠"}
+            {showing ? TAASH_SYMBOLS[data.cards?.[i] ?? 0] : sel.has(i) ? "✓" : "🂠"}
           </button>
         ))}
       </div>
@@ -679,19 +711,29 @@ function DhokhaChoice({ game }: { game: (p: unknown) => void }) {
 
 /** K6 — the phone drawing canvas. Strokes stream one per message so each
  *  frame stays under the 4KB cap (SEC-M0-11); submit locks the drawing. */
-export function DrawingCanvas({ prompt, game }: { prompt: string; game: (p: unknown) => void }) {
-  const [strokes, setStrokes] = useState<Stroke[]>([]);
+export function DrawingCanvas({
+  prompt,
+  initialStrokes = [],
+  game,
+}: {
+  prompt: string;
+  /** Server-held draft, so a reload restores what was already drawn (QA-M3-4). */
+  initialStrokes?: Stroke[];
+  game: (p: unknown) => void;
+}) {
+  const [strokes, setStrokes] = useState<Stroke[]>(initialStrokes);
   const [color, setColor] = useState(1); // default: blood red
   const drawing = useRef<Stroke | null>(null);
   const [, force] = useState(0);
   const boxRef = useRef<HTMLDivElement | null>(null);
 
+  // Points are quantized to 3 decimals so a full 120-point stroke frame stays
+  // well under the 4KB pre-parse cap (SEC-M3-2: ~1.9KB worst case).
   const norm = (e: { clientX: number; clientY: number }): [number, number] | null => {
     const rect = boxRef.current?.getBoundingClientRect();
-    if (rect === undefined || rect.width === 0 || rect.height === 0) return [0, 0];
-    const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
-    return [x, y];
+    if (rect === undefined || rect.width === 0 || rect.height === 0) return null;
+    const q = (v: number) => Math.round(Math.min(1, Math.max(0, v)) * 1000) / 1000;
+    return [q((e.clientX - rect.left) / rect.width), q((e.clientY - rect.top) / rect.height)];
   };
 
   const start = (e: React.PointerEvent) => {
@@ -733,15 +775,7 @@ export function DrawingCanvas({ prompt, game }: { prompt: string; game: (p: unkn
       >
         <svg viewBox="0 0 100 100" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
           {live.map((s, i) => (
-            <polyline
-              key={i}
-              points={s.points.map(([x, y]) => `${x * 100},${y * 100}`).join(" ")}
-              fill="none"
-              stroke={DRAW_PALETTE[s.color] ?? DRAW_PALETTE[0]}
-              strokeWidth={s.width}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <StrokeShape key={i} s={s} />
           ))}
         </svg>
       </div>

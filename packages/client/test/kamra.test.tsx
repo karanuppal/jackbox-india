@@ -285,6 +285,15 @@ describe("Controller — wheel", () => {
 });
 
 describe("DrawingCanvas", () => {
+  // jsdom reports zero-size rects; norm() correctly refuses those (QA-M3-4b),
+  // so give the canvas a real box.
+  beforeEach(() => {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+      x: 0, y: 0, left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100,
+      toJSON: () => ({}),
+    } as DOMRect);
+  });
+
   function drawOneStroke(actions: unknown[]) {
     const canvas = container.querySelector('[data-testid="canvas"]')!;
     const opts = { bubbles: true, clientX: 10, clientY: 10 };

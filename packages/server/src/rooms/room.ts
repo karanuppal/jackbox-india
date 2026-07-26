@@ -346,7 +346,14 @@ export class Room {
     if (this.engine === null || playerId === null) return "NOT_ALLOWED";
     const p = this.players.get(playerId);
     if (p === undefined) return "NOT_ALLOWED";
-    const meta: ActionMeta = { role: p.role, active: p.role === "player" && p.alive, vip: p.vip };
+    // Liveness comes from the ENGINE mid-game — the room's own flag goes
+    // stale after kamra deaths (QA-M3-16).
+    const gs = this.engine.playerState(playerId);
+    const meta: ActionMeta = {
+      role: p.role,
+      active: p.role === "player" && (gs !== null ? gs.alive : p.alive),
+      vip: p.vip,
+    };
     const next = this.engine.onAction(playerId, payload, meta);
     if (next !== null) {
       this.phase = next.phase as Phase;
@@ -413,7 +420,10 @@ export class Room {
       audienceCount: this.audience().length,
       questionNumber: progress.number,
       questionTotal: progress.total,
-      deadline: this.deadline,
+      // While paused the countdown is FROZEN server-side; report no deadline
+      // so clients don't render a ticking lie (QA-M3-10). The internal
+      // deadline/pausedRemaining bookkeeping is untouched.
+      deadline: this.paused ? null : this.deadline,
       phaseData: this.engine !== null ? this.engine.publicPhaseData() : null,
     };
   }

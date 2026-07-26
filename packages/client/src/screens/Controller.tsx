@@ -40,7 +40,6 @@ export function Controller({ state, onAction }: { state: ClientState; onAction: 
     <main style={S.page}>
       <h1 style={S.h1}>{you?.name ?? "Mehmaan"}</h1>
       {you !== null && <p style={{ opacity: 0.8 }}>{avatarLabel(you.avatar)}</p>}
-      {state.public.paused && <p style={S.error}>Game rukka hua hai…</p>}
       {phase === "lobby" ? (
         <>
           <p style={{ textAlign: "center" }}>
@@ -55,6 +54,10 @@ export function Controller({ state, onAction }: { state: ClientState; onAction: 
             </button>
           )}
         </>
+      ) : state.public.paused ? (
+        // Inputs are frozen while paused (§4.3) — show the banner INSTEAD of
+        // live widgets so taps aren't silently rejected (QA-M3-10).
+        <p style={S.error}>⏸ Game rukka hua hai… host resume karega.</p>
       ) : (
         <GamePhase
           pub={state.public.phaseData as KsPublicPhase | null}

@@ -21,13 +21,18 @@ import {
 
 export type KamraSubPhase = "intro" | "play" | "vote" | "result";
 
+export type KamraTimerOverrides = Partial<Record<keyof typeof KAMRA_TIMERS, number>>;
+
 /** Content + timing knobs the engine passes down (defaults built in). */
 export interface KamraOptions {
-  timers?: Partial<typeof KAMRA_TIMERS>;
+  timers?: KamraTimerOverrides;
   /** Content pools (M5 fills these from /content); one is picked per visit. */
   spellingWords?: string[];
   worstPrompts?: string[];
   drawPrompts?: string[];
+  /** §3.4's K5/K6 constraint counts LIVING voters only, even though ghosts
+   *  also get to vote (QA-M3-12). Defaults to voterIds.length. */
+  livingVoterCount?: number;
 }
 
 function pickFrom(pool: string[] | undefined, rand: () => number): string | undefined {
@@ -78,7 +83,8 @@ export class KamraCoordinator {
   private sub: KamraSubPhase = "intro";
   private readonly deps: MinigameDeps;
   private readonly voterIds: Set<string>;
-  private readonly t: typeof KAMRA_TIMERS;
+  private readonly voted = new Set<string>();
+  private readonly t: Record<keyof typeof KAMRA_TIMERS, number>;
   private deaths: string[] = [];
 
   constructor(
@@ -91,7 +97,7 @@ export class KamraCoordinator {
     this.deps = deps;
     this.voterIds = new Set(voterIds);
     this.t = { ...KAMRA_TIMERS, ...opts.timers };
-    const kind = pickMinigame(floor.length, voterIds.length, seen, deps.rand);
+    const kind = pickMinigame(floor.length, opts.livingVoterCount ?? voterIds.length, seen, deps.rand);
     seen.add(kind);
     this.game = makeMinigame(kind, floor, deps, opts);
   }
@@ -119,9 +125,12 @@ export class KamraCoordinator {
     switch (this.sub) {
       case "intro":
         this.sub = "play";
+        // Memorize windows (K2/K3) anchor on the real play start (SEC-M3-3).
+        this.game.beginPlay(this.deps.now());
         return false;
       case "play":
-        // Some games (math) end only on the timer — mark all seats done.
+        // Some games (math, drawing) end only on the timer — mark all seats
+        // done / auto-submit drafts.
         if ("finish" in this.game && typeof (this.game as { finish: () => void }).finish === "function") {
           (this.game as { finish: () => void }).finish();
         }
@@ -133,6 +142,36 @@ export class KamraCoordinator {
       case "result":
         return true;
     }
+  }
+
+  /** A player disconnected mid-visit: forfeit their seat (floor) or drop them
+   *  from the electorate (vote) so the room never idles a full timer on an
+   *  empty chair (QA-M3-9). Returns true if the sub-phase advanced. */
+  onPlayerLeft(playerId: string): boolean {
+    if (this.sub === "play" && this.isFloor(playerId)) {
+      this.game.forfeit(playerId);
+      if (this.game.allDone()) {
+        this.afterPlay();
+        return true;
+      }
+      return false;
+    }
+    if (this.sub === "vote" && this.voterIds.has(playerId) && !this.voted.has(playerId)) {
+      this.voterIds.delete(playerId);
+      return this.maybeCloseVote();
+    }
+    return false;
+  }
+
+  /** Every remaining voter has voted → close the polls early (QA-M3-9). */
+  private maybeCloseVote(): boolean {
+    if (this.sub !== "vote") return false;
+    if (this.voterIds.size === 0 || [...this.voterIds].every((v) => this.voted.has(v))) {
+      this.deaths = this.game.resolveDeaths();
+      this.sub = "result";
+      return true;
+    }
+    return false;
   }
 
   private afterPlay(): boolean {
@@ -155,6 +194,8 @@ export class KamraCoordinator {
     }
     if (this.sub === "vote" && action.type === "kmVote" && this.voterIds.has(playerId)) {
       this.game.onVote(playerId, action.targetId);
+      this.voted.add(playerId);
+      this.maybeCloseVote(); // all polls in → result early (QA-M3-9)
       return true;
     }
     return false;
@@ -170,8 +211,11 @@ export class KamraCoordinator {
     return this.game.floorPublic().some((f) => f.playerId === playerId);
   }
 
-  /** VIP/host censor of a floor player's submission (voting games only, §4.3). */
-  censor(targetId: string): boolean {
+  /** VIP censor of a floor player's submission (§4.3). Vote sub-phase only
+   *  (SEC-M3-5) and never your own entry (QA-M3-3). */
+  censor(callerId: string, targetId: string): boolean {
+    if (this.sub !== "vote") return false;
+    if (callerId === targetId) return false;
     const g = this.game as { censor?: (id: string) => void };
     if (typeof g.censor === "function") {
       g.censor(targetId);

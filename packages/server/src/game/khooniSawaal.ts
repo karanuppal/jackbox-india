@@ -1,17 +1,21 @@
 import {
+  applyProfanityFilter,
   censorActionSchema,
   CORRECT_REWARD,
   KAMRA_TIMERS,
   ksActionSchema,
   QUESTION_BUDGET,
+  sanitizeFreeText,
   TIMERS,
   WHEEL_DEATH_SEGMENTS,
   WHEEL_TOTAL_SEGMENTS,
+  type KsAction,
   type KsPrivatePhase,
   type KsPublicPhase,
   type KsRevealOptionTally,
   type KsStanding,
   type MinigameKind,
+  type ProfanityMode,
   type Question,
 } from "@tamasha/shared";
 import type { ActionMeta, EnginePhase, GameContext, GameEngine } from "./engine.js";
@@ -52,7 +56,7 @@ export interface KsOptions {
   /** Override phase durations (ms) — used by tests for fast timer-driver runs. */
   timers?: Partial<Record<keyof typeof TIMERS, number>>;
   /** Override Khooni Kamra / wheel durations (ms) for tests. */
-  kamraTimers?: Partial<typeof KAMRA_TIMERS>;
+  kamraTimers?: Partial<Record<keyof typeof KAMRA_TIMERS, number>>;
   /** Deterministic randomness (minigame pick, wheel, content pick). */
   rand?: () => number;
   /** Content pools for the kamra minigames (adult items are filtered out in
@@ -91,13 +95,14 @@ export class KhooniSawaalEngine implements GameEngine {
   private pendingFloor: string[] = [];
   private readonly seenMinigames = new Set<MinigameKind>();
   private kamraOpts: KamraOptions = {};
+  private profanityMode: ProfanityMode = "strict";
 
   // --- Maut Ka Chakra state (§3.3) ----------------------------------------
   private wheelSpinnerId: string | null = null;
   private wheelOutcome: "life" | "death" | null = null;
 
   private readonly t: Record<keyof typeof TIMERS, number>;
-  private readonly kt: typeof KAMRA_TIMERS;
+  private readonly kt: Record<keyof typeof KAMRA_TIMERS, number>;
   private readonly rand: () => number;
 
   constructor(
@@ -123,7 +128,15 @@ export class KhooniSawaalEngine implements GameEngine {
     // Kamra content pools, family-friendly filtered once at start (§6.4).
     const ff = ctx.settings.familyFriendly;
     const kc = this.opts.kamraContent;
-    this.kamraOpts = { timers: this.opts.kamraTimers ?? {} };
+    this.profanityMode = ctx.settings.profanityFilter;
+    // Kamra play/vote honor the accessibility timer modes by DOUBLING (they
+    // stay timed even in "off" mode so a race always resolves; QA-M3-7,
+    // PLAN.md amendment 2026-07-26). Test overrides win.
+    const slow = ctx.settings.timerMode === "extended" || ctx.settings.timerMode === "off";
+    const kamraBase: Partial<Record<keyof typeof KAMRA_TIMERS, number>> = slow
+      ? { playMs: this.kt.playMs * 2, voteMs: this.kt.voteMs * 2 }
+      : {};
+    this.kamraOpts = { timers: { ...kamraBase, ...(this.opts.kamraTimers ?? {}) } };
     const words = kc?.spellingWords?.filter((w) => !ff || !w.adult).map((w) => w.word) ?? [];
     const worst = kc?.worstPrompts?.filter((p) => !ff || !p.adult).map((p) => p.text) ?? [];
     const draw = kc?.drawPrompts?.filter((p) => !ff || !p.adult).map((p) => p.text) ?? [];
@@ -190,9 +203,17 @@ export class KhooniSawaalEngine implements GameEngine {
   }
 
   /** A player disconnected — forfeit their pending answer so the round can
-   *  still resolve in no-timer mode (§4.2, QA-M2-2). Kamra phases are always
-   *  timed, so a mid-kamra disconnect resolves at the play/vote deadline. */
+   *  still resolve in no-timer mode (§4.2, QA-M2-2). Mid-kamra, forfeit their
+   *  seat/ballot so the visit can resolve early too (QA-M3-9). */
   onPlayerLeft(playerId: string): EnginePhase | null {
+    if (this.phase === "khooniKamra" && this.kamra !== null) {
+      const before = this.kamra.subPhase();
+      this.kamra.onPlayerLeft(playerId);
+      if (this.kamra.subPhase() !== before) {
+        return { phase: "khooniKamra", deadline: this.kamra.deadline(this.now()) };
+      }
+      return null;
+    }
     if (this.phase !== "question") return null;
     const p = this.players.find((x) => x.id === playerId);
     if (p === undefined || p.answer !== null) return null;
@@ -261,15 +282,17 @@ export class KhooniSawaalEngine implements GameEngine {
       .map((id) => this.players.find((p) => p.id === id))
       .filter((p): p is KsPlayer => p !== undefined)
       .map((p) => ({ playerId: p.id, name: p.name }));
-    const voters = this.players
-      .filter((p) => p.alive && !this.pendingFloor.includes(p.id))
-      .map((p) => p.id);
+    // Ghosts vote too — "everyone else votes", §3.4/§3.5, QA-M3-12 — but the
+    // K5/K6 selection constraint still counts LIVING voters only.
+    const offFloor = this.players.filter((p) => !this.pendingFloor.includes(p.id));
+    const voters = offFloor.map((p) => p.id);
+    const livingVoterCount = offFloor.filter((p) => p.alive).length;
     this.kamra = new KamraCoordinator(
       floor,
       voters,
       this.seenMinigames,
       { now: this.now, rand: this.rand },
-      this.kamraOpts,
+      { ...this.kamraOpts, livingVoterCount },
     );
     this.pendingFloor = [];
     this.phase = "khooniKamra";
@@ -284,12 +307,13 @@ export class KhooniSawaalEngine implements GameEngine {
     return this.applyKamraOutcome();
   }
 
-  /** The visit is over: pay minigame winnings (§3.7), apply deaths, move on. */
+  /** The visit is over: pay minigame winnings (§3.7), apply deaths, move on.
+   *  Amounts may be negative (Dhokha forfeit) — money never drops below 0. */
   private applyKamraOutcome(): EnginePhase {
     const k = this.kamra!;
     for (const { playerId, amount } of k.getPayouts()) {
       const p = this.players.find((x) => x.id === playerId);
-      if (p !== undefined) p.money += amount;
+      if (p !== undefined) p.money = Math.max(0, p.money + amount);
     }
     for (const id of k.getDeaths()) {
       const p = this.players.find((x) => x.id === id);
@@ -303,22 +327,44 @@ export class KhooniSawaalEngine implements GameEngine {
     const k = this.kamra;
     if (k === null) return null;
     // VIP censor of a floor submission (§4.3) — only the VIP's phone sends it.
+    // Vote-phase-only and never their own entry (SEC-M3-5, QA-M3-3).
     const cz = censorActionSchema.safeParse(payload);
     if (cz.success) {
       if (meta.vip !== true) return null;
-      k.censor(cz.data.targetId);
+      k.censor(playerId, cz.data.targetId);
       return null; // no phase change; snapshots rebroadcast regardless
     }
     const parsed = ksActionSchema.safeParse(payload);
     if (!parsed.success || parsed.data.type === "answer") return null;
+    const action = this.cleanKamraAction(parsed.data);
+    if (action === null) return null;
     const before = k.subPhase();
-    const changed = k.onInput(playerId, parsed.data);
+    const changed = k.onInput(playerId, action);
     if (!changed) return null;
     if (k.subPhase() !== before) {
       // Early advance (all floor players locked in) → new sub-phase deadline.
       return { phase: "khooniKamra", deadline: k.deadline(this.now()) };
     }
     return null;
+  }
+
+  /** Normalize player-typed kamra text before it can reach the shared screen:
+   *  codepoint hygiene (SEC-M3-1/6) + the §4.4 profanity setting (QA-M3-6 —
+   *  strict rejects, lenient masks). */
+  private cleanKamraAction(action: KsAction): KsAction | null {
+    if (action.type === "kmAnswer") {
+      const clean = sanitizeFreeText(action.text, 140);
+      if (clean === null) return null;
+      const filtered = applyProfanityFilter(clean, this.profanityMode);
+      if (filtered.text === null) return null; // strict mode rejects
+      return { ...action, text: filtered.text };
+    }
+    if (action.type === "kmSpell") {
+      const clean = sanitizeFreeText(action.word, 24);
+      if (clean === null) return null;
+      return { ...action, word: clean };
+    }
+    return action;
   }
 
   // --- Maut Ka Chakra (§3.3) ------------------------------------------------

@@ -1,4 +1,8 @@
 import {
+  DHOKHA_LOYALTY_FORFEIT,
+  DHOKHA_POT,
+  KAMRA_TIMERS,
+  MATH_PAYOUT_CAP,
   MAX_STROKES,
   SOLO_MATH_SURVIVAL,
   type KamraFloorPlayer,
@@ -68,6 +72,16 @@ abstract class Base implements Minigame {
   payouts(): { playerId: string; amount: number }[] {
     return [];
   }
+  /** The play phase has begun (intro ended) — memorize windows anchor here. */
+  beginPlay(_now: number): void {
+    /* default: nothing */
+  }
+  /** A floor player disconnected — lock their seat so the round can resolve
+   *  early instead of idling the full timer (QA-M3-9). */
+  forfeit(playerId: string): void {
+    const s = this.seat(playerId);
+    if (s !== undefined) s.done = true;
+  }
   protected get solo(): boolean {
     return this.seats.length === 1;
   }
@@ -120,9 +134,12 @@ export class HisaabKitaab extends Base {
     }
     return lowestScorersDie(this.seats);
   }
-  /** §3.7: ₹25 per correct sum. */
+  /** §3.7: ₹25 per correct sum, capped (SEC-M3-7). */
   override payouts(): { playerId: string; amount: number }[] {
-    return this.seats.map((s) => ({ playerId: s.playerId, amount: s.score * 25 }));
+    return this.seats.map((s) => ({
+      playerId: s.playerId,
+      amount: Math.min(s.score, MATH_PAYOUT_CAP) * 25,
+    }));
   }
 }
 
@@ -134,7 +151,7 @@ export class ZeharWaliChai extends Base {
   readonly title = "Zeher Wali Chai";
   readonly rules = "Ek glass uthao. Kisi ek mein… thoda extra masala hai.";
   private readonly cups: number;
-  private readonly poisoned: Set<number>;
+  private poisoned: Set<number>;
   private picks = new Map<string, number>();
 
   constructor(floor: FloorInit[], deps: MinigameDeps) {
@@ -161,15 +178,22 @@ export class ZeharWaliChai extends Base {
     return true;
   }
   override resolveDeaths(): string[] {
-    // A never-picked cup counts as drinking blind — un-picked players are
-    // eligible for the poison fallback below but don't auto-die.
     const dead = this.seats.filter((s) => this.poisoned.has(this.picks.get(s.playerId) ?? -1)).map((s) => s.playerId);
     if (dead.length > 0) return dead;
     // §3.4 solo floor: pure luck, death NOT guaranteed — dodging the poison
     // solo means surviving the visit.
     if (this.solo) return [];
     // Multi floor, nobody drank the poison — the room still claims one (§3.4
-    // "at least one dies"): a random floor player meets a different fate.
+    // "at least one dies"). TMP-style rig (QA-M3-2): the poison MOVES into a
+    // cup somebody actually picked, so the death is always attributable to a
+    // pick — no "chose a safe glass and died anyway" on the host screen.
+    const pickers = this.seats.filter((s) => this.picks.has(s.playerId));
+    if (pickers.length > 0) {
+      const victim = pickers[Math.floor(this.deps.rand() * pickers.length)]!;
+      this.poisoned = new Set([this.picks.get(victim.playerId)!]);
+      return [victim.playerId];
+    }
+    // Nobody picked at all (everyone idled the timer) — a random idler dies.
     const fallback = this.seats[Math.floor(this.deps.rand() * this.seats.length)];
     return fallback !== undefined ? [fallback.playerId] : [];
   }
@@ -202,8 +226,8 @@ export class Dhokha extends Base {
     const betrayers = choices.filter((x) => x.c === "betray");
     if (betrayers.length === 0) {
       // §3.4/§3.7 loyalty table: universal loyalty → EVERYONE survives (the
-      // one sanctioned exception to "at least one dies") but forfeits the
-      // round's pot — nobody profits.
+      // one sanctioned exception to "at least one dies") but forfeits money
+      // (see payouts) — loyalty is safe, never free (QA-M3-5).
       return [];
     }
     if (betrayers.length === this.seats.length) {
@@ -212,48 +236,73 @@ export class Dhokha extends Base {
     // Mixed: the loyal (spare) players die; the betrayers escape.
     return choices.filter((x) => x.c === "spare").map((x) => x.id);
   }
-  /** §3.7: a UNIQUE betrayer takes the pot (₹1,000). Everyone else gets 0. */
+  /** §3.7 stakes (QA-M3-5): a UNIQUE betrayer takes the pot; universal
+   *  loyalty means everyone survives but pays the house its due. */
   override payouts(): { playerId: string; amount: number }[] {
     const betrayers = this.seats.filter((s) => this.choice.get(s.playerId) === "betray");
+    if (betrayers.length === 0) {
+      return this.seats.map((s) => ({ playerId: s.playerId, amount: -DHOKHA_LOYALTY_FORFEIT }));
+    }
     if (betrayers.length !== 1) return [];
-    return [{ playerId: betrayers[0]!.playerId, amount: 1000 }];
+    return [{ playerId: betrayers[0]!.playerId, amount: DHOKHA_POT }];
   }
 }
 
-// K2 — Yaaddasht: memorize highlighted tiles on a grid, reproduce them. Score
-// = correctly recalled tiles; lowest dies.
+// K2 — Yaaddasht: memorize highlighted tiles on a grid, reproduce them.
+// Scoring (QA-M3-1): score = pattern tiles recalled MINUS wrong picks (never
+// below 0) so an empty/lazy submission scores 0 and never beats a genuine
+// attempt; payout is ₹1,000 × proportion OF THE PATTERN recalled (§3.7).
+// The memorize window is enforced server-side (SEC-M3-3): the pattern leaves
+// the private snapshot — and recall input opens — only after it closes.
 export class Yaaddasht extends Base {
   readonly kind = "yaaddasht" as const;
   readonly title = "Yaaddasht";
   readonly rules = "Jo tiles jal rahe the yaad rakho, phir wahi dabaao.";
   private readonly size = 16; // 4x4
   private readonly pattern: Set<number>;
+  private readonly hits = new Map<string, number>();
+  private playStart: number | null = null;
 
   constructor(floor: FloorInit[], deps: MinigameDeps) {
     super(floor, deps);
     this.pattern = new Set(pickDistinct(this.size, 5, deps.rand));
   }
+  override beginPlay(now: number): void {
+    this.playStart = now;
+  }
+  private memorizing(): boolean {
+    return this.playStart === null || this.deps.now() < this.playStart + KAMRA_TIMERS.memorizeMs;
+  }
   override privateFor(playerId: string): unknown {
-    return { size: this.size, pattern: [...this.pattern], locked: this.seat(playerId)?.done ?? false };
+    return {
+      size: this.size,
+      // Pattern visible ONLY during the memorize window (SEC-M3-3).
+      pattern: this.memorizing() ? [...this.pattern] : null,
+      locked: this.seat(playerId)?.done ?? false,
+    };
   }
   onInput(playerId: string, action: KsAction): boolean {
     if (action.type !== "kmRecall") return false;
+    if (this.memorizing()) return false; // no answering while the answer shows
     const s = this.seat(playerId);
     if (s === undefined || s.done) return false;
     const sel = new Set(action.selection.filter((i) => i < this.size));
-    let score = 0;
-    for (let i = 0; i < this.size; i++) {
-      if (this.pattern.has(i) === sel.has(i)) score += 1; // reward correct include/exclude
+    let hits = 0;
+    let falsePicks = 0;
+    for (const i of sel) {
+      if (this.pattern.has(i)) hits += 1;
+      else falsePicks += 1;
     }
-    s.score = score;
+    this.hits.set(playerId, hits);
+    s.score = Math.max(0, hits - falsePicks);
     s.done = true;
     return true;
   }
-  /** §3.7: ₹1,000 × proportion of the grid judged correctly. */
+  /** §3.7: ₹1,000 × proportion of the PATTERN recalled. */
   override payouts(): { playerId: string; amount: number }[] {
     return this.seats.map((s) => ({
       playerId: s.playerId,
-      amount: Math.round((1000 * s.score) / this.size),
+      amount: Math.round((1000 * (this.hits.get(s.playerId) ?? 0)) / this.pattern.size),
     }));
   }
 }
@@ -267,28 +316,47 @@ export class TaashKePatte extends Base {
   readonly rules = "Patte yaad karo, phir sawaal ka jawab do.";
   private readonly cards: number[]; // symbol index 0..3 per card
   private readonly target: number;
+  private playStart: number | null = null;
 
   constructor(floor: FloorInit[], deps: MinigameDeps) {
     super(floor, deps);
     this.cards = Array.from({ length: 5 }, () => Math.floor(deps.rand() * 4));
     this.target = this.cards[Math.floor(deps.rand() * this.cards.length)]!;
   }
+  override beginPlay(now: number): void {
+    this.playStart = now;
+  }
+  private memorizing(): boolean {
+    return this.playStart === null || this.deps.now() < this.playStart + KAMRA_TIMERS.memorizeMs;
+  }
   override privateFor(playerId: string): unknown {
-    return { cards: this.cards, target: this.target, locked: this.seat(playerId)?.done ?? false };
+    return {
+      // Cards visible ONLY during the memorize window (SEC-M3-3); the target
+      // symbol stays visible — it's the question, not the answer.
+      cards: this.memorizing() ? this.cards : null,
+      cardCount: this.cards.length,
+      target: this.target,
+      locked: this.seat(playerId)?.done ?? false,
+    };
   }
   override prompt(): string | null {
     return `Kaun se patton par symbol ${this.target}?`;
   }
   onInput(playerId: string, action: KsAction): boolean {
     if (action.type !== "kmRecall") return false;
+    if (this.memorizing()) return false; // no answering while the answer shows
     const s = this.seat(playerId);
     if (s === undefined || s.done) return false;
-    const sel = new Set(action.selection);
-    let score = 0;
-    for (let i = 0; i < this.cards.length; i++) {
-      if ((this.cards[i] === this.target) === sel.has(i)) score += 1;
+    const sel = new Set(action.selection.filter((i) => i < this.cards.length));
+    // Same anti-lazy scoring as K2 (QA-M3-1): target positions found minus
+    // wrong picks, floored at 0.
+    let hits = 0;
+    let falsePicks = 0;
+    for (const i of sel) {
+      if (this.cards[i] === this.target) hits += 1;
+      else falsePicks += 1;
     }
-    s.score = score;
+    s.score = Math.max(0, hits - falsePicks);
     s.done = true;
     return true;
   }
@@ -361,19 +429,25 @@ abstract class VotingBase extends Base {
       this.votes.set(voterId, targetId); // one vote per voter; last wins
     }
   }
-  /** VIP/host censors a submission — it can't win "worst". */
+  /** VIP censors a submission — its CONTENT is hidden and it can attract no
+   *  further votes, but censorship is NOT death-immunity (SEC-M3-4/QA-M3-3):
+   *  votes cast before the censor still count and censored players stay in
+   *  every fallback pool. */
   censor(targetId: string): void {
     this.censored.add(targetId);
   }
   override resolveDeaths(): string[] {
-    // Most votes-against (the "worst") dies; ties → all tied die. If nobody
-    // voted, the room still claims the last submitter (a random floor player).
-    const counts = this.seats
-      .filter((s) => !this.censored.has(s.playerId))
-      .map((s) => ({ id: s.playerId, n: [...this.votes.values()].filter((t) => t === s.playerId).length }));
-    if (counts.length === 0) return [this.seats[0]!.playerId];
+    // Most votes-against (the "worst") dies; ties → all tied die. Censored
+    // seats are included with whatever votes they had already gathered.
+    const counts = this.seats.map((s) => ({
+      id: s.playerId,
+      n: [...this.votes.values()].filter((t) => t === s.playerId).length,
+    }));
+    if (counts.length === 0) return [];
     const max = Math.max(...counts.map((c) => c.n));
     if (max === 0) {
+      // Nobody voted (or everything was censored) — a RANDOM floor player
+      // dies; never a deterministic seat (QA-M3-11/SEC-M3-4).
       const v = this.seats[Math.floor(this.deps.rand() * this.seats.length)];
       return v !== undefined ? [v.playerId] : [];
     }
@@ -444,6 +518,16 @@ export class GandaChitra extends VotingBase {
         return true;
       default:
         return false;
+    }
+  }
+  /** Play timer expired — auto-submit whatever is on each canvas so voters
+   *  never stare at an empty entry that the server was holding (QA-M3-4b). */
+  finish(): void {
+    for (const s of this.seats) {
+      if (!s.done) {
+        this.answers.set(s.playerId, { text: null, strokes: this.drafts.get(s.playerId) ?? [] });
+        s.done = true;
+      }
     }
   }
 }

@@ -488,10 +488,11 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     engine.onAction(C, { type: "censor", targetId: B }, { ...meta, vip: false });
     const vote2 = pub(engine);
     if (vote2.kind === "kamraVote") expect(vote2.entries).toHaveLength(1);
-    // the living non-floor voter votes against B
-    engine.onAction(C, { type: "kmVote", targetId: B }, meta);
-    engine.onTimeout(); // vote timeout → result (deaths resolved)
+    // the last outstanding voter votes against B → the polls close EARLY
+    const closed = engine.onAction(C, { type: "kmVote", targetId: B }, meta);
+    expect(closed?.phase).toBe("khooniKamra"); // sub-phase advanced → new deadline
     const res = pub(engine);
+    expect(res.kind).toBe("kamraResult");
     if (res.kind === "kamraResult") {
       expect(res.deaths).toEqual([B]);
       expect(res.survivors).toEqual([A]);
@@ -537,13 +538,49 @@ describe("KhooniSawaalEngine — M3 Khooni Kamra", () => {
     expect(engine.playerState("b")!.alive).toBe(true); // nothing applied yet
   });
 
-  it("kamra timers ignore the extended/off timer modes (killing floor is a race)", () => {
+  it("extended/off timer modes DOUBLE kamra play/vote; intro/result stay fixed (QA-M3-7)", () => {
     const { engine, clock } = makeEngine(["a", "b"], { timerMode: "extended" });
     engine.onTimeout(); // q1 (extended: 60s)
     engine.onAction("a", answer("q_0001", 0), meta);
     engine.onAction("b", answer("q_0001", 3), meta);
     const kamra = engine.onTimeout(); // reveal → kamra intro
-    expect(kamra?.deadline).toBe(clock.now() + 3500); // introMs, NOT doubled
+    expect(kamra?.deadline).toBe(clock.now() + 3500); // introMs is presentation — fixed
+    const play = engine.onTimeout(); // intro → play
+    expect(play?.deadline).toBe(clock.now() + 50000); // 25s × 2 (accessibility)
+    // normal mode keeps the standard race timer
+    const { engine: e2, clock: c2 } = makeEngine(["a", "b"]);
+    e2.onTimeout();
+    e2.onAction("a", answer("q_0001", 0), meta);
+    e2.onAction("b", answer("q_0001", 3), meta);
+    e2.onTimeout(); // → intro
+    const p2 = e2.onTimeout(); // → play
+    expect(p2?.deadline).toBe(c2.now() + 25000);
+  });
+
+  it("kmAnswer text is sanitized and profanity-filtered before the shared screen (SEC-M3-1/QA-M3-6)", () => {
+    const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const { engine } = makeEngine([A, B, C], { rand: () => 0.5 }); // sabseGhatiyaJawaab
+    engine.onTimeout(); // q1
+    engine.onAction(A, answer("q_0001", 1), meta);
+    engine.onAction(B, answer("q_0001", 2), meta);
+    engine.onAction(C, answer("q_0001", 0), meta);
+    engine.onTimeout(); // → intro
+    engine.onTimeout(); // → play
+    // bidi-override + zero-width injection is stripped before storage
+    engine.onAction(A, { type: "kmAnswer", text: "chai‮ lo​" }, meta);
+    // default profanityFilter is STRICT → a profane answer is rejected outright
+    expect(engine.onAction(B, { type: "kmAnswer", text: "kya chutiya prompt hai" }, meta)).toBeNull();
+    expect(engine.privatePhaseData(B).kamra?.done).toBe(false);
+    // an invisible-only answer is rejected too
+    expect(engine.onAction(B, { type: "kmAnswer", text: "​​" }, meta)).toBeNull();
+    engine.onAction(B, { type: "kmAnswer", text: "theek hai" }, meta); // → vote
+    const v = pub(engine);
+    if (v.kind === "kamraVote") {
+      const entryA = v.entries.find((e) => e.playerId === A);
+      expect(entryA?.text).toBe("chai lo"); // sanitized, no bidi/zero-width
+    }
   });
 
   it("minigames rotate without repeats until all legal ones are seen (LRU §3.4)", () => {

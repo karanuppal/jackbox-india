@@ -30,7 +30,20 @@ export const KAMRA_TIMERS = {
   wheelSpinMs: 4000,
   /** Pause on the landed wheel outcome before the next spin. */
   wheelLandMs: 2500,
+  /** K2/K3 memorize window — enforced SERVER-side (SEC-M3-3): the pattern is
+   *  only present in private snapshots (and recall input rejected) while the
+   *  window is open. */
+  memorizeMs: 6000,
 } as const;
+
+/** K8 Dhokha stakes (§3.7, QA-M3-5): a unique betrayer takes the pot; under
+ *  universal loyalty everyone survives but forfeits money to the house
+ *  (PLAN.md amendments, 2026-07-26). */
+export const DHOKHA_POT = 1000;
+export const DHOKHA_LOYALTY_FORFEIT = 500;
+
+/** K1 payout ceiling: ₹25 × at most this many corrects (SEC-M3-7). */
+export const MATH_PAYOUT_CAP = 40;
 
 /** Maut Ka Chakra odds (§3.3): 5 death segments : 1 life segment. */
 export const WHEEL_DEATH_SEGMENTS = 5;

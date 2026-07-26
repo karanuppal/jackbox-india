@@ -102,6 +102,36 @@ export function sanitizeName(raw: string): string | null {
   return out.length > 0 && HAS_VISIBLE.test(out) ? out : null;
 }
 
+/**
+ * Normalize untrusted free text that lands on the shared screen / other
+ * phones (K5 answers etc., SEC-M3-1/6). Same codepoint hygiene as names —
+ * forbidden-codepoint strip, whitespace collapse, zalgo cap, visible-glyph
+ * requirement — but with a caller-chosen length cap. Returns null if nothing
+ * displayable survives.
+ */
+export function sanitizeFreeText(raw: string, maxLen: number): string | null {
+  let s = raw.normalize("NFC").replace(/\s+/g, " ");
+  s = s
+    .replace(FORBIDDEN_CODEPOINTS, "")
+    .replace(FORBIDDEN_CODEPOINTS_ASTRAL, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  let out = "";
+  let run = 0;
+  for (const ch of s) {
+    if (COMBINING.test(ch)) {
+      run += 1;
+      if (run > MAX_COMBINING_RUN) continue;
+    } else {
+      run = 0;
+    }
+    out += ch;
+  }
+  out = [...out].slice(0, maxLen).join("").trim();
+  while (out.length > 0 && COMBINING.test([...out][0]!)) out = [...out].slice(1).join("");
+  return out.length > 0 && HAS_VISIBLE.test(out) ? out : null;
+}
+
 export const playerNameSchema = z
   .string()
   .min(1)

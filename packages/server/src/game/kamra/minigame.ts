@@ -46,8 +46,14 @@ export interface Minigame {
   resolveDeaths(): string[];
 
   /** Money earned inside the minigame (§3.7: K1 ₹25/correct, K2 ₹1000 ×
-   *  proportion, K4 ₹100 × word length, K8 pot). Empty for the rest. */
+   *  proportion, K4 ₹100 × word length, K8 pot/forfeit — amounts may be
+   *  negative). Empty for the rest. */
   payouts(): { playerId: string; amount: number }[];
+
+  /** The play phase has begun — memorize windows anchor here (SEC-M3-3). */
+  beginPlay(now: number): void;
+  /** A floor player disconnected — lock their seat (QA-M3-9). */
+  forfeit(playerId: string): void;
 }
 
 /** Shared helper: the lowest-scorer(s) die; ties break by killing all tied. */

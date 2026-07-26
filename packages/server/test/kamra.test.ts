@@ -47,11 +47,21 @@ describe("K7 Zeher Wali Chai (luck)", () => {
     g.onInput("b", answer({ type: "kmPick", index: 1 })); // safe
     expect(g.resolveDeaths()).toEqual(["a"]);
   });
-  it("still claims a victim if nobody drew the poison", () => {
+  it("rigs the poison into a PICKED cup when nobody drew it (QA-M3-2)", () => {
     const g = new ZeharWaliChai(floor("a", "b"), deps(() => 0)); // poison cup 0
     g.onInput("a", answer({ type: "kmPick", index: 1 }));
     g.onInput("b", answer({ type: "kmPick", index: 2 }));
-    expect(g.resolveDeaths()).toHaveLength(1); // fallback kill
+    const dead = g.resolveDeaths();
+    expect(dead).toHaveLength(1);
+    expect(["a", "b"]).toContain(dead[0]); // a picker — death is attributable
+    // after the rig, re-resolving agrees the victim's own cup was poisoned
+    expect(g.resolveDeaths()).toEqual(dead);
+  });
+
+  it("a solo floor player who dodges the poison SURVIVES (§3.4)", () => {
+    const g = new ZeharWaliChai(floor("solo"), deps(() => 0)); // poison cup 0 of 3
+    g.onInput("solo", answer({ type: "kmPick", index: 2 }));
+    expect(g.resolveDeaths()).toEqual([]);
   });
 });
 
@@ -69,12 +79,15 @@ describe("K8 Dhokha (betrayal)", () => {
     g.onInput("b", answer({ type: "kmChoice", choice: "betray" }));
     expect(g.resolveDeaths().sort()).toEqual(["a", "b"]);
   });
-  it("everyone loyal: ALL survive — the §3.4/§3.7 loyalty exception", () => {
+  it("everyone loyal: ALL survive but forfeit ₹500 each (§3.7, QA-M3-5)", () => {
     const g = new Dhokha(floor("a", "b"), deps(() => 0));
     g.onInput("a", answer({ type: "kmChoice", choice: "spare" }));
     g.onInput("b", answer({ type: "kmChoice", choice: "spare" }));
     expect(g.resolveDeaths()).toEqual([]);
-    expect(g.payouts()).toEqual([]); // nobody profits from universal loyalty
+    expect(g.payouts()).toEqual([
+      { playerId: "a", amount: -500 },
+      { playerId: "b", amount: -500 },
+    ]); // loyalty is safe, never free
   });
 
   it("a UNIQUE betrayer takes the ₹1,000 pot (§3.7)", () => {
@@ -94,23 +107,50 @@ describe("K8 Dhokha (betrayal)", () => {
 });
 
 describe("K2 Yaaddasht (memory)", () => {
-  it("scores tile recall and kills the worst", () => {
+  it("scores tile recall and kills the worst; memorize window gates input (SEC-M3-3)", () => {
     const g = new Yaaddasht(floor("a", "b"), deps(seq([0.01, 0.05, 0.1, 0.15, 0.2])));
+    // pattern is readable BEFORE play begins (the memorize phase)…
     const pa = g.privateFor("a") as { pattern: number[] };
+    expect(pa.pattern).not.toBeNull();
+    // …but recall input is rejected while the window is open
+    expect(g.onInput("a", answer({ type: "kmRecall", selection: pa.pattern }))).toBe(false);
+    g.beginPlay(-10_000); // window long closed at now()=1000
+    // and once closed, the pattern leaves the private snapshot
+    expect((g.privateFor("a") as { pattern: number[] | null }).pattern).toBeNull();
     g.onInput("a", answer({ type: "kmRecall", selection: pa.pattern })); // perfect
     g.onInput("b", answer({ type: "kmRecall", selection: [] })); // nothing
     expect(g.resolveDeaths()).toEqual(["b"]);
+    // §3.7 payout: proportion of the PATTERN recalled — perfect = 1000, lazy = 0
+    expect(g.payouts()).toEqual([
+      { playerId: "a", amount: 1000 },
+      { playerId: "b", amount: 0 },
+    ]);
+  });
+
+  it("lazy empty submissions no longer out-earn genuine attempts (QA-M3-1)", () => {
+    const g = new Yaaddasht(floor("lazy", "genuine"), deps(seq([0.01, 0.05, 0.1, 0.15, 0.2])));
+    const pattern = (g.privateFor("lazy") as { pattern: number[] }).pattern;
+    g.beginPlay(-10_000);
+    g.onInput("lazy", answer({ type: "kmRecall", selection: [] })); // does nothing
+    g.onInput("genuine", answer({ type: "kmRecall", selection: pattern.slice(0, 2) })); // 2 real tiles
+    expect(g.resolveDeaths()).toEqual(["lazy"]); // 0 < 2
+    const pay = Object.fromEntries(g.payouts().map((p) => [p.playerId, p.amount]));
+    expect(pay["lazy"]).toBe(0);
+    expect(pay["genuine"]).toBe(400); // 2/5 of ₹1000
   });
 });
 
 describe("K3 Taash Ke Patte (memory)", () => {
-  it("scores symbol recall and kills the worst", () => {
+  it("scores symbol recall (spray-and-pray penalized) and kills the worst", () => {
     const g = new TaashKePatte(floor("a", "b"), deps(seq([0, 0.3, 0.6, 0.9, 0.1, 0.2])));
     const pa = g.privateFor("a") as { cards: number[]; target: number };
+    expect(pa.cards).not.toBeNull();
     const correct = pa.cards.map((c, i) => (c === pa.target ? i : -1)).filter((i) => i >= 0);
+    g.beginPlay(-10_000);
+    expect((g.privateFor("a") as { cards: number[] | null }).cards).toBeNull(); // window closed
     g.onInput("a", answer({ type: "kmRecall", selection: correct }));
     g.onInput("b", answer({ type: "kmRecall", selection: [0, 1, 2, 3, 4] })); // spray
-    expect(g.resolveDeaths()).toContain("b");
+    expect(g.resolveDeaths()).toContain("b"); // false picks cancel hits
   });
 });
 
@@ -133,14 +173,26 @@ describe("K5 Sabse Ghatiya Jawaab (voting)", () => {
     g.onVote("v3", "a");
     expect(g.resolveDeaths()).toEqual(["b"]);
   });
-  it("respects VIP censor — a censored entry can't be voted or win", () => {
+  it("censor hides content and blocks NEW votes, but is not death-immunity (SEC-M3-4)", () => {
     const g = new SabseGhatiyaJawaab(floor("a", "b"), deps(), "prompt");
     g.onInput("a", answer({ type: "kmAnswer", text: "x" }));
     g.onInput("b", answer({ type: "kmAnswer", text: "gaali" }));
+    g.onVote("v1", "b"); // cast BEFORE the censor — it counts
     g.censor("b");
-    g.onVote("v1", "b"); // vote against censored → ignored
-    expect(g.voteEntries().some((e) => e.playerId === "b")).toBe(false);
-    expect(g.resolveDeaths()).toEqual(["a"]); // b is out; a is the only target
+    g.onVote("v2", "b"); // after the censor → ignored
+    expect(g.voteEntries().some((e) => e.playerId === "b")).toBe(false); // hidden
+    expect(g.resolveDeaths()).toEqual(["b"]); // pre-censor vote still kills b
+  });
+
+  it("all-censored / nobody-voted falls back to a RANDOM floor player, not seat 0 (QA-M3-11)", () => {
+    // rand → 0.9 so the random fallback picks the LAST seat, proving it isn't
+    // hardwired to seats[0]
+    const g = new SabseGhatiyaJawaab(floor("a", "b"), deps(() => 0.9), "prompt");
+    g.onInput("a", answer({ type: "kmAnswer", text: "x" }));
+    g.onInput("b", answer({ type: "kmAnswer", text: "y" }));
+    g.censor("a");
+    g.censor("b"); // VIP censored everything; no votes possible
+    expect(g.resolveDeaths()).toEqual(["b"]); // rand-driven, not seats[0]
   });
 });
 
@@ -223,13 +275,57 @@ describe("KamraCoordinator — snapshots & censor", () => {
     co.onTimeout();
     expect(co.deadline(1000)).toBeGreaterThan(1000); // play
   });
-  it("routes a censor to a voting game and ignores it for non-voting", () => {
+  it("censor works only in the vote phase, never on yourself, never in non-voting games", () => {
     const preSeen = new Set(["hisaabKitaab", "yaaddasht", "taashKePatte", "spellingShelling", "zeharWaliChai", "dhokha"]);
     const voting = new KamraCoordinator(floor("a", "b"), ["v1"], preSeen as never, deps(s()));
-    expect(voting.censor("a")).toBe(true);
+    expect(voting.censor("v1", "a")).toBe(false); // intro — too early (SEC-M3-5)
+    voting.onTimeout(); // → play
+    expect(voting.censor("v1", "a")).toBe(false); // play — still too early
+    voting.onInput("a", { type: "kmAnswer", text: "x" });
+    voting.onInput("b", { type: "kmAnswer", text: "y" }); // → vote (early advance)
+    expect(voting.subPhase()).toBe("vote");
+    expect(voting.censor("a", "a")).toBe(false); // self-censor rejected (QA-M3-3)
+    expect(voting.censor("v1", "a")).toBe(true); // VIP censoring another entry
     const nonVoting = new KamraCoordinator(floor("a", "b"), [], new Set(), deps(s()));
     // a math/luck/etc game has no censor
-    expect(nonVoting.censor("a")).toBe(false);
+    expect(nonVoting.censor("v1", "a")).toBe(false);
+  });
+
+  it("closes the vote early once every voter has voted (QA-M3-9)", () => {
+    const preSeen = new Set(["hisaabKitaab", "yaaddasht", "taashKePatte", "spellingShelling", "zeharWaliChai", "dhokha"]);
+    const co = new KamraCoordinator(floor("a", "b"), ["v1", "v2"], preSeen as never, deps(s()));
+    co.onTimeout(); // → play
+    co.onInput("a", { type: "kmAnswer", text: "x" });
+    co.onInput("b", { type: "kmAnswer", text: "y" }); // → vote
+    co.onInput("v1", { type: "kmVote", targetId: "a" });
+    expect(co.subPhase()).toBe("vote"); // one ballot still out
+    co.onInput("v2", { type: "kmVote", targetId: "a" });
+    expect(co.subPhase()).toBe("result"); // all polls in → result early
+    expect(co.getDeaths()).toContain("a");
+  });
+
+  it("forfeits a disconnected floor player and early-resolves the play (QA-M3-9)", () => {
+    const preSeen = new Set(["hisaabKitaab", "yaaddasht", "taashKePatte", "sabseGhatiyaJawaab", "gandaChitra", "zeharWaliChai", "dhokha"]);
+    const co = new KamraCoordinator(floor("a", "b"), [], preSeen as never, deps(s()));
+    expect(co.game.kind).toBe("spellingShelling");
+    co.onTimeout(); // → play
+    co.onInput("a", { type: "kmSpell", word: "khichdi" });
+    expect(co.subPhase()).toBe("play"); // waiting on b
+    co.onPlayerLeft("b"); // b disconnects → seat forfeited → resolve
+    expect(co.subPhase()).toBe("result");
+    expect(co.getDeaths()).toEqual(["b"]); // never spelled → score 0 → dies
+  });
+
+  it("drops a disconnected voter from the electorate and closes when the rest voted", () => {
+    const preSeen = new Set(["hisaabKitaab", "yaaddasht", "taashKePatte", "spellingShelling", "zeharWaliChai", "dhokha"]);
+    const co = new KamraCoordinator(floor("a", "b"), ["v1", "v2"], preSeen as never, deps(s()));
+    co.onTimeout(); // → play
+    co.onInput("a", { type: "kmAnswer", text: "x" });
+    co.onInput("b", { type: "kmAnswer", text: "y" }); // → vote
+    co.onInput("v1", { type: "kmVote", targetId: "b" });
+    co.onPlayerLeft("v2"); // the only outstanding voter leaves
+    expect(co.subPhase()).toBe("result");
+    expect(co.getDeaths()).toContain("b");
   });
   it("resolves all floor players locking in early during play", () => {
     // spelling: both submit → allDone → resolves without waiting for the timer
