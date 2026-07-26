@@ -66,6 +66,6 @@ describe("Host — settings chips", () => {
     expect(html).toContain("Family-Friendly: OFF");
     expect(html).toContain("Audience: OFF");
     expect(html).toContain("Password lagega");
-    expect(html).toContain("Extended timers: ON");
+    expect(html).toContain("Lambe timers: ON");
   });
 });

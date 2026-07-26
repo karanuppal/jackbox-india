@@ -141,6 +141,37 @@ describe("Controller — M2 UX", () => {
     expect(html).not.toContain(">ek<");
   });
 
+  it("locks the tapped option instantly and freezes the rest (AES-LIVE-9)", async () => {
+    const actions: unknown[] = [];
+    const state = joined({ public: base("question", question), private: { you: player(), role: "player", phaseData: { myAnswer: null, answered: false, alive: true } } });
+    await act(async () => { root.render(<Controller state={state} onAction={(p) => actions.push(p)} />); });
+    const buttons = [...container.querySelectorAll("button")].filter((b) => ["ek", "do", "teen", "chaar"].includes(b.textContent ?? ""));
+    await act(async () => { buttons[1]!.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+    // tapped option shows the checkmark immediately, others are disabled
+    const after = [...container.querySelectorAll("button")];
+    expect(after.some((b) => b.textContent === "✓ do")).toBe(true);
+    expect(after.filter((b) => ["ek", "teen", "chaar"].includes(b.textContent ?? "")).every((b) => b.disabled)).toBe(true);
+    // a second tap on a frozen option must NOT dispatch another answer
+    const teen = after.find((b) => b.textContent === "teen")!;
+    await act(async () => { teen.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+    expect(actions.filter((a) => (a as { action: string }).action === "game")).toHaveLength(1);
+  });
+
+  it("tells the winner they won on their own phone (AES-LIVE-12) and names the VIP for others (GF-LIVE-5)", () => {
+    const winState = joined({ public: base("gameOver", gameOver), private: { you: player({ vip: false }), role: "player", phaseData: { myAnswer: null, answered: false, alive: true } } });
+    const html = renderToString(<Controller state={winState} onAction={() => {}} />);
+    expect(html).toContain("Aap jeet gaye"); // p1 IS the winner in the fixture
+    expect(html).toContain("₹5000");
+    expect(html).toContain("VIP phir se shuru kar sakta hai"); // non-VIP hint
+  });
+
+  it("play-again keeps the crimson action style when unarmed (AES-LIVE-11)", async () => {
+    const state = joined({ public: base("gameOver", gameOver), private: { you: player({ vip: true }), role: "player", phaseData: { myAnswer: null, answered: false, alive: true } } });
+    await act(async () => { root.render(<Controller state={state} onAction={() => {}} />); });
+    const btn = [...container.querySelectorAll("button")].find((b) => b.textContent?.includes("Phir se khelein"))!;
+    expect(btn.style.background).not.toBe(""); // explicit background, never browser default gray
+  });
+
   it("shows a VIP play-again button on game over and dispatches restart", async () => {
     const actions: unknown[] = [];
     const state = joined({ public: base("gameOver", gameOver), private: { you: player({ vip: true }), role: "player", phaseData: { myAnswer: null, answered: false, alive: true } } });

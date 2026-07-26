@@ -163,7 +163,6 @@ function GamePhase({
       );
     }
     const answered = priv?.answered ?? false;
-    const mine = priv?.myAnswer ?? null;
     return (
       <>
         {ghost && <p style={{ color: COLORS.ghost }}>👻 Aatma mode — phir bhi khel sakte ho.</p>}
@@ -173,17 +172,12 @@ function GamePhase({
         {answered ? (
           <p style={{ textAlign: "center" }}>Jawaab lock ho gaya. Screen dekho…</p>
         ) : (
-          <div style={{ display: "grid", gap: "0.6rem", width: "100%", maxWidth: "22rem" }}>
-            {pub.options.map((opt, i) => (
-              <button
-                key={i}
-                style={{ ...S.button, marginTop: 0, background: mine === i ? COLORS.marigold : COLORS.blood, color: mine === i ? COLORS.ink : COLORS.cream }}
-                onClick={() => onAction({ action: "game", payload: { type: "answer", questionId: pub.questionId, optionIndex: i } })}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
+          <AnswerButtons
+            key={pub.questionId}
+            options={pub.options}
+            serverPick={priv?.myAnswer ?? null}
+            onPick={(i) => onAction({ action: "game", payload: { type: "answer", questionId: pub.questionId, optionIndex: i } })}
+          />
         )}
       </>
     );
@@ -223,12 +217,66 @@ function GamePhase({
       </div>
     );
   }
-  // gameOver
+  // gameOver — land the moment PERSONALLY (AES-LIVE-12): winners hear it on
+  // their own phone, everyone else learns who can start the rematch
+  // (GF-LIVE-5).
+  const iWon = youId !== null && pub.winnerId === youId;
+  const myRow = pub.standings.find((s) => s.playerId === youId);
   return (
     <>
-      <p style={{ textAlign: "center" }}>Khel khatam. Screen par natija dekho!</p>
-      {isVip && <PlayAgainButton onRestart={() => onAction({ action: "restart" })} />}
+      {iWon ? (
+        <p style={{ textAlign: "center", fontSize: "1.4rem", color: COLORS.marigold }}>
+          {`🏆 Aap jeet gaye! ₹${myRow?.money ?? 0}`}
+        </p>
+      ) : (
+        <p style={{ textAlign: "center" }}>Khel khatam. Screen par natija dekho!</p>
+      )}
+      {isVip ? (
+        <PlayAgainButton onRestart={() => onAction({ action: "restart" })} />
+      ) : (
+        !isAudience && <p style={{ opacity: 0.7, fontSize: "0.9rem" }}>★ VIP phir se shuru kar sakta hai — ruko zara.</p>
+      )}
     </>
+  );
+}
+
+/** Question options with INSTANT local lock feedback (AES-LIVE-9): the tapped
+ *  button highlights and the rest freeze immediately, without waiting for the
+ *  server round-trip that flips the phone to the wait card. */
+function AnswerButtons({
+  options,
+  serverPick,
+  onPick,
+}: {
+  options: readonly string[];
+  serverPick: number | null;
+  onPick: (i: number) => void;
+}) {
+  const [localPick, setLocalPick] = useState<number | null>(null);
+  const pick = serverPick ?? localPick;
+  return (
+    <div style={{ display: "grid", gap: "0.6rem", width: "100%", maxWidth: "22rem" }}>
+      {options.map((opt, i) => (
+        <button
+          key={i}
+          disabled={pick !== null && pick !== i}
+          style={{
+            ...S.button,
+            marginTop: 0,
+            background: pick === i ? COLORS.marigold : COLORS.blood,
+            color: pick === i ? COLORS.ink : COLORS.cream,
+            opacity: pick !== null && pick !== i ? 0.45 : 1,
+          }}
+          onClick={() => {
+            if (localPick !== null) return;
+            setLocalPick(i);
+            onPick(i);
+          }}
+        >
+          {pick === i ? `✓ ${opt}` : opt}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -243,7 +291,9 @@ function PlayAgainButton({ onRestart }: { onRestart: () => void }) {
   }, [armed]);
   return (
     <button
-      style={{ ...S.button, background: armed ? COLORS.marigold : undefined, color: armed ? COLORS.ink : undefined }}
+      // spread with EXPLICIT undefined would unset S.button's background and
+      // fall back to browser default gray (AES-LIVE-11/GF-LIVE-5)
+      style={{ ...S.button, ...(armed ? { background: COLORS.marigold, color: COLORS.ink } : {}) }}
       onClick={() => {
         if (armed) onRestart();
         else setArmed(true);

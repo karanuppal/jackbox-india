@@ -6,6 +6,7 @@ import { S } from "../ui/styles.css.js";
 import { COLORS, avatarLabel } from "../ui/theme.js";
 import { joinUrl, qrSvg } from "../net/qr.js";
 import { Countdown } from "../ui/Countdown.js";
+import { SubtitleBand } from "../ui/Subtitle.js";
 import { HostKamraScene } from "./kamra.js";
 import { HostFinaleScene } from "./finale.js";
 
@@ -100,7 +101,11 @@ export function Host({
       <h1 style={S.h1}>{BRANDING.gameName}</h1>
       {pub.phase === "lobby" ? (
         <>
-          <p style={{ opacity: 0.85 }}>jaao {origin.replace(/^https?:\/\//, "")} — code daalo:</p>
+          {/* the join URL is what a new player must read across the room —
+              it must NOT be the smallest text on screen (AES-LIVE-5) */}
+          <p style={{ fontSize: "1.4rem", margin: "0.25rem 0" }}>
+            jaao <strong style={{ color: COLORS.marigold }}>{origin.replace(/^https?:\/\//, "")}</strong> — code daalo:
+          </p>
           {!hideCode ? <div style={S.code}>{pub.code}</div> : <div style={S.code}>••••</div>}
           {!hideCode && qr !== "" && (
             <div
@@ -143,20 +148,40 @@ export function Host({
               {pub.paused ? "▶ Resume" : "⏸ Pause"}
             </button>
           )}
-          <GameScene
-            pub={pub.phaseData as KsPublicPhase | null}
-            subtitles={pub.settings.subtitles}
-            players={pub.players}
-            deadline={pub.deadline}
-          />
-          <PodiumRow
-            players={pub.players}
-            audienceCount={pub.audienceCount}
-            inGame
-            showLocks={(pub.phaseData as KsPublicPhase | null)?.kind === "question"}
-          />
+          {/* the stage block is vertically centered so scenes fill the TV
+              instead of top-loading with a dead bottom half (AES-LIVE-6) */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", width: "100%" }}>
+            <GameScene
+              pub={pub.phaseData as KsPublicPhase | null}
+              subtitles={pub.settings.subtitles}
+              players={pub.players}
+              deadline={pub.deadline}
+            />
+          </div>
+          {/* the Natija scene carries its own podium — a duplicate card strip
+              under it just repeats the same info (AES-LIVE-4) */}
+          {(pub.phaseData as KsPublicPhase | null)?.kind !== "gameOver" && (
+            <PodiumRow
+              players={pub.players}
+              audienceCount={pub.audienceCount}
+              inGame
+              showLocks={(pub.phaseData as KsPublicPhase | null)?.kind === "question"}
+            />
+          )}
         </>
       )}
+      {/* haveli set-dressing: a faint diya row + warm floor glow so the stage
+          reads staged, not unfinished (AES-LIVE-6) */}
+      <div
+        aria-hidden
+        style={{ position: "fixed", left: 0, right: 0, bottom: 0, height: "18vh", pointerEvents: "none", background: "linear-gradient(transparent, rgba(192,24,43,0.12))" }}
+      />
+      <div
+        aria-hidden
+        style={{ position: "fixed", left: 0, right: 0, bottom: "0.3rem", textAlign: "center", pointerEvents: "none", opacity: 0.22, fontSize: "1.3rem", letterSpacing: "2.4rem" }}
+      >
+        🪔🪔🪔🪔🪔
+      </div>
     </main>
   );
 }
@@ -177,8 +202,7 @@ function GameScene({
   if (pub === null) {
     return <p style={{ fontSize: "1.5rem", textAlign: "center" }}>{BRANDING.venueName}…</p>;
   }
-  const Subtitle = ({ vo }: { vo: string }) =>
-    subtitles ? <p style={{ maxWidth: "40rem", textAlign: "center", opacity: 0.85, fontStyle: "italic" }}>“{vo}”</p> : null;
+  const Subtitle = ({ vo }: { vo: string }) => <SubtitleBand vo={vo} show={subtitles} />;
   const nameOf = (id: string) => players.find((p) => p.id === id)?.name ?? "koi";
 
   if (pub.kind === "tutorial") {
@@ -233,10 +257,12 @@ function GameScene({
   if (pub.kind === "finaleIntro" || pub.kind === "finaleTurn") {
     return <HostFinaleScene pub={pub} deadline={deadline} subtitles={subtitles} />;
   }
-  // gameOver
+  // gameOver — the winner is the HERO moment: giant name + amount, then the
+  // rest of the field in a compact list (AES-LIVE-4).
+  const champ = pub.standings.find((s) => s.playerId === pub.winnerId) ?? pub.standings[0];
   return (
     <div style={{ textAlign: "center", width: "100%" }}>
-      <h2 style={{ fontSize: "2rem", color: COLORS.marigold }}>Natija</h2>
+      <h2 style={{ fontSize: "2rem", color: COLORS.marigold, margin: "0.25rem 0" }}>Natija</h2>
       {/* the rule, spelled out — a poorer survivor beating richer ghosts must
           not read as a scoring bug (UT-M3-4) */}
       <p style={{ opacity: 0.8, margin: "0.2rem 0 0.5rem" }}>
@@ -248,45 +274,61 @@ function GameScene({
               ? "Koi zinda nahi nikla. Taaj sabse amir laash ko — mubarak ho… jaisi bhi ho." // UT-M4-3
               : "Niyam: jo zinda bacha, wahi jeeta — paisa nahi, saansein ginti hain."}
       </p>
+      {champ !== undefined && (
+        <div style={{ margin: "0.5rem 0 0.75rem" }}>
+          <p style={{ fontSize: "3rem", fontWeight: 800, color: COLORS.marigold, margin: 0, lineHeight: 1.1 }}>
+            {`👑 ${champ.alive ? "" : "👻 "}${champ.name}`}
+          </p>
+          <p style={{ fontSize: "1.6rem", margin: "0.15rem 0", opacity: 0.95 }}>{`₹${champ.money}`}</p>
+        </div>
+      )}
       <ol style={{ listStyle: "none", padding: 0, maxWidth: "24rem", margin: "0 auto" }}>
-        {pub.standings.map((s, i) => (
-          <li
-            key={s.playerId}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "0.4rem 0.75rem",
-              margin: "0.25rem 0",
-              borderRadius: "0.5rem",
-              background: i === 0 ? COLORS.marigold : "rgba(255,255,255,0.06)",
-              color: i === 0 ? COLORS.ink : COLORS.cream,
-              opacity: s.alive ? 1 : 0.6,
-            }}
-          >
-            <span>{`${i === 0 ? "👑 " : ""}${s.alive ? "" : "👻 "}${s.name}`}</span>
-            <span>{`₹${s.money}`}</span>
-          </li>
-        ))}
+        {pub.standings
+          .filter((s) => s.playerId !== champ?.playerId)
+          .map((s) => (
+            <li
+              key={s.playerId}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "0.4rem 0.75rem",
+                margin: "0.25rem 0",
+                borderRadius: "0.5rem",
+                background: "rgba(255,255,255,0.06)",
+                color: COLORS.cream,
+                opacity: s.alive ? 1 : 0.6,
+              }}
+            >
+              <span>{`${s.alive ? "" : "👻 "}${s.name}`}</span>
+              <span>{`₹${s.money}`}</span>
+            </li>
+          ))}
       </ol>
-      <GameOverStats standings={pub.standings} />
+      <GameOverStats standings={pub.standings} winnerId={pub.winnerId} />
       <ShareButton standings={pub.standings} winnerId={pub.winnerId} />
       <Subtitle vo={pub.vo} />
     </div>
   );
 }
 
-/** §3.8 stats screen: biggest fool, kamra survivor, richest ghost. */
-function GameOverStats({ standings }: { standings: { playerId: string; name: string; money: number; alive: boolean; wrongs: number; kamraEscapes: number }[] }) {
+/** §3.8 stats screen: biggest fool, kamra survivor, richest ghost. Ties are
+ *  named together (GF-LIVE-4), and a stat that just repeats the crowned
+ *  winner is suppressed (GF-LIVE-6). */
+function GameOverStats({ standings, winnerId = null }: { standings: { playerId: string; name: string; money: number; alive: boolean; wrongs: number; kamraEscapes: number }[]; winnerId?: string | null }) {
   if (standings.length === 0) return null;
   const fool = [...standings].sort((a, b) => b.wrongs - a.wrongs)[0];
+  const fools = fool !== undefined ? standings.filter((s) => s.wrongs === fool.wrongs) : [];
   const survivor = [...standings].sort((a, b) => b.kamraEscapes - a.kamraEscapes)[0];
+  const survivors = survivor !== undefined ? standings.filter((s) => s.kamraEscapes === survivor.kamraEscapes) : [];
   const ghosts = standings.filter((s) => !s.alive);
   const richGhost = [...ghosts].sort((a, b) => b.money - a.money)[0];
+  const names = (list: { name: string }[]) => list.map((s) => s.name).join(" & ");
   const rows: [string, string][] = [];
-  if (fool !== undefined && fool.wrongs > 0) rows.push(["🤡 Sabse bada bewakoof", `${fool.name} (${fool.wrongs} galat)`]);
+  if (fool !== undefined && fool.wrongs > 0) rows.push(["🤡 Sabse bada bewakoof", `${names(fools)} (${fool.wrongs} galat)`]);
   if (survivor !== undefined && survivor.kamraEscapes > 0)
-    rows.push(["🚪 Kamra survivor", `${survivor.name} (${survivor.kamraEscapes} baar bacha)`]);
-  if (richGhost !== undefined) rows.push(["👻 Sabse amir aatma", `${richGhost.name} (₹${richGhost.money})`]);
+    rows.push(["🚪 Kamra survivor", `${names(survivors)} (${survivor.kamraEscapes} baar bacha)`]);
+  if (richGhost !== undefined && richGhost.playerId !== winnerId)
+    rows.push(["👻 Sabse amir aatma", `${richGhost.name} (₹${richGhost.money})`]);
   if (rows.length === 0) return null;
   return (
     <div style={{ maxWidth: "24rem", margin: "0.5rem auto" }}>
@@ -343,20 +385,38 @@ function OptionGrid({
       {options.map((opt, i) => {
         const isCorrect = correct === i;
         const count = tally?.find((t) => t.index === i)?.count ?? null;
+        // Live question: bright plaster tiles — the answers are the second
+        // most important thing on a trivia screen and must not read as
+        // disabled placeholders from the couch (AES-LIVE-1).
+        const idle = correct === undefined;
         return (
           <div
             key={i}
             style={{
-              padding: "0.75rem",
+              padding: "0.85rem",
               borderRadius: "0.5rem",
-              fontSize: "1.25rem",
-              background: correct === undefined ? "rgba(255,255,255,0.06)" : isCorrect ? "#1f7a3d" : "rgba(192,24,43,0.25)",
-              color: COLORS.cream,
-              border: `2px solid ${isCorrect ? COLORS.marigold : "transparent"}`,
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              background: idle ? COLORS.plaster : isCorrect ? "#1f7a3d" : "rgba(192,24,43,0.25)",
+              color: idle ? COLORS.ink : COLORS.cream,
+              border: `2px solid ${isCorrect ? COLORS.marigold : idle ? "rgba(0,0,0,0.25)" : "transparent"}`,
             }}
           >
             {opt}
-            {count !== null && <span style={{ opacity: 0.7, fontSize: "0.9rem" }}>{` — ${count}`}</span>}
+            {count !== null && (
+              <span
+                style={{
+                  marginLeft: "0.5rem",
+                  fontWeight: 800,
+                  fontSize: "1.05rem",
+                  background: "rgba(0,0,0,0.4)",
+                  borderRadius: "1rem",
+                  padding: "0.05rem 0.6rem",
+                }}
+              >
+                {count}
+              </span>
+            )}
           </div>
         );
       })}
@@ -453,10 +513,12 @@ function SettingsPanel({
   );
 
   return (
-    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "center", marginTop: "1.25rem" }}>
+    // settings are back-of-house, not part of the show — keep the tray quiet
+    // relative to the code/QR (AES-LIVE-8)
+    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "center", marginTop: "1.5rem", opacity: 0.85 }}>
       <Toggle label="Family-Friendly" on={settings.familyFriendly} patch={{ familyFriendly: !settings.familyFriendly }} />
       <Toggle label="Audience" on={settings.audienceEnabled} patch={{ audienceEnabled: !settings.audienceEnabled }} />
-      <Toggle label="Extended timers" on={settings.timerMode === "extended"} patch={{ timerMode: settings.timerMode === "extended" ? "normal" : "extended" }} />
+      <Toggle label="Lambe timers" on={settings.timerMode === "extended"} patch={{ timerMode: settings.timerMode === "extended" ? "normal" : "extended" }} />
       <Toggle label="Streamer mode" on={settings.hideRoomCode} patch={{ hideRoomCode: !settings.hideRoomCode }} />
       <Toggle label="Moderation" on={settings.moderation} patch={{ moderation: !settings.moderation }} />
       {settings.moderation && modPassword !== null && (

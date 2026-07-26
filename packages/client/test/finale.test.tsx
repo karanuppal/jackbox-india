@@ -99,6 +99,27 @@ describe("ControllerFinale", () => {
     expect(html).toContain("screen dekho");
   });
 
+  it("keeps a role banner with turn + distance on every finale phone (GF-LIVE-1/3)", () => {
+    // living runner, locked: still knows they're alive and how far the door is
+    let html = renderToString(<ControllerFinale pub={judge} priv={{ racing: true, options: [{ index: 0, text: "x" }], selection: [0], locked: true }} youId="L" isAudience={false} deadline={null} onAction={() => {}} />);
+    expect(html).toContain("ZINDA");
+    expect(html).toContain("Chakkar 2");
+    expect(html).toContain("14 kadam");
+    // ghost during resolve: aatma framing, never identical to the living phone
+    html = renderToString(<ControllerFinale pub={resolve} priv={null} youId="g1" isAudience={false} deadline={null} onAction={() => {}} />);
+    expect(html).toContain("Aatma mode");
+  });
+
+  it("bridges an early finale on the host intro when one player is left (GF-LIVE-2)", () => {
+    const soloIntro: FinalePublic = {
+      kind: "finaleIntro",
+      runners: [runners[0]!, { ...runners[1]!, kind: "ghost" as const }],
+      vo: "Bhaago!",
+    };
+    const html = renderToString(<HostFinaleScene pub={soloIntro} deadline={null} subtitles />);
+    expect(html).toContain("Sirf Karan zinda bacha");
+  });
+
   it("resolve tells each runner their own fate", () => {
     let html = renderToString(<ControllerFinale pub={resolve} priv={null} youId="L" isAudience={false} deadline={null} onAction={() => {}} />);
     // L both escaped and was stolen-from in the fixture; escape wins the message

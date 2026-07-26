@@ -14,6 +14,7 @@ import {
 import { S } from "../ui/styles.css.js";
 import { COLORS } from "../ui/theme.js";
 import { Countdown } from "../ui/Countdown.js";
+import { SubtitleBand } from "../ui/Subtitle.js";
 
 // Taash Ke Patte symbols (§3.4 K3): kirpan, hockey stick, chappal, hathoda.
 // (chappal replaces belan — no rolling-pin emoji exists and 🥖 read as bread,
@@ -52,10 +53,7 @@ export function HostKamraScene({
   subtitles: boolean;
 }) {
   const nameOf = (id: string) => players.find((p) => p.id === id)?.name ?? "koi";
-  const Subtitle = ({ vo }: { vo: string }) =>
-    subtitles ? (
-      <p style={{ maxWidth: "40rem", textAlign: "center", opacity: 0.85, fontStyle: "italic" }}>“{vo}”</p>
-    ) : null;
+  const Subtitle = ({ vo }: { vo: string }) => <SubtitleBand vo={vo} show={subtitles} />;
 
   if (pub.kind === "kamraIntro") {
     return (

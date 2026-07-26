@@ -9,6 +9,7 @@ import {
 import { S } from "../ui/styles.css.js";
 import { COLORS } from "../ui/theme.js";
 import { Countdown } from "../ui/Countdown.js";
+import { SubtitleBand } from "../ui/Subtitle.js";
 
 // ---------------------------------------------------------------------------
 // Shared-screen (host) scenes for the Aakhri Darwaza finale (§3.6/§5.2).
@@ -22,16 +23,23 @@ export function HostFinaleScene({
   deadline: number | null;
   subtitles: boolean;
 }) {
-  const Subtitle = ({ vo }: { vo: string }) =>
-    subtitles ? (
-      <p style={{ maxWidth: "40rem", textAlign: "center", opacity: 0.85, fontStyle: "italic" }}>“{vo}”</p>
-    ) : null;
+  const Subtitle = ({ vo }: { vo: string }) => <SubtitleBand vo={vo} show={subtitles} />;
 
   if (pub.kind === "finaleIntro") {
+    // Bridge line (GF-LIVE-2): when the finale arrives EARLY (last one
+    // standing), the room was promised more sawaal — say why we're here.
+    const living = pub.runners.filter((r) => r.kind === "living");
     return (
       <div style={{ textAlign: "center", width: "100%" }}>
         <p style={{ color: COLORS.blood, fontSize: "1.1rem", letterSpacing: "0.2em" }}>AAKHRI DARWAZA</p>
         <h2 style={{ fontSize: "2rem", color: COLORS.marigold }}>Subah se pehle bhaago!</h2>
+        <p style={{ fontSize: "1.15rem", opacity: 0.9, margin: "0.2rem 0" }}>
+          {living.length === 1
+            ? `Sirf ${living[0]!.name} zinda bacha — ab aatmayein bhi peechhe bhaagengi!`
+            : living.length === 0
+              ? "Koi zinda nahi bacha — aatmaon ki race hogi!"
+              : "Jo zinda darwaza paar kare, wahi jeetega. Aatmayein shareer chheen sakti hain!"}
+        </p>
         <Track runners={pub.runners} darkness={FINALE_DARKNESS_START} />
         <Subtitle vo={pub.vo} />
       </div>
@@ -86,9 +94,11 @@ function Track({ runners, darkness }: { runners: FinaleRunnerPublic[]; darkness:
   const span = FINALE_DARKNESS_START; // fixed scale so movement reads across turns
   const pct = (d: number) => Math.min(100, Math.max(0, (d / span) * 100));
   return (
+    // The finale is the climax — the track must read from the couch: taller
+    // stage, bigger name chips, legible ticks (AES-LIVE-3).
     <div
       aria-label="escape track"
-      style={{ position: "relative", height: "7.5rem", maxWidth: "44rem", margin: "0.75rem auto", background: "rgba(255,255,255,0.05)", borderRadius: "0.5rem", overflow: "hidden" }}
+      style={{ position: "relative", height: "11rem", maxWidth: "50rem", margin: "0.75rem auto", background: "rgba(255,255,255,0.05)", borderRadius: "0.5rem", overflow: "hidden" }}
     >
       {/* darkness overlay from the far end */}
       <div
@@ -97,25 +107,34 @@ function Track({ runners, darkness }: { runners: FinaleRunnerPublic[]; darkness:
       {/* distance ticks every 5 spaces so movement is legible (UT-M4-4) */}
       {[5, 10, 15, 20, 25].map((d) => (
         <div key={d} style={{ position: "absolute", left: `${pct(d)}%`, top: 0, bottom: 0, borderLeft: "1px dashed rgba(255,255,255,0.15)" }}>
-          <span style={{ position: "absolute", bottom: "0.1rem", left: "0.15rem", fontSize: "0.6rem", opacity: 0.5 }}>{d}</span>
+          <span style={{ position: "absolute", bottom: "0.15rem", left: "0.2rem", fontSize: "0.85rem", opacity: 0.6 }}>{d}</span>
         </div>
       ))}
-      <div style={{ position: "absolute", left: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "3rem" }}>🚪</div>
+      <div style={{ position: "absolute", left: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "3.5rem" }}>🚪</div>
       {runners.map((r, i) => (
         <div
           key={r.id}
           style={{
             position: "absolute",
             left: `calc(${pct(r.distance)}% + 0.5rem)`,
-            top: `${12 + (i % 4) * 22}%`,
+            top: `${8 + (i % 4) * 22}%`,
             transition: "left 0.8s",
             opacity: r.eliminated ? 0.25 : 1,
-            fontSize: "0.85rem",
+            fontSize: "1.15rem",
             whiteSpace: "nowrap",
           }}
         >
-          <span>{r.eliminated ? "🌑" : r.kind === "living" ? "🏃" : r.kind === "audience" ? "👥" : "👻"}</span>
-          <span style={{ marginLeft: "0.2rem", color: r.kind === "living" ? COLORS.marigold : COLORS.ghost }}>
+          <span style={{ fontSize: "1.4rem" }}>{r.eliminated ? "🌑" : r.kind === "living" ? "🏃" : r.kind === "audience" ? "👥" : "👻"}</span>
+          <span
+            style={{
+              marginLeft: "0.25rem",
+              fontWeight: 700,
+              color: r.kind === "living" ? COLORS.marigold : COLORS.ghost,
+              background: "rgba(0,0,0,0.45)",
+              borderRadius: "1rem",
+              padding: "0.1rem 0.55rem",
+            }}
+          >
             {r.name}
             {r.lastMove > 0 && !r.eliminated ? ` +${r.lastMove}` : ""}
           </span>
@@ -161,47 +180,87 @@ export function ControllerFinale({
     );
   }
 
+  // Persistent role banner (GF-LIVE-1/3): outside the judge panel the phone
+  // must still say WHO you are and what's at stake — a live runner's phone
+  // must never look identical to a ghost's.
+  const meNow = pub.runners.find((r) => r.id === (isAudience ? AUDIENCE_RUNNER_ID : youId));
+  const RoleBanner = () =>
+    meNow === undefined ? null : (
+      <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
+        <p style={{ margin: "0.1rem 0", fontSize: "1.05rem", color: meNow.kind === "living" ? COLORS.marigold : COLORS.ghost }}>
+          {meNow.eliminated
+            ? "🌑 Andhere ne nigal liya — ab sirf dekho."
+            : meNow.kind === "living"
+              ? "🏃 Aap ZINDA ho — bhaago!"
+              : isAudience
+                ? "👥 Audience ek saath bhaagti hai — vote karo!"
+                : "👻 Aatma mode — shareer chheeno ya darwaza chhoo lo."}
+        </p>
+        {!meNow.eliminated && (
+          <p style={{ margin: 0, opacity: 0.75, fontSize: "0.9rem" }}>
+            {`Chakkar ${pub.turn} · darwaza ${meNow.distance} kadam door`}
+          </p>
+        )}
+      </div>
+    );
+
   if (pub.sub === "judge") {
     if (priv === null || !priv.racing || priv.options === null) {
-      return <p style={{ textAlign: "center" }}>Race chal rahi hai… screen dekho.</p>;
+      return (
+        <div>
+          <RoleBanner />
+          <p style={{ textAlign: "center" }}>Race chal rahi hai… screen dekho.</p>
+        </div>
+      );
     }
     if (priv.locked && !isAudience) {
-      return <p style={{ textAlign: "center" }}>Lock ho gaya. Bhaag… mat, ruko. 🏃</p>;
+      return (
+        <div>
+          <RoleBanner />
+          <p style={{ textAlign: "center" }}>Lock ho gaya. Bhaag… mat, ruko. 🏃</p>
+        </div>
+      );
     }
     return (
-      <JudgePanel
-        key={pub.turn}
-        turn={pub.turn}
-        category={pub.categoryTitle}
-        options={priv.options}
-        deadline={deadline}
-        onAction={onAction}
-      />
+      <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <RoleBanner />
+        <JudgePanel
+          key={pub.turn}
+          turn={pub.turn}
+          category={pub.categoryTitle}
+          options={priv.options}
+          deadline={deadline}
+          onAction={onAction}
+        />
+      </div>
     );
   }
 
   // resolve — pick the most consequential event about me (escape > darkness >
   // steal > barrier), not merely the first in the list.
-  const me = pub.runners.find((r) => r.id === (isAudience ? AUDIENCE_RUNNER_ID : youId));
+  const me = meNow;
   const mine = pub.events.filter((e) => (e.type === "steal" ? e.byId === me?.id || e.fromId === me?.id : e.id === me?.id));
   const order = { escape: 0, darkness: 1, steal: 2, barrier: 3 } as const;
   const myEvent = [...mine].sort((a, b) => order[a.type] - order[b.type])[0];
   return (
-    <p style={{ textAlign: "center", fontSize: "1.1rem" }}>
-      {myEvent?.type === "escape"
-        ? "🚪 NIKAL GAYE! Jeet gaye!"
-        : myEvent?.type === "darkness"
-          ? "🌑 Andhere ne pakad liya…"
-          : myEvent?.type === "barrier"
-            ? "🚧 Darwaza atka hai — agla chakkar PERFECT chahiye."
-            : myEvent?.type === "steal" && myEvent.byId === me?.id
-              ? "👤 Shareer aapka! Ab bhaago!"
-              : myEvent?.type === "steal"
-                ? "👻 Shareer chhin gaya… wapas pack mein."
-                : me !== undefined && me.lastMove > 0
-                  ? `+${me.lastMove} aage badhe!`
-                  : "Screen dekho…"}
-    </p>
+    <div>
+      <RoleBanner />
+      <p style={{ textAlign: "center", fontSize: "1.1rem" }}>
+        {myEvent?.type === "escape"
+          ? "🚪 NIKAL GAYE! Jeet gaye!"
+          : myEvent?.type === "darkness"
+            ? "🌑 Andhere ne pakad liya…"
+            : myEvent?.type === "barrier"
+              ? "🚧 Darwaza atka hai — agla chakkar PERFECT chahiye."
+              : myEvent?.type === "steal" && myEvent.byId === me?.id
+                ? "👤 Shareer aapka! Ab bhaago!"
+                : myEvent?.type === "steal"
+                  ? "👻 Shareer chhin gaya… wapas pack mein."
+                  : me !== undefined && me.lastMove > 0
+                    ? `+${me.lastMove} aage badhe!`
+                    : "Screen dekho…"}
+      </p>
+    </div>
   );
 }
 
