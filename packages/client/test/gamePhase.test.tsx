@@ -31,7 +31,10 @@ const reveal: KsRevealPublic = {
 };
 const gameOver: KsPublicPhase = {
   kind: "gameOver",
-  standings: [{ playerId: "p1", name: "Karan", money: 5000, alive: true }, { playerId: "p2", name: "Priya", money: 2000, alive: false }],
+  standings: [
+    { playerId: "p1", name: "Karan", money: 5000, alive: true, wrongs: 1, kamraEscapes: 2 },
+    { playerId: "p2", name: "Priya", money: 2000, alive: false, wrongs: 4, kamraEscapes: 0 },
+  ],
   winnerId: "p1", vo: "Bas, itna hi.",
 };
 

@@ -49,6 +49,8 @@ interface KsPlayer {
   alive: boolean;
   money: number;
   answer: number | null; // index for the current question
+  wrongs: number; // wrong trivia answers (stats, §3.8)
+  kamraEscapes: number; // kamra visits survived (stats, §3.8)
 }
 
 type Phase =
@@ -143,7 +145,7 @@ export class KhooniSawaalEngine implements GameEngine {
 
   start(ctx: GameContext): EnginePhase {
     this.now = ctx.now;
-    this.players = ctx.players.map((p) => ({ id: p.id, name: p.name, alive: true, money: 0, answer: null }));
+    this.players = ctx.players.map((p) => ({ id: p.id, name: p.name, alive: true, money: 0, answer: null, wrongs: 0, kamraEscapes: 0 }));
     const pick = this.opts.pickQuestions ?? defaultPick;
     this.questions = pick(this.bank, QUESTION_BUDGET, ctx.settings.familyFriendly);
     this.questionMs =
@@ -282,7 +284,10 @@ export class KhooniSawaalEngine implements GameEngine {
     for (const p of this.players) {
       const right = p.answer === correct;
       if (right) p.money += CORRECT_REWARD; // ghosts earn too (§3.5)
-      else if (p.alive) livingWrong.push(p);
+      else {
+        p.wrongs += 1;
+        if (p.alive) livingWrong.push(p);
+      }
     }
     const livingCount = this.players.filter((p) => p.alive).length;
     const allLivingWrong = livingWrong.length === livingCount && livingCount > 0;
@@ -366,9 +371,12 @@ export class KhooniSawaalEngine implements GameEngine {
       const p = this.players.find((x) => x.id === playerId);
       if (p !== undefined) p.money = Math.max(0, p.money + amount);
     }
-    for (const id of k.getDeaths()) {
-      const p = this.players.find((x) => x.id === id);
-      if (p !== undefined) p.alive = false;
+    const deaths = k.getDeaths();
+    for (const f of k.game.floorPublic()) {
+      const p = this.players.find((x) => x.id === f.playerId);
+      if (p === undefined) continue;
+      if (deaths.includes(p.id)) p.alive = false;
+      else p.kamraEscapes += 1; // walked out of the Kamra alive (§3.8 stats)
     }
     this.kamra = null;
     return this.advanceOrEnd();
@@ -623,7 +631,14 @@ export class KhooniSawaalEngine implements GameEngine {
 
   private standings(): KsStanding[] {
     return [...this.players]
-      .map((p) => ({ playerId: p.id, name: p.name, money: p.money, alive: p.alive }))
+      .map((p) => ({
+        playerId: p.id,
+        name: p.name,
+        money: p.money,
+        alive: p.alive,
+        wrongs: p.wrongs,
+        kamraEscapes: p.kamraEscapes,
+      }))
       .sort((a, b) => {
         if (a.alive !== b.alive) return a.alive ? -1 : 1; // alive first
         return b.money - a.money;

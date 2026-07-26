@@ -4,6 +4,7 @@ import { useRoom } from "./net/useRoom.js";
 import { JoinForm, type JoinSubmit } from "./screens/Join.js";
 import { Controller } from "./screens/Controller.js";
 import { Host } from "./screens/Host.js";
+import { Moderator } from "./screens/Moderator.js";
 import {
   clearHostSession,
   loadHostSession,
@@ -66,14 +67,7 @@ export function App({ env }: { env?: Env }) {
       </main>
     );
   }
-  if (route === "mod") {
-    return (
-      <main style={S.page}>
-        <h1 style={S.h1}>{BRANDING.platformName} — Moderator</h1>
-        <p>Moderation portal M7 mein aayega.</p>
-      </main>
-    );
-  }
+  if (route === "mod") return <ModApp env={e} />;
   if (route === "host") return <HostApp env={e} />;
   return <PlayerApp env={e} />;
 }
@@ -154,6 +148,59 @@ function ConnectedController({ env, join }: { env: Env; join: Omit<JoinMessage, 
     }
   }, [state.sessionToken, join.code, join.name]);
   return <Controller state={state} onAction={sendAction} />;
+}
+
+/** Moderation portal (M7, §4.2): join with the room code + password (when the
+ *  room has one) and get kick + censor controls over live content. */
+function ModApp({ env }: { env: Env }) {
+  const [join, setJoin] = useState<Omit<JoinMessage, "type"> | null>(null);
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  if (join === null) {
+    return (
+      <main style={S.page}>
+        <h1 style={S.h1}>{BRANDING.platformName} — Moderator</h1>
+        <p style={{ maxWidth: "22rem", textAlign: "center" }}>
+          Room ka code aur (agar hai) password daalo. Moderation setting ON honi chahiye.
+        </p>
+        <input
+          aria-label="Room code"
+          style={{ ...S.field, textTransform: "uppercase" }}
+          value={code}
+          onChange={(ev) => setCode(ev.target.value.slice(0, 4))}
+          placeholder="CODE"
+          maxLength={4}
+        />
+        <input
+          aria-label="Room password"
+          type="password"
+          style={{ ...S.field, marginTop: "0.75rem" }}
+          value={password}
+          onChange={(ev) => setPassword(ev.target.value.slice(0, 32))}
+          placeholder="Password (agar hai)"
+        />
+        <button
+          style={S.button}
+          disabled={!/^[A-Za-z]{4}$/.test(code.trim())}
+          onClick={() =>
+            setJoin({
+              code: code.trim().toUpperCase(),
+              intent: "moderate",
+              ...(password !== "" ? { password } : {}),
+            })
+          }
+        >
+          Portal kholo
+        </button>
+      </main>
+    );
+  }
+  return <ConnectedModerator env={env} join={join} />;
+}
+
+function ConnectedModerator({ env, join }: { env: Env; join: Omit<JoinMessage, "type"> }) {
+  const { state, sendAction } = useRoom(env.wsUrl, join);
+  return <Moderator state={state} onAction={sendAction} />;
 }
 
 /** Restores or creates a room, then connects as the host screen. */

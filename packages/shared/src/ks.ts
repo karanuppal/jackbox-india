@@ -62,6 +62,10 @@ export interface KsStanding {
   name: string;
   money: number;
   alive: boolean;
+  /** Wrong trivia answers across the game (stats screen, §3.8). */
+  wrongs: number;
+  /** Khooni Kamra visits survived (stats screen, §3.8). */
+  kamraEscapes: number;
 }
 
 export interface KsGameOverPublic {

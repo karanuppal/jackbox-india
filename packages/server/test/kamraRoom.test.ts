@@ -280,3 +280,64 @@ describe("Room × Aakhri Darwaza integration (QA-M4-5)", () => {
     expect(pd.sub).toBe("resolve"); // resolved early, no 12s of dead air
   });
 });
+
+// ---------------------------------------------------------------------------
+// Moderation portal (M7, §4.2): gated connect, kick, and moderator censor.
+// ---------------------------------------------------------------------------
+describe("Room × moderation portal (M7)", () => {
+  it("moderator connect requires the moderation setting (and password when set)", () => {
+    const { room } = setup();
+    expect(room.connectModerator("").ok).toBe(false); // moderation OFF
+    room.applyAction(null, { action: "updateSettings", settings: { moderation: true } });
+    expect(room.connectModerator("").ok).toBe(true); // ON, no password set
+    room.applyAction(null, { action: "updateSettings", settings: { password: "chai123" } });
+    expect(room.connectModerator("wrong").ok).toBe(false);
+    expect(room.connectModerator("chai123").ok).toBe(true);
+  });
+
+  it("kick removes a player, forfeits their pending input, and queues the socket close", () => {
+    const { room, clock, a, b, c } = setup();
+    room.applyAction(a, { action: "startGame" });
+    clock.advance(TIMERS.tutorialMs);
+    room.handleTimeout(); // → q1
+    room.applyAction(a, answerAction("q_0001", 0));
+    room.applyAction(b, answerAction("q_0001", 0));
+    // c never answers; the moderator kicks them → forfeit resolves the round
+    expect(room.applyAction(null, { action: "kick", playerId: c }, "moderator")).toBeNull();
+    expect(room.getPhase()).toBe("reveal"); // c's forfeit completed the question
+    expect(room.publicState().players.some((p) => p.id === c)).toBe(false);
+    expect(room.takeKicked()).toEqual([c]);
+  });
+
+  it("kick never drops the room below the in-game minimum", () => {
+    const { room, clock, a, b, c } = setup();
+    room.applyAction(a, { action: "startGame" });
+    clock.advance(TIMERS.tutorialMs);
+    room.handleTimeout();
+    expect(room.applyAction(null, { action: "kick", playerId: b }, "moderator")).toBeNull();
+    expect(room.applyAction(null, { action: "kick", playerId: c }, "moderator")).toBeNull();
+    // only a remains — kicking the last player mid-game is refused
+    expect(room.applyAction(null, { action: "kick", playerId: a }, "moderator")).toBe("NOT_ALLOWED");
+  });
+
+  it("players cannot kick; moderators cannot pause", () => {
+    const { room, a, b } = setup();
+    expect(room.applyAction(a, { action: "kick", playerId: b }, "player")).toBe("NOT_ALLOWED");
+    expect(room.applyAction(null, { action: "pause" }, "moderator")).toBe("NOT_ALLOWED");
+  });
+
+  it("moderator censor rides the engine path without erroring on non-voting games", () => {
+    const { room, clock, a, b, c } = setup();
+    room.applyAction(a, { action: "startGame" });
+    clock.advance(TIMERS.tutorialMs);
+    room.handleTimeout(); // q1
+    room.applyAction(a, answerAction("q_0001", 1));
+    room.applyAction(b, answerAction("q_0001", 2));
+    room.applyAction(c, answerAction("q_0001", 0));
+    clock.advance(TIMERS.revealMs);
+    room.handleTimeout(); // → kamra intro (rand 0 → hisaabKitaab, non-voting)
+    clock.advance(KAMRA_TIMERS.introMs);
+    room.handleTimeout(); // → play
+    expect(room.applyAction(null, { action: "modCensor", targetId: a }, "moderator")).toBeNull();
+  });
+});

@@ -197,7 +197,7 @@ export class Hub {
     }
     if (msg.seq <= conn.lastInSeq) return; // stale/replay — ignore (SEC-M0-12)
     conn.lastInSeq = msg.seq;
-    const err = conn.room.applyAction(conn.playerId, msg.payload);
+    const err = conn.room.applyAction(conn.playerId, msg.payload, conn.role ?? "player");
     if (err !== null) {
       this.sendError(conn, err, "action rejected");
       return;
@@ -219,7 +219,9 @@ export class Hub {
     const result =
       msg.intent === "hostScreen"
         ? room.connectHost(msg.sessionToken ?? "")
-        : room.join({
+        : msg.intent === "moderate"
+          ? room.connectModerator(msg.password ?? "")
+          : room.join({
             ...(msg.name !== undefined ? { name: msg.name } : {}),
             ...(msg.sessionToken !== undefined ? { sessionToken: msg.sessionToken } : {}),
             ...(msg.password !== undefined ? { password: msg.password } : {}),
@@ -298,9 +300,16 @@ export class Hub {
   broadcast(room: Room): void {
     const set = this.connsByRoom.get(room.code);
     if (set !== undefined) {
+      // Kicked players' sockets are told once and closed (M7 moderation).
+      const kicked = new Set(room.takeKicked());
       const pub = room.publicState();
       for (const conn of set) {
         if (conn.role === null) continue;
+        if (conn.playerId !== null && kicked.has(conn.playerId)) {
+          this.sendError(conn, "NOT_ALLOWED", "kicked by moderator");
+          conn.ws.close();
+          continue;
+        }
         this.send(conn, {
           seq: conn.outSeq++,
           type: "state",

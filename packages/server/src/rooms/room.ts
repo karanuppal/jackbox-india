@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   ACTION_ROLE,
   MAX_AUDIENCE,
+  MIN_PLAYERS,
   MAX_NAME_LENGTH,
   MAX_PLAYERS,
   sanitizeName,
@@ -158,6 +159,24 @@ export class Room {
     return this.hostConnected;
   }
 
+  /** Moderation portal connect (M7, §4.2): requires the moderation setting ON
+   *  and the room password (when one is set). No seat is taken. */
+  connectModerator(password: string): JoinResult | JoinError {
+    if (!this.settings.moderation) return { ok: false, code: "NOT_ALLOWED" };
+    if (this.passwordRequired() && !safeEqual(password, this.settings.password ?? "")) {
+      return { ok: false, code: "BAD_PASSWORD" };
+    }
+    return { ok: true, playerId: null, sessionToken: randomUUID(), role: "moderator" };
+  }
+
+  /** Players kicked since the last drain — the hub closes their sockets. */
+  private kickedQueue: string[] = [];
+  takeKicked(): string[] {
+    const k = this.kickedQueue;
+    this.kickedQueue = [];
+    return k;
+  }
+
   private recomputeEmpty(): void {
     this.emptySince = this.isEmpty() ? (this.emptySince ?? this.now()) : null;
   }
@@ -287,9 +306,16 @@ export class Room {
    * Apply a platform action from a connection. `playerId` is null for the host
    * screen. Returns an error code if rejected, otherwise null (state changed).
    */
-  applyAction(playerId: string | null, action: ClientAction): ServerErrorCode | null {
+  applyAction(
+    playerId: string | null,
+    action: ClientAction,
+    callerRole: Role = playerId === null ? "host" : "player",
+  ): ServerErrorCode | null {
     const required = ACTION_ROLE[action.action] ?? "any";
-    if (required === "hostScreen" && playerId !== null) return "NOT_ALLOWED";
+    if (required === "hostScreen" && callerRole !== "host") return "NOT_ALLOWED";
+    if (required === "moderator" && callerRole !== "host" && callerRole !== "moderator") {
+      return "NOT_ALLOWED";
+    }
     if (required === "vip" && !this.isVip(playerId)) return "NOT_ALLOWED";
 
     switch (action.action) {
@@ -326,6 +352,40 @@ export class Room {
         return null;
       case "resume":
         if (this.paused) this.resumeInternal();
+        return null;
+      case "kick": {
+        // §4.2: kick players — never below the minimum mid-game.
+        const target = this.players.get(action.playerId);
+        if (target === undefined) return "NOT_ALLOWED";
+        if (
+          target.role === "player" &&
+          this.phase !== "lobby" &&
+          this.activePlayers().length <= MIN_PLAYERS
+        ) {
+          return "NOT_ALLOWED";
+        }
+        this.players.delete(action.playerId);
+        if (this.engine !== null) {
+          const next = this.engine.onPlayerLeft(action.playerId);
+          if (next !== null) {
+            this.phase = next.phase as Phase;
+            this.deadline = next.deadline;
+          }
+        }
+        this.kickedQueue.push(action.playerId);
+        this.reassignVipIfNeeded();
+        this.recomputeEmpty();
+        return null;
+      }
+      case "modCensor":
+        // Moderator censor rides the engine's censor path with a synthetic
+        // non-player caller (never equal to a floor player's id).
+        if (this.engine === null) return "NOT_ALLOWED";
+        this.engine.onAction(
+          "__moderator__",
+          { type: "censor", targetId: action.targetId },
+          { role: "player", active: false, vip: true },
+        );
         return null;
       case "game":
         // Paused freezes all game input for everyone (§4.3, QA-M1-10).

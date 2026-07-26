@@ -209,6 +209,23 @@ describe("AakhriDarwazaFinale — darkness & barrier", () => {
 });
 
 describe("AakhriDarwazaFinale — no lock, no movement (UT-M4-2)", () => {
+  it("a FORFEITED (disconnected) runner also scores zero — forfeit is not a lock (FINAL-1)", () => {
+    const f = makeFinale({ ghosts: [entrant("g1", 100)] });
+    f.onTimeout(); // judge t1
+    judgePerfect(f, "g1");
+    const advanced = f.onPlayerLeft("L"); // living player disconnects
+    expect(advanced).toBe(true); // turn resolved early — no dead air (QA-M4-4)
+    const p = pub(f) as Extract<FinalePublic, { kind: "finaleTurn" }>;
+    const L = p.runners.find((r) => r.id === "L")!;
+    expect(L.lastMove).toBe(0); // …but the ghost-phone never crept forward
+    expect(L.distance).toBe(FINALE_START_LIVING);
+    // and later turns keep resolving without waiting on the absentee
+    f.onTimeout(); // resolve → judge t2
+    judgePerfect(f, "g1"); // only the connected runner judges → early resolve
+    const p2 = pub(f) as Extract<FinalePublic, { kind: "finaleTurn" }>;
+    expect(p2.sub).toBe("resolve");
+  });
+
   it("an idle runner never moves — even when dealt all non-fitting options", () => {
     const f = makeFinale({ ghosts: [entrant("g1", 100)] });
     f.onTimeout(); // judge t1

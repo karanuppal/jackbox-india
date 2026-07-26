@@ -229,6 +229,7 @@ export class AakhriDarwazaFinale {
     if (this.selections.has(playerId)) return false; // locked; no takebacks
     const assigned = this.assignments.get(playerId);
     if (assigned === undefined) return false;
+    this.forfeited.delete(playerId); // a reconnected runner is racing again
     this.selections.set(playerId, action.selection.filter((i) => assigned.includes(i)));
     this.maybeEarlyResolve();
     return true;
@@ -240,19 +241,29 @@ export class AakhriDarwazaFinale {
     const audienceRacing = this.active().some((r) => r.kind === "audience");
     if (audienceRacing) return;
     const playerRunners = this.active().filter((r) => r.kind !== "audience");
-    if (playerRunners.every((r) => this.selections.has(r.id))) this.resolveTurn();
+    // Forfeited (disconnected) runners don't hold the turn open — but they
+    // are NOT locked selections and score zero (FINAL-1).
+    if (playerRunners.every((r) => this.selections.has(r.id) || this.forfeited.has(r.id))) {
+      this.resolveTurn();
+    }
   }
 
-  /** A racing player disconnected — lock an empty judgment so the turn can
-   *  resolve early instead of idling all 12s every turn (QA-M4-4). Returns
-   *  true if the sub-phase advanced. */
+  /** Runners who disconnected — their turns need no waiting, but they score
+   *  ZERO like any other idle phone (FINAL-1: a forfeit is NOT a lock, so a
+   *  disconnected runner can't creep on non-fit credit or cross the barrier).
+   *  Persists across turns; a reconnecting runner clears it by judging. */
+  private readonly forfeited = new Set<string>();
+
+  /** A racing player disconnected — mark them forfeited so turns resolve
+   *  early instead of idling 12s (QA-M4-4). Returns true if the sub-phase
+   *  advanced. */
   onPlayerLeft(playerId: string): boolean {
-    if (this.sub !== "judge") return false;
     const runner = this.runners.find(
       (r) => r.id === playerId && r.kind !== "audience" && !r.eliminated && r.distance > 0,
     );
-    if (runner === undefined || this.selections.has(playerId)) return false;
-    this.selections.set(playerId, []); // §3.6/§4.2: absent = empty judgment
+    if (runner === undefined) return false;
+    this.forfeited.add(playerId);
+    if (this.sub !== "judge" || this.selections.has(playerId)) return false;
     const before = this.sub;
     this.maybeEarlyResolve();
     return (this.sub as FinaleSubPhase) !== before;

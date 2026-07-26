@@ -264,8 +264,57 @@ function GameScene({
           </li>
         ))}
       </ol>
+      <GameOverStats standings={pub.standings} />
+      <ShareButton standings={pub.standings} winnerId={pub.winnerId} />
       <Subtitle vo={pub.vo} />
     </div>
+  );
+}
+
+/** §3.8 stats screen: biggest fool, kamra survivor, richest ghost. */
+function GameOverStats({ standings }: { standings: { playerId: string; name: string; money: number; alive: boolean; wrongs: number; kamraEscapes: number }[] }) {
+  if (standings.length === 0) return null;
+  const fool = [...standings].sort((a, b) => b.wrongs - a.wrongs)[0];
+  const survivor = [...standings].sort((a, b) => b.kamraEscapes - a.kamraEscapes)[0];
+  const ghosts = standings.filter((s) => !s.alive);
+  const richGhost = [...ghosts].sort((a, b) => b.money - a.money)[0];
+  const rows: [string, string][] = [];
+  if (fool !== undefined && fool.wrongs > 0) rows.push(["🤡 Sabse bada bewakoof", `${fool.name} (${fool.wrongs} galat)`]);
+  if (survivor !== undefined && survivor.kamraEscapes > 0)
+    rows.push(["🚪 Kamra survivor", `${survivor.name} (${survivor.kamraEscapes} baar bacha)`]);
+  if (richGhost !== undefined) rows.push(["👻 Sabse amir aatma", `${richGhost.name} (₹${richGhost.money})`]);
+  if (rows.length === 0) return null;
+  return (
+    <div style={{ maxWidth: "24rem", margin: "0.5rem auto" }}>
+      {rows.map(([label, value]) => (
+        <p key={label} style={{ margin: "0.2rem 0", opacity: 0.85 }}>
+          <span style={{ color: COLORS.marigold }}>{label}:</span> {value}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+/** Share card (M7): copies a text summary of the night to the clipboard. */
+function ShareButton({ standings, winnerId }: { standings: { playerId: string; name: string; money: number; alive: boolean }[]; winnerId: string | null }) {
+  const winner = standings.find((s) => s.playerId === winnerId);
+  const text = [
+    `🩸 ${BRANDING.gameName} — aaj ki raat ${BRANDING.venueName} mein:`,
+    ...standings.map(
+      (s, i) => `${i + 1}. ${s.playerId === winnerId ? "👑 " : s.alive ? "" : "👻 "}${s.name} — ₹${s.money}`,
+    ),
+    winner !== undefined ? `${winner.name} zinda nikla. Baaki… mehmaan ban gaye.` : "Koi zinda nahi nikla.",
+  ].join("\n");
+  return (
+    <button
+      type="button"
+      style={{ fontSize: "0.9rem", minHeight: "40px", borderRadius: "1rem", padding: "0.3rem 0.9rem", border: `1px solid ${COLORS.marigold}`, background: "transparent", color: COLORS.cream, cursor: "pointer", margin: "0.4rem" }}
+      onClick={() => {
+        void navigator.clipboard?.writeText(text).catch(() => undefined);
+      }}
+    >
+      📋 Natija copy karo
+    </button>
   );
 }
 

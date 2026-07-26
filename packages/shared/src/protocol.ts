@@ -191,6 +191,9 @@ export const hostActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("updateSettings"), settings: settingsSchema.partial() }),
   z.object({ action: z.literal("pause") }),
   z.object({ action: z.literal("resume") }),
+  // Moderation portal (§4.2 table, M7): kick a player / censor a submission.
+  z.object({ action: z.literal("kick"), playerId: z.string().uuid() }),
+  z.object({ action: z.literal("modCensor"), targetId: z.string().uuid() }),
 ]);
 
 export const gameActionEnvelopeSchema = z.object({
@@ -205,14 +208,17 @@ export const clientActionSchema = z.union([
 ]);
 export type ClientAction = z.infer<typeof clientActionSchema>;
 
-/** Minimum identity required to issue each platform action. */
-export const ACTION_ROLE: Record<string, "vip" | "hostScreen" | "any"> = {
+/** Minimum identity required to issue each platform action. "moderator"
+ *  means the host screen OR a moderator connection (M7 portal). */
+export const ACTION_ROLE: Record<string, "vip" | "hostScreen" | "moderator" | "any"> = {
   startGame: "vip",
   skipTutorial: "vip",
   restart: "vip",
   updateSettings: "hostScreen",
   pause: "hostScreen",
   resume: "hostScreen",
+  kick: "moderator",
+  modCensor: "moderator",
   game: "any",
 };
 
@@ -291,7 +297,9 @@ export interface RoomLookupResponse {
 export const joinMessageSchema = z.object({
   type: z.literal("join"),
   code: z.string().min(1).max(8),
-  intent: z.enum(["hostScreen", "play"]),
+  // "moderate" (M7): the moderation portal — requires settings.moderation ON
+  // and the room password.
+  intent: z.enum(["hostScreen", "play", "moderate"]),
   // Player display name (required for intent "play" on a fresh join).
   name: z.string().max(64).optional(),
   // Reconnect: proves prior identity (host token or player session token).
